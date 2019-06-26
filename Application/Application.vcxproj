@@ -15,7 +15,7 @@
     <ProjectGuid>{8A6C871E-2AD2-4E90-8274-97900C119DCE}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Application</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -64,7 +64,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d11.lib;DirectXTK.lib;d3dcompiler.lib;Effects11d.lib;dinput8.lib;dxguid.lib;StaticLibd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>DXGI.lib;d3d11.lib;DirectXTK.lib;d3dcompiler.lib;Effects11d.lib;dinput8.lib;dxguid.lib;StaticLibd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)ThirdParty\FX11\Bin\Desktop_2017_Win10\x64\Debug;$(SolutionDir)ThirdParty\DirectXTK\Bin\Desktop_2017_Win10\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>

@@ -15,7 +15,7 @@
     <ProjectGuid>{9C447AD8-381C-4DC0-99CA-F1A60892FF32}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>StaticLib</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -87,7 +87,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="D3DApp.h" />
+    <ClInclude Include="Headers\D3DApp.h" />
     <ClInclude Include="Headers\Game.h" />
     <ClInclude Include="Headers\GameClock.h" />
     <ClInclude Include="Headers\GameException.h" />
@@ -96,7 +96,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="D3DApp.cpp" />
+    <ClCompile Include="Sources\D3DApp.cpp" />
     <ClCompile Include="Sources\Game.cpp" />
     <ClCompile Include="Sources\GameClock.cpp" />
     <ClCompile Include="Sources\GameException.cpp" />

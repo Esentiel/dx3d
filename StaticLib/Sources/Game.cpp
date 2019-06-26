@@ -7,10 +7,12 @@ namespace Library
 	const UINT Game::DefaultScreenHeight = 768;
 
 	Game::Game(HINSTANCE instance, const std::wstring& windowClass, const std::wstring& windowTitle, int showCommand)
-		: mInstance(instance), mWindowClass(windowClass), mWindowTitle(windowTitle), mShowCommand(showCommand),
-		mWindowHandle(), mWindow(),
-		mScreenWidth(DefaultScreenWidth), mScreenHeight(DefaultScreenHeight),
-		mGameClock(), mGameTime()
+		: mInstance(instance), 
+		mWindowClass(windowClass), 
+		mWindowTitle(windowTitle), 
+		mShowCommand(showCommand),
+		mScreenWidth(DefaultScreenWidth), 
+		mScreenHeight(DefaultScreenHeight)
 	{
 	}
 
@@ -88,14 +90,22 @@ namespace Library
 
 	void Game::Initialize()
 	{
+		m_d3dApp.reset(new D3DApp(mWindowHandle));
+		m_d3dApp->Initialize();
 	}
 
 	void Game::Update(const GameTime& gameTime)
 	{
+		auto delta = gameTime.ElapsedGameTime();
+		std::string deltaText = std::to_string(delta);
+		std::string title("FPS: ");
+		title.insert(title.cend(), deltaText.cbegin(), deltaText.cend());
+		SetWindowTextA(mWindowHandle, title.c_str());
 	}
 
 	void Game::Draw(const GameTime& gameTime)
 	{
+		m_d3dApp->Draw(gameTime);
 	}
 
 	void Game::InitializeWindow()

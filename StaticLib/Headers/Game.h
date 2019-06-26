@@ -4,6 +4,7 @@
 #include <string>
 #include "GameClock.h"
 #include "GameTime.h"
+#include "D3DApp.h"
 
 using namespace Library;
 
@@ -49,6 +50,8 @@ namespace Library
 
 		GameClock mGameClock;
 		GameTime mGameTime;
+
+		std::unique_ptr<D3DApp> m_d3dApp;
 
 	private:
 		Game(const Game& rhs);

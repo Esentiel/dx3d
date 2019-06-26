@@ -33,7 +33,7 @@
     <ClInclude Include="Headers\GameTime.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D3DApp.h">
+    <ClInclude Include="Headers\D3DApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -53,7 +53,7 @@
     <ClCompile Include="Sources\GameTime.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D3DApp.cpp">
+    <ClCompile Include="Sources\D3DApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
