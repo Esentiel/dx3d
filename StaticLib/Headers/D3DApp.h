@@ -12,6 +12,8 @@ struct IDXGISwapChain1;
 struct ID3D11RenderTargetView;
 struct ID3D11DepthStencilView;
 struct D3D11_VIEWPORT;
+struct ID3D11InputLayout;
+struct ID3D11Buffer;
 
 namespace Library
 {
@@ -33,6 +35,9 @@ namespace Library
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_rtv;
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_dsbView;
 		std::unique_ptr<D3D11_VIEWPORT> m_viewport;
+		std::unique_ptr<ID3D11InputLayout> m_Inputlayout;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> m_constBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;
 	};
 }
 

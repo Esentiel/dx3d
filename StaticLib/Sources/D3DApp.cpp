@@ -136,16 +136,107 @@ void D3DApp::Initialize()
 	m_viewport->MaxDepth = 1.f;
 	
 	m_deviceCtx->RSSetViewports(1, m_viewport.get());
+
+	// setup shaders
+	auto vertexShaderBytecode = reader->ReadData("SimpleVertexShader.cso");
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
+	m_device->CreateVertexShader(
+			vertexShaderBytecode->Data,
+			vertexShaderBytecode->Length,
+			nullptr,
+			&vertexShader
+		)
+
+	// setup IA layout
+	D3D11_INPUT_ELEMENT_DESC layout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+
+	if (FAILED(hr = m_device->CreateInputLayout(layout, 1, ))) //todo shaders
+	{
+		throw GameException("CreateInputLayout() failed", hr);
+	}
+
+	// setup constant buffer
+	struct VS_CONSTANT_BUFFER
+	{
+		DirectX::XMFLOAT4X4 WorldViewProj;
+	};
+
+	VS_CONSTANT_BUFFER VsConstData;
+	VsConstData.WorldViewProj = DirectX::XMFLOAT4X4();
+
+	D3D11_BUFFER_DESC cbDesc;
+	cbDesc.ByteWidth = sizeof(VS_CONSTANT_BUFFER);
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cbDesc.MiscFlags = 0;
+	cbDesc.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA InitData;
+	InitData.pSysMem = &VsConstData;
+	InitData.SysMemPitch = 0;
+	InitData.SysMemSlicePitch = 0;
+
+	if (FAILED(hr = m_device->CreateBuffer(&cbDesc, &InitData, &m_constBuffer)))
+	{
+		throw GameException("CreateBuffer() failed", hr);
+	}
+
+	m_deviceCtx->VSSetConstantBuffers(0, 1, m_constBuffer.GetAddressOf());
 }
 
 
 void D3DApp::Draw(const GameTime &gameTime) 
 {
+	// clear rt
 	const DirectX::XMVECTORF32 BackgroundColor = { 0.392f,0.584f, 0.929f, 1.0f };
-
 	m_deviceCtx->ClearRenderTargetView(m_rtv.Get(), reinterpret_cast<const float*>(&BackgroundColor));
 	m_deviceCtx->ClearDepthStencilView(m_dsbView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
+	// IA
+
+	// debug
+	DirectX::XMFLOAT3 Vbuff[] = {
+		{1.f, 1.f, 1.f},
+		{0.f, 0.f, 0.f},
+		{-1.f, -1.f, -1.f}
+	};
+
+	UINT stride = sizeof(DirectX::XMFLOAT3);
+
+	// Fill in a buffer description.
+	D3D11_BUFFER_DESC bufferDesc;
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.ByteWidth = sizeof(DirectX::XMFLOAT3) * 3;
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.CPUAccessFlags = 0;
+	bufferDesc.MiscFlags = 0;
+
+	// Fill in the sub-resource data.
+	D3D11_SUBRESOURCE_DATA InitData;
+	InitData.pSysMem = Vbuff;
+	InitData.SysMemPitch = 0;
+	InitData.SysMemSlicePitch = 0;
+
+	// Create the vertex buffer.
+	HRESULT hr;
+	if (FAILED(hr = m_device->CreateBuffer(&bufferDesc, &InitData, &m_vertexBuffer)))
+	{
+		throw GameException("CreateBuffer() failed", hr);
+	}
+
+	// end debug
+	m_deviceCtx->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, 0);
+	m_deviceCtx->IASetInputLayout(m_Inputlayout.get());
+	m_deviceCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// draw call
+	m_deviceCtx->Draw(1, 0);
+
+	// present
 	HRESULT hr = m_swapChain->Present(0, 0);
 	if (FAILED(hr)) 
 	{ 
