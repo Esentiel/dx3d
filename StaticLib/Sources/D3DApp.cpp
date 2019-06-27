@@ -5,6 +5,7 @@
 #include <dxgi1_3.h>
 #include <DirectXMath.h>
 #include <wrl.h>
+#include <d3dcompiler.h>
 
 #include "GameException.h"
 
@@ -26,6 +27,10 @@ void D3DApp::Initialize()
 	// create device
 	HRESULT hr;
 	UINT flags(0);
+#if defined(_DEBUG)
+	// If the project is in a debug build, enable the debug layer.
+	flags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
 	D3D_FEATURE_LEVEL features[] = {D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_11_1};
 	D3D_FEATURE_LEVEL featureLvl;
 
@@ -101,7 +106,6 @@ void D3DApp::Initialize()
 
 	// create DSB
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> dsb;
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_dsbView;
 	D3D11_TEXTURE2D_DESC dsbDesc;
 	ZeroMemory(&dsbDesc, sizeof(dsbDesc));
 	dsbDesc.Width = 800; // todo
@@ -138,14 +142,31 @@ void D3DApp::Initialize()
 	m_deviceCtx->RSSetViewports(1, m_viewport.get());
 
 	// setup shaders
-	auto vertexShaderBytecode = reader->ReadData("SimpleVertexShader.cso");
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
-	m_device->CreateVertexShader(
-			vertexShaderBytecode->Data,
-			vertexShaderBytecode->Length,
-			nullptr,
-			&vertexShader
-		)
+	// vertex
+	Microsoft::WRL::ComPtr<ID3DBlob> VS_Buffer, PS_Buffer;
+	if (FAILED(hr = D3DReadFileToBlob(L"../Bin/x64/Debug/VertexShader.cso", &VS_Buffer)))
+	{
+		throw GameException("D3DReadFileToBlob() for VS failed", hr);
+	}
+	if (FAILED(hr = m_device->CreateVertexShader(VS_Buffer->GetBufferPointer(), VS_Buffer->GetBufferSize(), nullptr, m_vertexShader.GetAddressOf())))
+	{
+		throw GameException("CreateVertexShader() failed", hr);
+	}
+
+	m_deviceCtx->VSSetShader(m_vertexShader.Get(), NULL, 0);
+
+
+	// pixel
+	if (FAILED(hr = D3DReadFileToBlob(L"../Bin/x64/Debug/PixelShader.cso", &PS_Buffer)))
+	{
+		throw GameException("D3DReadFileToBlob() for PS failed", hr);
+	}
+	if (FAILED(hr = m_device->CreatePixelShader(PS_Buffer->GetBufferPointer(), PS_Buffer->GetBufferSize(), nullptr, m_pixelShader.GetAddressOf())))
+	{
+		throw GameException("CreateVertexShader() failed", hr);
+	}
+
+	m_deviceCtx->PSSetShader(m_pixelShader.Get(), NULL, 0);
 
 	// setup IA layout
 	D3D11_INPUT_ELEMENT_DESC layout[] =
@@ -153,7 +174,7 @@ void D3DApp::Initialize()
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
-	if (FAILED(hr = m_device->CreateInputLayout(layout, 1, ))) //todo shaders
+	if (FAILED(hr = m_device->CreateInputLayout(layout, 1, VS_Buffer->GetBufferPointer(), VS_Buffer->GetBufferSize(), m_Inputlayout.GetAddressOf())))
 	{
 		throw GameException("CreateInputLayout() failed", hr);
 	}
@@ -206,6 +227,7 @@ void D3DApp::Draw(const GameTime &gameTime)
 	};
 
 	UINT stride = sizeof(DirectX::XMFLOAT3);
+	UINT offset = 0;
 
 	// Fill in a buffer description.
 	D3D11_BUFFER_DESC bufferDesc;
@@ -229,15 +251,15 @@ void D3DApp::Draw(const GameTime &gameTime)
 	}
 
 	// end debug
-	m_deviceCtx->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, 0);
-	m_deviceCtx->IASetInputLayout(m_Inputlayout.get());
+	m_deviceCtx->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 	m_deviceCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_deviceCtx->IASetInputLayout(m_Inputlayout.Get());
 
 	// draw call
 	m_deviceCtx->Draw(1, 0);
 
 	// present
-	HRESULT hr = m_swapChain->Present(0, 0);
+	hr = m_swapChain->Present(0, 0);
 	if (FAILED(hr)) 
 	{ 
 		throw GameException("IDXGISwapChain::Present() failed.", hr); 
