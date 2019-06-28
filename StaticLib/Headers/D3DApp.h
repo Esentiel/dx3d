@@ -16,6 +16,7 @@ struct ID3D11InputLayout;
 struct ID3D11Buffer;
 struct ID3D11VertexShader;
 struct ID3D11PixelShader;
+struct ID3D11RasterizerState;
 
 namespace Library
 {
@@ -27,7 +28,7 @@ namespace Library
 
 		void Initialize();
 		void Draw(const GameTime &gameTime);
-
+		void CreateCube();
 	private:
 		HWND m_hwnd;
 		Microsoft::WRL::ComPtr<ID3D11Device> m_device;
@@ -40,8 +41,12 @@ namespace Library
 		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_Inputlayout;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_constBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> m_indexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11VertexShader> m_vertexShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader> m_pixelShader;
+		Microsoft::WRL::ComPtr <ID3D11RasterizerState> m_rasterState;
+
+		int m_indexCount;
 	};
 }
 

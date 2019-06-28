@@ -11,6 +11,8 @@
 
 using namespace Library;
 
+DirectX::XMFLOAT4X4 g_mvp;
+
 D3DApp::D3DApp(HWND hwnd) : 
 	m_hwnd(hwnd), 
 	m_viewport(new D3D11_VIEWPORT)
@@ -128,9 +130,6 @@ void D3DApp::Initialize()
 		throw GameException("CreateDepthStencilView() failed", hr);
 	}
 
-	// set views to OM stage
-	m_deviceCtx->OMSetRenderTargets(1, m_rtv.GetAddressOf(), m_dsbView.Get());
-
 	//set viewport
 	m_viewport->Width = 800.f; //todo
 	m_viewport->Height = 600.f; //todo
@@ -141,7 +140,7 @@ void D3DApp::Initialize()
 	
 	m_deviceCtx->RSSetViewports(1, m_viewport.get());
 
-	// setup shaders
+	// load shaders
 	// vertex
 	Microsoft::WRL::ComPtr<ID3DBlob> VS_Buffer, PS_Buffer;
 	if (FAILED(hr = D3DReadFileToBlob(L"../Bin/x64/Debug/VertexShader.cso", &VS_Buffer)))
@@ -153,9 +152,6 @@ void D3DApp::Initialize()
 		throw GameException("CreateVertexShader() failed", hr);
 	}
 
-	m_deviceCtx->VSSetShader(m_vertexShader.Get(), NULL, 0);
-
-
 	// pixel
 	if (FAILED(hr = D3DReadFileToBlob(L"../Bin/x64/Debug/PixelShader.cso", &PS_Buffer)))
 	{
@@ -165,8 +161,6 @@ void D3DApp::Initialize()
 	{
 		throw GameException("CreateVertexShader() failed", hr);
 	}
-
-	m_deviceCtx->PSSetShader(m_pixelShader.Get(), NULL, 0);
 
 	// setup IA layout
 	D3D11_INPUT_ELEMENT_DESC layout[] =
@@ -188,80 +182,155 @@ void D3DApp::Initialize()
 	VS_CONSTANT_BUFFER VsConstData;
 	VsConstData.WorldViewProj = DirectX::XMFLOAT4X4();
 
-	D3D11_BUFFER_DESC cbDesc;
-	cbDesc.ByteWidth = sizeof(VS_CONSTANT_BUFFER);
-	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	cbDesc.MiscFlags = 0;
-	cbDesc.StructureByteStride = 0;
+	CD3D11_BUFFER_DESC cbDesc(
+		sizeof(VsConstData),
+		D3D11_BIND_CONSTANT_BUFFER
+	);
 
-	D3D11_SUBRESOURCE_DATA InitData;
-	InitData.pSysMem = &VsConstData;
-	InitData.SysMemPitch = 0;
-	InitData.SysMemSlicePitch = 0;
-
-	if (FAILED(hr = m_device->CreateBuffer(&cbDesc, &InitData, &m_constBuffer)))
+	if (FAILED(hr = m_device->CreateBuffer(&cbDesc, NULL, &m_constBuffer)))
 	{
 		throw GameException("CreateBuffer() failed", hr);
 	}
 
-	m_deviceCtx->VSSetConstantBuffers(0, 1, m_constBuffer.GetAddressOf());
+	// scissors test
+	D3D11_RECT rects[1];
+	rects[0].left = 0;
+	rects[0].right = 800;
+	rects[0].top = 0;
+	rects[0].bottom = 600;
+
+	m_deviceCtx->RSSetScissorRects(1, rects);
+
+	// rasterizer
+	D3D11_RASTERIZER_DESC rasterizerState;
+	rasterizerState.FillMode = D3D11_FILL_SOLID;
+	rasterizerState.CullMode = D3D11_CULL_BACK;
+	rasterizerState.FrontCounterClockwise = true;
+	rasterizerState.DepthBias = false;
+	rasterizerState.DepthBiasClamp = 0;
+	rasterizerState.SlopeScaledDepthBias = 0;
+	rasterizerState.DepthClipEnable = true;
+	rasterizerState.ScissorEnable = true;
+	rasterizerState.MultisampleEnable = false;
+	rasterizerState.AntialiasedLineEnable = false;
+	m_device->CreateRasterizerState(&rasterizerState, &m_rasterState);
+
+	m_deviceCtx->RSSetState(m_rasterState.Get());
+
+	// debug cube
+	CreateCube();
 }
 
 
 void D3DApp::Draw(const GameTime &gameTime) 
 {
+	// debug cube
+	DirectX::XMFLOAT4X4 mvp;
+	DirectX::XMMATRIX model, view, projection;
+
+	float angle = 90.0f;
+	const DirectX::XMVECTOR rotationAxis = DirectX::XMVectorSet(0, 1, 1, 0);
+	model = DirectX::XMMatrixRotationAxis(rotationAxis, DirectX::XMConvertToRadians(angle));
+
+	DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, 0.f, 10.0f, 1.0f);
+	DirectX::XMVECTOR at = DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f);
+	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+	view = DirectX::XMMatrixLookToRH(eye, at, up);
+
+	float aspectRatio = (float)800/600; // todo
+	auto fov = DirectX::XMConvertToRadians(45.0f);
+
+	projection = DirectX::XMMatrixPerspectiveFovRH(fov, aspectRatio, 0.01f, 1000.0f);
+
+	DirectX::XMStoreFloat4x4(&mvp, model * view * projection);
+
+	m_deviceCtx->UpdateSubresource(m_constBuffer.Get(),	0, nullptr,	&mvp, 0, 0);
+
 	// clear rt
 	const DirectX::XMVECTORF32 BackgroundColor = { 0.392f,0.584f, 0.929f, 1.0f };
 	m_deviceCtx->ClearRenderTargetView(m_rtv.Get(), reinterpret_cast<const float*>(&BackgroundColor));
 	m_deviceCtx->ClearDepthStencilView(m_dsbView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	// IA
-
-	// debug
-	DirectX::XMFLOAT3 Vbuff[] = {
-		{1.f, 1.f, 1.f},
-		{0.f, 0.f, 0.f},
-		{-1.f, -1.f, -1.f}
-	};
-
 	UINT stride = sizeof(DirectX::XMFLOAT3);
 	UINT offset = 0;
-
-	// Fill in a buffer description.
-	D3D11_BUFFER_DESC bufferDesc;
-	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferDesc.ByteWidth = sizeof(DirectX::XMFLOAT3) * 3;
-	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bufferDesc.CPUAccessFlags = 0;
-	bufferDesc.MiscFlags = 0;
-
-	// Fill in the sub-resource data.
-	D3D11_SUBRESOURCE_DATA InitData;
-	InitData.pSysMem = Vbuff;
-	InitData.SysMemPitch = 0;
-	InitData.SysMemSlicePitch = 0;
-
-	// Create the vertex buffer.
-	HRESULT hr;
-	if (FAILED(hr = m_device->CreateBuffer(&bufferDesc, &InitData, &m_vertexBuffer)))
-	{
-		throw GameException("CreateBuffer() failed", hr);
-	}
-
-	// end debug
 	m_deviceCtx->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
+	m_deviceCtx->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 	m_deviceCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_deviceCtx->IASetInputLayout(m_Inputlayout.Get());
 
+	// VS
+	m_deviceCtx->VSSetShader(m_vertexShader.Get(), NULL, 0);
+	m_deviceCtx->VSSetConstantBuffers(0, 1,	m_constBuffer.GetAddressOf());
+
+	// PS
+	m_deviceCtx->PSSetShader(m_pixelShader.Get(), NULL, 0);
+
 	// draw call
-	m_deviceCtx->Draw(1, 0);
+	m_deviceCtx->DrawIndexed(36, 0, 0);
+
+	// set views to OM stage
+	m_deviceCtx->OMSetRenderTargets(1, m_rtv.GetAddressOf(), m_dsbView.Get());
 
 	// present
-	hr = m_swapChain->Present(0, 0);
-	if (FAILED(hr)) 
-	{ 
-		throw GameException("IDXGISwapChain::Present() failed.", hr); 
+	HRESULT hr = m_swapChain->Present(0, 0);
+	if (FAILED(hr))
+	{
+		throw GameException("IDXGISwapChain::Present() failed.", hr);
 	}
+}
+
+void Library::D3DApp::CreateCube()
+{
+	DirectX::XMFLOAT3 CubeVertices[] =
+	{
+	 DirectX::XMFLOAT3(-1.0f, -1.0f, -1.0f), // 0
+	 DirectX::XMFLOAT3(-1.0f,  1.0f, -1.0f), // 1
+	 DirectX::XMFLOAT3(1.0f,  1.0f, -1.0f), // 2
+	 DirectX::XMFLOAT3(1.0f, -1.0f, -1.0f), // 3
+	 DirectX::XMFLOAT3(-1.0f, -1.0f,  1.0f), // 4
+	 DirectX::XMFLOAT3(-1.0f,  1.0f,  1.0f), // 5
+	 DirectX::XMFLOAT3(1.0f,  1.0f,  1.0f), // 6
+	 DirectX::XMFLOAT3(1.0f, -1.0f,  1.0f)  // 7
+	};
+
+	CD3D11_BUFFER_DESC vDesc(
+		sizeof(CubeVertices),
+		D3D11_BIND_VERTEX_BUFFER
+	);
+
+	D3D11_SUBRESOURCE_DATA vData;
+	ZeroMemory(&vData, sizeof(D3D11_SUBRESOURCE_DATA));
+	vData.pSysMem = CubeVertices;
+	vData.SysMemPitch = 0;
+	vData.SysMemSlicePitch = 0;
+
+	HRESULT hr = m_device->CreateBuffer(&vDesc, &vData,	m_vertexBuffer.GetAddressOf());
+
+	UINT CubeIndices[] =
+	{
+	0, 1, 2, 0, 2, 3,
+	4, 6, 5, 4, 7, 6,
+	4, 5, 1, 4, 1, 0,
+	3, 2, 6, 3, 6, 7,
+	1, 5, 6, 1, 6, 2,
+	4, 0, 3, 4, 3, 7
+	};
+
+
+	m_indexCount = ARRAYSIZE(CubeIndices);
+
+	CD3D11_BUFFER_DESC iDesc(
+		sizeof(CubeIndices),
+		D3D11_BIND_INDEX_BUFFER
+	);
+
+	D3D11_SUBRESOURCE_DATA iData;
+	ZeroMemory(&iData, sizeof(D3D11_SUBRESOURCE_DATA));
+	iData.pSysMem = CubeIndices;
+	iData.SysMemPitch = 0;
+	iData.SysMemSlicePitch = 0;
+
+	hr = m_device->CreateBuffer(&iDesc,	&iData,	m_indexBuffer.GetAddressOf());
 }

@@ -5,5 +5,5 @@ struct PS_INPUT
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-	return float4(0.f, 0.f, 0.f, 0.f);
+	return float4(input.projPos.x / 1000, input.projPos.y / 1000, input.projPos.z / 1000, 1.f);
 }
