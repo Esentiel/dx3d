@@ -5,48 +5,53 @@
 
 #include "GameTime.h"
 
+
+
 struct ID3D11Device;
 struct ID3D11DeviceContext;
-struct IDXGIFactory2;
 struct IDXGISwapChain1;
 struct ID3D11RenderTargetView;
 struct ID3D11DepthStencilView;
-struct D3D11_VIEWPORT;
-struct ID3D11InputLayout;
-struct ID3D11Buffer;
-struct ID3D11VertexShader;
-struct ID3D11PixelShader;
 struct ID3D11RasterizerState;
 
 namespace Library
 {
+	class RenderScene;
+	class Mesh;
+	class ShaderManager;
+	class Camera;
+	struct GD3DApp;
+
 	class D3DApp
 	{
 	public:
-		D3DApp(HWND hwnd);
+		D3DApp(HWND hwnd, unsigned int width, unsigned int height);
 		~D3DApp();
 
 		void Initialize();
 		void Draw(const GameTime &gameTime);
-		void CreateCube();
+
 	private:
+		void DrawMesh(Mesh* mesh);
+
+		std::unique_ptr<GD3DApp> m_globalApp;
+
 		HWND m_hwnd;
+		unsigned int m_width;
+		unsigned int m_height;
+
 		Microsoft::WRL::ComPtr<ID3D11Device> m_device;
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_deviceCtx;
-		Microsoft::WRL::ComPtr<IDXGIFactory2> m_factory;
 		Microsoft::WRL::ComPtr<IDXGISwapChain1> m_swapChain;
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_rtv;
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_dsbView;
-		std::unique_ptr<D3D11_VIEWPORT> m_viewport;
-		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_Inputlayout;
-		Microsoft::WRL::ComPtr<ID3D11Buffer> m_constBuffer;
-		Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;
-		Microsoft::WRL::ComPtr<ID3D11Buffer> m_indexBuffer;
-		Microsoft::WRL::ComPtr<ID3D11VertexShader> m_vertexShader;
-		Microsoft::WRL::ComPtr<ID3D11PixelShader> m_pixelShader;
+		
+
 		Microsoft::WRL::ComPtr <ID3D11RasterizerState> m_rasterState;
 
-		int m_indexCount;
+		std::unique_ptr<RenderScene> m_renderScene;
+		std::unique_ptr<ShaderManager> m_shaderManager;
+		std::unique_ptr<Camera> m_camera;
 	};
 }
 

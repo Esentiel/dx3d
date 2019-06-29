@@ -90,7 +90,7 @@ namespace Library
 
 	void Game::Initialize()
 	{
-		m_d3dApp.reset(new D3DApp(mWindowHandle));
+		m_d3dApp.reset(new D3DApp(mWindowHandle, mScreenWidth, mScreenHeight));
 		m_d3dApp->Initialize();
 	}
 
