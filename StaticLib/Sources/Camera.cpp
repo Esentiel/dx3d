@@ -34,7 +34,7 @@ const DirectX::XMMATRIX* Camera::GetProjection() const
 
 void Camera::UpdateView()
 {
-	DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, 0.f, 10.0f, 1.0f);
+	DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, 30.f, 30.0f, 1.0f);
 	DirectX::XMVECTOR at = DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f);
 	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 

@@ -20,6 +20,7 @@ namespace Library
 	class Mesh;
 	class ShaderManager;
 	class TextureManager;
+	class FileManager;
 	class Camera;
 	struct GD3DApp;
 
@@ -53,6 +54,7 @@ namespace Library
 		std::unique_ptr<RenderScene> m_renderScene;
 		std::unique_ptr<ShaderManager> m_shaderManager;
 		std::unique_ptr<TextureManager> m_textureManager;
+		std::unique_ptr<FileManager> m_fileManager;
 		std::unique_ptr<Camera> m_camera;
 	};
 }

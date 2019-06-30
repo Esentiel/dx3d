@@ -60,12 +60,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)Headers;$(SolutionDir)ThirdParty\FX11\inc;$(SolutionDir)ThirdParty\DirectXTK\Inc;$(WindowsSDK_IncludePath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Headers;$(SolutionDir)ThirdParty\FX11\inc;$(SolutionDir)ThirdParty\Assimp\include;$(SolutionDir)ThirdParty\DirectXTK\Inc;$(WindowsSDK_IncludePath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>XCOPY "$(SolutionDir)ThirdParty\Assimp\bin\x64\assimp-vc140-mt.dll" "$(OutDir)" /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -89,6 +92,7 @@
   <ItemGroup>
     <ClInclude Include="Headers\Camera.h" />
     <ClInclude Include="Headers\D3DApp.h" />
+    <ClInclude Include="Headers\FileManager.h" />
     <ClInclude Include="Headers\Game.h" />
     <ClInclude Include="Headers\GameClock.h" />
     <ClInclude Include="Headers\GameException.h" />
@@ -96,12 +100,14 @@
     <ClInclude Include="Headers\Mesh.h" />
     <ClInclude Include="Headers\ShaderManager.h" />
     <ClInclude Include="Headers\RenderScene.h" />
+    <ClInclude Include="Headers\Transformations.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Headers\TextureManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Sources\FileManager.cpp" />
     <ClCompile Include="Sources\RenderScene.cpp" />
     <ClCompile Include="Sources\Camera.cpp" />
     <ClCompile Include="Sources\ShaderManager.cpp" />
@@ -111,6 +117,7 @@
     <ClCompile Include="Sources\GameClock.cpp" />
     <ClCompile Include="Sources\GameException.cpp" />
     <ClCompile Include="Sources\GameTime.cpp" />
+    <ClCompile Include="Sources\Transformations.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>

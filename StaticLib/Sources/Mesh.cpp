@@ -6,25 +6,10 @@
 #include "GameException.h"
 #include "ShaderManager.h"
 #include "TextureManager.h"
+#include "Transformations.h"
 
 using namespace Library;
 
-
-
-Mesh::Mesh(std::unique_ptr<Library::Vertex[]> vertices, int vertexCnt, std::unique_ptr<UINT[]> indices, int indexCnt, std::string diffuseTexture) :
-	m_vertexdata(std::move(vertices)),
-	m_vertexCnt(vertexCnt),
-	m_indexData(std::move(indices)),
-	m_indexCnt(indexCnt),
-	m_diffuseTexture(diffuseTexture)
-{
-	Initialize();
-}
-
-
-Mesh::~Mesh()
-{
-}
 
 void Mesh::CreateInputLayout()
 {
@@ -33,7 +18,8 @@ void Mesh::CreateInputLayout()
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXTCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "TEXTCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	ID3DBlob* vertexShaderBLOB = g_D3D->shaderMgr->GetShaderBLOB(m_vertexShaderName);
@@ -50,72 +36,123 @@ void Mesh::CreateInputLayout()
 	}
 }
 
-ID3D11Buffer* Library::Mesh::GetConstBuffer() const
+Mesh::Mesh() :
+	m_transformations(std::make_unique<Transformations>()),
+	m_dirtyVertex(true)
+{
+}
+
+Mesh::~Mesh()
+{
+}
+
+ID3D11Buffer* Mesh::GetConstBuffer() const
 {
 	return m_constBuffer.Get();
 }
 
-ID3D11Buffer** Library::Mesh::GetConstBufferRef()
+ID3D11Buffer** Mesh::GetConstBufferRef()
 {
 	return m_constBuffer.GetAddressOf();
 }
 
-ID3D11Buffer** Library::Mesh::GetVertexBufferRef()
+ID3D11Buffer** Mesh::GetVertexBufferRef()
 {
 	return m_vertexBuffer.GetAddressOf();
 }
 
-ID3D11Buffer* Library::Mesh::GetIndexBuffer() const
+ID3D11Buffer* Mesh::GetIndexBuffer() const
 {
 	return m_indexBuffer.Get();
 }
 
-ID3D11InputLayout* Library::Mesh::GetInputLayout() const
+ID3D11InputLayout* Mesh::GetInputLayout() const
 {
 	return m_inputlayout.Get();
 }
 
-ID3D11SamplerState** Library::Mesh::GetSampler()
+const DirectX::XMMATRIX* Mesh::GetModelTransform() const
 {
-	return m_sampler.GetAddressOf();
+	return m_transformations->GetModel();
 }
 
-const DirectX::XMMATRIX* Library::Mesh::GetModelTransform() const
+const DirectX::XMFLOAT3* Mesh::GetVertexData() const
 {
-	return m_modelTransform.get();
+	return m_vertices.get();
 }
 
-const Library::Vertex* Library::Mesh::GetVertexData() const
+const UINT* Mesh::GetIndexData() const
 {
-	return m_vertexdata.get();
+	return m_indices.get();
 }
 
-const UINT* Library::Mesh::GetIndexData() const
-{
-	return m_indexData.get();
-}
-
-const std::string& Library::Mesh::GetVertexShader() const
+const std::string& Mesh::GetVertexShader() const
 {
 	return m_vertexShaderName;
 }
 
-const std::string& Library::Mesh::GetPixelShader() const
+const std::string& Mesh::GetPixelShader() const
 {
 	return m_pixelShaderName;
 }
 
-const int Library::Mesh::GetIndexCount() const
+const int Mesh::GetIndexCount() const
 {
 	return m_indexCnt;
 }
 
-const std::string& Library::Mesh::GetDiffuseTexture() const
+const std::string& Mesh::GetDiffuseTexture() const
 {
 	return m_diffuseTexture;
 }
 
-void Library::Mesh::Initialize()
+void Mesh::SetVertices(std::unique_ptr<DirectX::XMFLOAT3[]> &&vertices, uint32_t cnt)
+{
+	m_vertices.swap(vertices);
+	m_vertexCnt = cnt;
+
+	m_vertexDataBuffer.resize(m_vertexCnt);
+}
+
+void Mesh::SetIndices(std::unique_ptr<UINT[]> &&indices, uint32_t cnt)
+{
+	m_indices.swap(indices);
+	m_indexCnt = cnt;
+
+	CreateIndexBuffer();
+}
+
+void Mesh::SetTexturePath(const std::string& path)
+{
+	m_diffuseTexture = path;
+}
+
+void Mesh::SetTextureCoords(std::unique_ptr<DirectX::XMFLOAT2[]> &&textureCoords)
+{
+	m_textCoords.swap(textureCoords);
+}
+
+void Mesh::SetNormals(std::unique_ptr<DirectX::XMFLOAT3[]> &&normals)
+{
+	m_normals.swap(normals);
+}
+
+void Mesh::Move(const DirectX::XMFLOAT3 &direction)
+{
+	m_transformations->Move(direction);
+}
+
+void Mesh::Rotate(const DirectX::XMFLOAT3 &rotation)
+{
+	m_transformations->Rotate(rotation);
+}
+
+void Mesh::Scale(const DirectX::XMFLOAT3 &scale)
+{
+	m_transformations->Scale(scale);
+}
+
+void Mesh::Initialize()
 {
 	assert(g_D3D->device);
 	assert(g_D3D->shaderMgr);
@@ -124,20 +161,12 @@ void Library::Mesh::Initialize()
 	m_vertexShaderName = "VertexShader";
 	m_pixelShaderName = "PixelShader";
 
-	// todo: Mocking model transform
-	float angle = 90.0f;
-	const DirectX::XMVECTOR rotationAxis = DirectX::XMVectorSet(0, 1, 1, 0);
-	m_modelTransform.reset(new DirectX::XMMATRIX(DirectX::XMMatrixRotationAxis(rotationAxis, DirectX::XMConvertToRadians(angle))));
-
 	CreateInputLayout();
 	CreateConstantBuffer();
-	CreateVertexBuffer();
-	CreateIndexBuffer();
-	CreateSampler();
 	g_D3D->textureMgr->LoadTexture(m_diffuseTexture);
 }
 
-void Library::Mesh::CreateConstantBuffer()
+void Mesh::CreateConstantBuffer()
 {
 	// setup constant buffer
 	struct VS_CONSTANT_BUFFER
@@ -160,8 +189,10 @@ void Library::Mesh::CreateConstantBuffer()
 	}
 }
 
-void Library::Mesh::CreateVertexBuffer()
+void Mesh::CreateVertexBuffer()
 {
+	m_vertexBuffer.Reset();
+
 	CD3D11_BUFFER_DESC vDesc(
 		sizeof(Vertex) * m_vertexCnt,
 		D3D11_BIND_VERTEX_BUFFER
@@ -169,7 +200,7 @@ void Library::Mesh::CreateVertexBuffer()
 
 	D3D11_SUBRESOURCE_DATA vData;
 	ZeroMemory(&vData, sizeof(D3D11_SUBRESOURCE_DATA));
-	vData.pSysMem = m_vertexdata.get();
+	vData.pSysMem = m_vertexDataBuffer.data();
 	vData.SysMemPitch = 0;
 	vData.SysMemSlicePitch = 0;
 
@@ -180,8 +211,10 @@ void Library::Mesh::CreateVertexBuffer()
 	}
 }
 
-void Library::Mesh::CreateIndexBuffer()
+void Mesh::CreateIndexBuffer()
 {
+	m_indexBuffer.Reset();
+
 	CD3D11_BUFFER_DESC iDesc(
 		sizeof(UINT) * m_indexCnt,
 		D3D11_BIND_INDEX_BUFFER
@@ -189,7 +222,7 @@ void Library::Mesh::CreateIndexBuffer()
 
 	D3D11_SUBRESOURCE_DATA iData;
 	ZeroMemory(&iData, sizeof(D3D11_SUBRESOURCE_DATA));
-	iData.pSysMem = m_indexData.get();
+	iData.pSysMem = m_indices.get();
 	iData.SysMemPitch = 0;
 	iData.SysMemSlicePitch = 0;
 
@@ -200,29 +233,20 @@ void Library::Mesh::CreateIndexBuffer()
 	}
 }
 
-void Library::Mesh::CreateSampler()
+
+void Mesh::LoadVertexDataBuffer()
 {
-	// Create a sampler state for texture sampling in the pixel shader
-		D3D11_SAMPLER_DESC samplerDesc;
-	ZeroMemory(&samplerDesc, sizeof(D3D11_SAMPLER_DESC));
-
-	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-	samplerDesc.MipLODBias = 0.0f;
-	samplerDesc.MaxAnisotropy = 1;
-	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-	samplerDesc.BorderColor[0] = 1.0f;
-	samplerDesc.BorderColor[1] = 1.0f;
-	samplerDesc.BorderColor[2] = 1.0f;
-	samplerDesc.BorderColor[3] = 1.0f;
-	samplerDesc.MinLOD = -FLT_MAX;
-	samplerDesc.MaxLOD = FLT_MAX;
-
-	HRESULT hr;
-	if (FAILED(hr = g_D3D->device->CreateSamplerState(&samplerDesc, m_sampler.GetAddressOf())))
+	if (m_dirtyVertex)
 	{
-		throw GameException("CreateSamplerState() failed", hr);
+		for (int i = 0; i < m_vertexCnt; i++)
+		{
+			m_vertexDataBuffer[i].Position = m_vertices[i];
+			m_vertexDataBuffer[i].TextCoord = m_textCoords[i];
+			m_vertexDataBuffer[i].Normal = m_normals[i];
+		}
+
+		CreateVertexBuffer();
+
+		m_dirtyVertex = false;
 	}
 }

@@ -1,10 +1,13 @@
 #include "stdafx.h"
 #include "Game.h"
+#include "Mesh.h"
+#include "FileManager.h"
+#include "RenderScene.h"
 
 namespace Library
 {
-	const UINT Game::DefaultScreenWidth = 1024;
-	const UINT Game::DefaultScreenHeight = 768;
+	const UINT Game::DefaultScreenWidth = 1280;
+	const UINT Game::DefaultScreenHeight = 960;
 
 	Game::Game(HINSTANCE instance, const std::wstring& windowClass, const std::wstring& windowTitle, int showCommand)
 		: mInstance(instance), 
@@ -92,6 +95,25 @@ namespace Library
 	{
 		m_d3dApp.reset(new D3DApp(mWindowHandle, mScreenWidth, mScreenHeight));
 		m_d3dApp->Initialize();
+
+		// create test meshes
+		std::string filePath = "../Content/models/Arissa.fbx";
+		uint32_t numMesh = 0;
+		uint32_t meshID = 0;
+		do
+		{
+			std::unique_ptr<Mesh> mesh(new Mesh);
+			bool res = g_D3D->fileMgr->ReamModelFromFBX(filePath.c_str(), meshID, mesh.get(), &numMesh);
+
+			if (res)
+			{
+				mesh->Initialize();
+				mesh->LoadVertexDataBuffer();
+				g_D3D->renderScene->AddMesh(std::move(mesh));
+			}
+			meshID++;
+		} while (meshID < numMesh);
+
 	}
 
 	void Game::Update(const GameTime& gameTime)

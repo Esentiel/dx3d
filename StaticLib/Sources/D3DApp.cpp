@@ -12,11 +12,44 @@
 #include "RenderScene.h"
 #include "ShaderManager.h"
 #include "TextureManager.h"
+#include "FileManager.h"
 #include "Mesh.h"
 #include "Camera.h"
 #include "GameException.h"
 
 using namespace Library;
+
+static Microsoft::WRL::ComPtr<ID3D11SamplerState> g_sampler;
+
+void CreateSampler()
+{
+	// Create a sampler state for texture sampling in the pixel shader
+	
+	D3D11_SAMPLER_DESC samplerDesc;
+	ZeroMemory(&samplerDesc, sizeof(D3D11_SAMPLER_DESC));
+
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	samplerDesc.BorderColor[0] = 1.0f;
+	samplerDesc.BorderColor[1] = 1.0f;
+	samplerDesc.BorderColor[2] = 1.0f;
+	samplerDesc.BorderColor[3] = 1.0f;
+	samplerDesc.MinLOD = -FLT_MAX;
+	samplerDesc.MaxLOD = FLT_MAX;
+
+	HRESULT hr;
+	if (FAILED(hr = g_D3D->device->CreateSamplerState(&samplerDesc, g_sampler.GetAddressOf())))
+	{
+		throw GameException("CreateSamplerState() failed", hr);
+	}
+}
+
+
 
 D3DApp::D3DApp(HWND hwnd, unsigned int width, unsigned int height) :
 	m_hwnd(hwnd),
@@ -165,6 +198,10 @@ void D3DApp::Initialize()
 	m_textureManager.reset(new TextureManager);
 	g_D3D->textureMgr = m_textureManager.get();
 
+	// file mgr
+	m_fileManager.reset(new FileManager);
+	g_D3D->fileMgr = m_fileManager.get();
+
 	// camera
 	float fov = DirectX::XMConvertToRadians(45.f);
 	m_camera.reset(new Camera(fov, m_width, m_height, 0.01f, 1000.0f));
@@ -172,32 +209,32 @@ void D3DApp::Initialize()
 	// scene
 	m_renderScene.reset(new RenderScene);
 	g_D3D->renderScene = m_renderScene.get();
+	CreateSampler();
+	//// todo: Mocking meshes
+	//std::unique_ptr<Vertex[]> vertices(new Vertex[8]
+	//	{
+	//		Vertex(DirectX::XMFLOAT3(-1.0f, -1.0f, -1.0f), DirectX::XMFLOAT2(0.25f, 2.f / 3)),
+	//		Vertex(DirectX::XMFLOAT3(-1.0f, 1.0f, -1.0f), DirectX::XMFLOAT2(0.25f, 1.f / 3)),
+	//		Vertex(DirectX::XMFLOAT3(1.0f, 1.0f, -1.0f), DirectX::XMFLOAT2(0.5f, 1.f / 3)),
+	//		Vertex(DirectX::XMFLOAT3(1.0f, -1.0f, -1.0f), DirectX::XMFLOAT2(0.5f, 2.f / 3)),
+	//		Vertex(DirectX::XMFLOAT3(-1.0f, -1.0f, 1.0f), DirectX::XMFLOAT2(0.f, 2.f / 3)),
+	//		Vertex(DirectX::XMFLOAT3(-1.0f, 1.0f, 1.0f), DirectX::XMFLOAT2(0.f, 1.f / 3)),
+	//		Vertex(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f), DirectX::XMFLOAT2(0.75f, 1.f / 3)),
+	//		Vertex(DirectX::XMFLOAT3(1.0f, -1.0f, 1.0f), DirectX::XMFLOAT2(0.75f, 2.f / 3))
+	//	});
 
-	// todo: Mocking meshes
-	std::unique_ptr<Vertex[]> vertices(new Vertex[8]
-		{
-			Vertex(DirectX::XMFLOAT3(-1.0f, -1.0f, -1.0f), DirectX::XMFLOAT2(0.25f, 2.f / 3)),
-			Vertex(DirectX::XMFLOAT3(-1.0f, 1.0f, -1.0f), DirectX::XMFLOAT2(0.25f, 1.f / 3)),
-			Vertex(DirectX::XMFLOAT3(1.0f, 1.0f, -1.0f), DirectX::XMFLOAT2(0.5f, 1.f / 3)),
-			Vertex(DirectX::XMFLOAT3(1.0f, -1.0f, -1.0f), DirectX::XMFLOAT2(0.5f, 2.f / 3)),
-			Vertex(DirectX::XMFLOAT3(-1.0f, -1.0f, 1.0f), DirectX::XMFLOAT2(0.f, 2.f / 3)),
-			Vertex(DirectX::XMFLOAT3(-1.0f, 1.0f, 1.0f), DirectX::XMFLOAT2(0.f, 1.f / 3)),
-			Vertex(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f), DirectX::XMFLOAT2(0.75f, 1.f / 3)),
-			Vertex(DirectX::XMFLOAT3(1.0f, -1.0f, 1.0f), DirectX::XMFLOAT2(0.75f, 2.f / 3))
-		});
+	//std::unique_ptr<UINT[]> indices(new UINT[36]
+	//	{
+	//		0, 1, 2, 0, 2, 3,
+	//		4, 6, 5, 4, 7, 6,
+	//		4, 5, 1, 4, 1, 0,
+	//		3, 2, 6, 3, 6, 7,
+	//		1, 5, 6, 1, 6, 2,
+	//		4, 0, 3, 4, 3, 7
+	//	});
 
-	std::unique_ptr<UINT[]> indices(new UINT[36]
-		{
-			0, 1, 2, 0, 2, 3,
-			4, 6, 5, 4, 7, 6,
-			4, 5, 1, 4, 1, 0,
-			3, 2, 6, 3, 6, 7,
-			1, 5, 6, 1, 6, 2,
-			4, 0, 3, 4, 3, 7
-		});
-
-	std::unique_ptr<Mesh> mesh(new Mesh(std::move(vertices), 8, std::move(indices), 36, "crate_diffuse.dds"));
-	m_renderScene->AddMesh(std::move(mesh));
+	//std::unique_ptr<Mesh> mesh(new Mesh(std::move(vertices), 8, std::move(indices), 36, "crate_diffuse.dds"));
+	//m_renderScene->AddMesh(std::move(mesh));
 }
 
 
@@ -215,6 +252,7 @@ void D3DApp::Draw(const GameTime &gameTime)
 	for (auto it = m_renderScene->BeginMesh(); it != m_renderScene->EndMesh(); ++it)
 	{
 		DrawMesh((*it).get());
+		//break;
 	}
 
 	// present
@@ -249,7 +287,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	// PS
 	ID3D11PixelShader* ps = m_shaderManager->GetPixelShader(mesh->GetPixelShader());
 	m_deviceCtx->PSSetShader(ps, NULL, 0);
-	m_deviceCtx->PSSetSamplers(0, 1, mesh->GetSampler());
+	m_deviceCtx->PSSetSamplers(0, 1, g_sampler.GetAddressOf());
 	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetDiffuseTexture()));
 
 	// draw call
