@@ -11,6 +11,7 @@
 
 #include "RenderScene.h"
 #include "ShaderManager.h"
+#include "TextureManager.h"
 #include "Mesh.h"
 #include "Camera.h"
 #include "GameException.h"
@@ -160,6 +161,10 @@ void D3DApp::Initialize()
 	m_shaderManager->Initialize();
 	g_D3D->shaderMgr = m_shaderManager.get();
 
+	// texture mgr
+	m_textureManager.reset(new TextureManager);
+	g_D3D->textureMgr = m_textureManager.get();
+
 	// camera
 	float fov = DirectX::XMConvertToRadians(45.f);
 	m_camera.reset(new Camera(fov, m_width, m_height, 0.01f, 1000.0f));
@@ -171,14 +176,14 @@ void D3DApp::Initialize()
 	// todo: Mocking meshes
 	std::unique_ptr<Vertex[]> vertices(new Vertex[8]
 		{
-			Vertex(DirectX::XMFLOAT3(-1.0f, -1.0f, -1.0f)),
-			Vertex(DirectX::XMFLOAT3(-1.0f, 1.0f, -1.0f)),
-			Vertex(DirectX::XMFLOAT3(1.0f, 1.0f, -1.0f)),
-			Vertex(DirectX::XMFLOAT3(1.0f, -1.0f, -1.0f)),
-			Vertex(DirectX::XMFLOAT3(-1.0f, -1.0f, 1.0f)),
-			Vertex(DirectX::XMFLOAT3(-1.0f, 1.0f, 1.0f)),
-			Vertex(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f)),
-			Vertex(DirectX::XMFLOAT3(1.0f, -1.0f, 1.0f))
+			Vertex(DirectX::XMFLOAT3(-1.0f, -1.0f, -1.0f), DirectX::XMFLOAT2(0.25f, 2.f / 3)),
+			Vertex(DirectX::XMFLOAT3(-1.0f, 1.0f, -1.0f), DirectX::XMFLOAT2(0.25f, 1.f / 3)),
+			Vertex(DirectX::XMFLOAT3(1.0f, 1.0f, -1.0f), DirectX::XMFLOAT2(0.5f, 1.f / 3)),
+			Vertex(DirectX::XMFLOAT3(1.0f, -1.0f, -1.0f), DirectX::XMFLOAT2(0.5f, 2.f / 3)),
+			Vertex(DirectX::XMFLOAT3(-1.0f, -1.0f, 1.0f), DirectX::XMFLOAT2(0.f, 2.f / 3)),
+			Vertex(DirectX::XMFLOAT3(-1.0f, 1.0f, 1.0f), DirectX::XMFLOAT2(0.f, 1.f / 3)),
+			Vertex(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f), DirectX::XMFLOAT2(0.75f, 1.f / 3)),
+			Vertex(DirectX::XMFLOAT3(1.0f, -1.0f, 1.0f), DirectX::XMFLOAT2(0.75f, 2.f / 3))
 		});
 
 	std::unique_ptr<UINT[]> indices(new UINT[36]
@@ -191,7 +196,7 @@ void D3DApp::Initialize()
 			4, 0, 3, 4, 3, 7
 		});
 
-	std::unique_ptr<Mesh> mesh(new Mesh(std::move(vertices), 8, std::move(indices), 36));
+	std::unique_ptr<Mesh> mesh(new Mesh(std::move(vertices), 8, std::move(indices), 36, "crate_diffuse.dds"));
 	m_renderScene->AddMesh(std::move(mesh));
 }
 
@@ -244,6 +249,8 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	// PS
 	ID3D11PixelShader* ps = m_shaderManager->GetPixelShader(mesh->GetPixelShader());
 	m_deviceCtx->PSSetShader(ps, NULL, 0);
+	m_deviceCtx->PSSetSamplers(0, 1, mesh->GetSampler());
+	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetDiffuseTexture()));
 
 	// draw call
 	m_deviceCtx->DrawIndexed(mesh->GetIndexCount(), 0, 0);

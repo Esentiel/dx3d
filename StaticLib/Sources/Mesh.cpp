@@ -5,16 +5,18 @@
 
 #include "GameException.h"
 #include "ShaderManager.h"
+#include "TextureManager.h"
 
 using namespace Library;
 
 
 
-Mesh::Mesh(std::unique_ptr<Library::Vertex[]> vertices, int vertexCnt, std::unique_ptr<UINT[]> indices, int indexCnt) :
+Mesh::Mesh(std::unique_ptr<Library::Vertex[]> vertices, int vertexCnt, std::unique_ptr<UINT[]> indices, int indexCnt, std::string diffuseTexture) :
 	m_vertexdata(std::move(vertices)),
 	m_vertexCnt(vertexCnt),
 	m_indexData(std::move(indices)),
-	m_indexCnt(indexCnt)
+	m_indexCnt(indexCnt),
+	m_diffuseTexture(diffuseTexture)
 {
 	Initialize();
 }
@@ -30,13 +32,14 @@ void Mesh::CreateInputLayout()
 	HRESULT hr;
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXTCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	ID3DBlob* vertexShaderBLOB = g_D3D->shaderMgr->GetShaderBLOB(m_vertexShaderName);
 	if (vertexShaderBLOB)
 	{
-		if (FAILED(hr = g_D3D->device->CreateInputLayout(layout, 1, vertexShaderBLOB->GetBufferPointer(), vertexShaderBLOB->GetBufferSize(), m_Inputlayout.GetAddressOf())))
+		if (FAILED(hr = g_D3D->device->CreateInputLayout(layout, _countof(layout), vertexShaderBLOB->GetBufferPointer(), vertexShaderBLOB->GetBufferSize(), m_inputlayout.GetAddressOf())))
 		{
 			throw GameException("CreateInputLayout() failed", hr);
 		}
@@ -69,7 +72,12 @@ ID3D11Buffer* Library::Mesh::GetIndexBuffer() const
 
 ID3D11InputLayout* Library::Mesh::GetInputLayout() const
 {
-	return m_Inputlayout.Get();
+	return m_inputlayout.Get();
+}
+
+ID3D11SamplerState** Library::Mesh::GetSampler()
+{
+	return m_sampler.GetAddressOf();
 }
 
 const DirectX::XMMATRIX* Library::Mesh::GetModelTransform() const
@@ -102,6 +110,11 @@ const int Library::Mesh::GetIndexCount() const
 	return m_indexCnt;
 }
 
+const std::string& Library::Mesh::GetDiffuseTexture() const
+{
+	return m_diffuseTexture;
+}
+
 void Library::Mesh::Initialize()
 {
 	assert(g_D3D->device);
@@ -120,6 +133,8 @@ void Library::Mesh::Initialize()
 	CreateConstantBuffer();
 	CreateVertexBuffer();
 	CreateIndexBuffer();
+	CreateSampler();
+	g_D3D->textureMgr->LoadTexture(m_diffuseTexture);
 }
 
 void Library::Mesh::CreateConstantBuffer()
@@ -182,5 +197,32 @@ void Library::Mesh::CreateIndexBuffer()
 	if (FAILED(hr = g_D3D->device->CreateBuffer(&iDesc, &iData, m_indexBuffer.GetAddressOf())))
 	{
 		throw GameException("Mesh::CreateIndexBuffer(): CreateBuffer() failed", hr);
+	}
+}
+
+void Library::Mesh::CreateSampler()
+{
+	// Create a sampler state for texture sampling in the pixel shader
+		D3D11_SAMPLER_DESC samplerDesc;
+	ZeroMemory(&samplerDesc, sizeof(D3D11_SAMPLER_DESC));
+
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	samplerDesc.BorderColor[0] = 1.0f;
+	samplerDesc.BorderColor[1] = 1.0f;
+	samplerDesc.BorderColor[2] = 1.0f;
+	samplerDesc.BorderColor[3] = 1.0f;
+	samplerDesc.MinLOD = -FLT_MAX;
+	samplerDesc.MaxLOD = FLT_MAX;
+
+	HRESULT hr;
+	if (FAILED(hr = g_D3D->device->CreateSamplerState(&samplerDesc, m_sampler.GetAddressOf())))
+	{
+		throw GameException("CreateSamplerState() failed", hr);
 	}
 }
