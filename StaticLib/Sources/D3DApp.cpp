@@ -265,12 +265,21 @@ void D3DApp::Draw(const GameTime &gameTime)
 
 void Library::D3DApp::DrawMesh(Mesh* mesh)
 {
-	// update cb
-	DirectX::XMFLOAT4X4 mvp;
-	DirectX::XMStoreFloat4x4(&mvp, *(mesh->GetModelTransform()) * *(m_camera->GetView()) * *(m_camera->GetProjection()));
+	// update mesh cb
+	MeshCB meshCb;
+	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * *(m_camera->GetView()) * *(m_camera->GetProjection()));
+	meshCb.AmbientK = 0.9;
+	meshCb.EmissiveK = 0.5;
+	meshCb.DiffuseIntensity = 0.9;
+	meshCb.Roughness = 0.5;
 
-	m_deviceCtx->UpdateSubresource(mesh->GetConstBuffer(), 0, nullptr, &mvp, 0, 0);
+	m_deviceCtx->UpdateSubresource(mesh->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
 	
+	// update scene CB
+
+	DirectX::XMFLOAT3 eyePos; // todo: Get eyePos from camera
+	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &eyePos, 0, 0);
+
 	// IA
 	UINT stride = sizeof(Library::Vertex);
 	UINT offset = 0;
@@ -282,7 +291,8 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	// VS
 	ID3D11VertexShader* vs = m_shaderManager->GetVertexShader(mesh->GetVertexShader());
 	m_deviceCtx->VSSetShader(vs, NULL, 0); //todo: mocking: ASSUMPTION: we use same vs for each
-	m_deviceCtx->VSSetConstantBuffers(0, 1, mesh->GetConstBufferRef());
+	m_deviceCtx->VSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
+	m_deviceCtx->VSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());
 
 	// PS
 	ID3D11PixelShader* ps = m_shaderManager->GetPixelShader(mesh->GetPixelShader());

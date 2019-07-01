@@ -101,12 +101,14 @@
     <ClInclude Include="Headers\ShaderManager.h" />
     <ClInclude Include="Headers\RenderScene.h" />
     <ClInclude Include="Headers\Transformations.h" />
+    <ClInclude Include="Headers\LightSource.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Headers\TextureManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Sources\LightSource.cpp" />
     <ClCompile Include="Sources\FileManager.cpp" />
     <ClCompile Include="Sources\RenderScene.cpp" />
     <ClCompile Include="Sources\Camera.cpp" />

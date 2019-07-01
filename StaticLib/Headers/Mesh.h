@@ -12,6 +12,15 @@ struct ID3D11Device;
 
 namespace Library
 {
+	struct MeshCB
+	{
+		DirectX::XMFLOAT4X4 WorldViewProj;
+		float DiffuseIntensity;
+		float EmissiveK;
+		float AmbientK;
+		float Roughness;
+	};
+
 	struct Vertex  // todo: 2 places to edit vertex(
 	{
 		DirectX::XMFLOAT3 Position;
@@ -30,8 +39,8 @@ namespace Library
 		Mesh();
 		~Mesh();
 
-		ID3D11Buffer* GetConstBuffer() const;
-		ID3D11Buffer** GetConstBufferRef();
+		ID3D11Buffer* GetConstMeshBuffer() const;
+		ID3D11Buffer** GetConstMeshBufferRef();
 		ID3D11Buffer** GetVertexBufferRef();
 		ID3D11Buffer* GetIndexBuffer() const;
 		ID3D11InputLayout* GetInputLayout() const; // todo: should move layout out from Mesh, as long as I will create several types of mashes with differemt layout
@@ -62,7 +71,7 @@ namespace Library
 		void Initialize();
 	private:
 		void CreateInputLayout();
-		void CreateConstantBuffer();
+		void CreateConstMeshBuffer();
 		void CreateVertexBuffer();
 		void CreateIndexBuffer();
 
@@ -75,7 +84,7 @@ namespace Library
 
 		std::vector<Vertex> m_vertexDataBuffer;
 
-		Microsoft::WRL::ComPtr<ID3D11Buffer> m_constBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> m_constMeshBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_indexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputlayout;

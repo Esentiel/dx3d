@@ -46,14 +46,14 @@ Mesh::~Mesh()
 {
 }
 
-ID3D11Buffer* Mesh::GetConstBuffer() const
+ID3D11Buffer* Mesh::GetConstMeshBuffer() const
 {
-	return m_constBuffer.Get();
+	return m_constMeshBuffer.Get();
 }
 
-ID3D11Buffer** Mesh::GetConstBufferRef()
+ID3D11Buffer** Mesh::GetConstMeshBufferRef()
 {
-	return m_constBuffer.GetAddressOf();
+	return m_constMeshBuffer.GetAddressOf();
 }
 
 ID3D11Buffer** Mesh::GetVertexBufferRef()
@@ -162,20 +162,14 @@ void Mesh::Initialize()
 	m_pixelShaderName = "PixelShader";
 
 	CreateInputLayout();
-	CreateConstantBuffer();
+	CreateConstMeshBuffer();
 	g_D3D->textureMgr->LoadTexture(m_diffuseTexture);
 }
 
-void Mesh::CreateConstantBuffer()
+void Mesh::CreateConstMeshBuffer()
 {
-	// setup constant buffer
-	struct VS_CONSTANT_BUFFER
-	{
-		DirectX::XMFLOAT4X4 WorldViewProj;
-	};
-
-	VS_CONSTANT_BUFFER VsConstData;
-	VsConstData.WorldViewProj = DirectX::XMFLOAT4X4();
+	MeshCB VsConstData;
+	//VsConstData.WorldViewProj = DirectX::XMFLOAT4X4();
 
 	CD3D11_BUFFER_DESC cbDesc(
 		sizeof(VsConstData),
@@ -183,9 +177,9 @@ void Mesh::CreateConstantBuffer()
 	);
 
 	HRESULT hr;
-	if (FAILED(hr = g_D3D->device->CreateBuffer(&cbDesc, NULL, &m_constBuffer)))
+	if (FAILED(hr = g_D3D->device->CreateBuffer(&cbDesc, NULL, &m_constMeshBuffer)))
 	{
-		throw GameException("CreateBuffer() failed", hr);
+		throw GameException("CreateConstMeshBuffer(): CreateBuffer() failed", hr);
 	}
 }
 

@@ -1,6 +1,11 @@
 Texture2D diffuseTexture : register(t0);
 SamplerState simpleSampler : register(s0);
 
+cbuffer PerScene : register(b1)
+{
+	float3 eyePos;
+}
+
 struct PS_INPUT
 {
 	float2 textCoord : TEXCOORD0;

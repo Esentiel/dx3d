@@ -1,6 +1,10 @@
 cbuffer MVPbuffer : register(b0)
 {
 	float4x4 mvp;
+	float diffuseIntensity;
+	float emissiveK;
+	float ambientK;
+	float roughness;
 }
 
 struct VS_IN
