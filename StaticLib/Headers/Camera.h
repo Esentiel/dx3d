@@ -17,6 +17,7 @@ namespace Library
 		virtual const DirectX::XMMATRIX* GetProjection() const;
 		virtual const D3D11_VIEWPORT* GetViewport() const;
 
+		DirectX::XMFLOAT3* GetPosition() const;
 	protected:
 		virtual void UpdateView();
 		virtual void UpdateProjection();
@@ -25,12 +26,13 @@ namespace Library
 		std::unique_ptr<DirectX::XMMATRIX> m_view;
 		std::unique_ptr<DirectX::XMMATRIX> m_projection;
 		std::unique_ptr<D3D11_VIEWPORT> m_viewport;
+		std::unique_ptr<DirectX::XMFLOAT3> m_position;
 
 		float m_fov;
 		int m_width;
 		int m_height;
 		float m_near;
 		float m_far;
-
+		
 	};
 }

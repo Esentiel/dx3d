@@ -11,7 +11,8 @@ Camera::Camera(float fov, int width, int height, float nearPlane, float farPlane
 	m_height(height),
 	m_near(nearPlane),
 	m_far(farPlane),
-	m_viewport(new D3D11_VIEWPORT)
+	m_viewport(new D3D11_VIEWPORT),
+	m_position(new DirectX::XMFLOAT3(.0f, 30.f, 30.0f))
 {
 	UpdateView();
 	UpdateProjection();
@@ -34,7 +35,7 @@ const DirectX::XMMATRIX* Camera::GetProjection() const
 
 void Camera::UpdateView()
 {
-	DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, 30.f, 30.0f, 1.0f);
+	DirectX::XMVECTOR eye = DirectX::XMLoadFloat3(m_position.get());
 	DirectX::XMVECTOR at = DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f);
 	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -64,4 +65,9 @@ void Library::Camera::UpdateViewport()
 	m_viewport->MaxDepth = 1.f;
 
 	g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());
+}
+
+DirectX::XMFLOAT3* Library::Camera::GetPosition() const
+{
+	return m_position.get();
 }

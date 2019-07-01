@@ -119,7 +119,7 @@ namespace Library
 	void Game::Update(const GameTime& gameTime)
 	{
 		auto delta = gameTime.ElapsedGameTime();
-		std::string deltaText = std::to_string(delta);
+		std::string deltaText = std::to_string(1.0f/delta);
 		std::string title("FPS: ");
 		title.insert(title.cend(), deltaText.cbegin(), deltaText.cend());
 		SetWindowTextA(mWindowHandle, title.c_str());

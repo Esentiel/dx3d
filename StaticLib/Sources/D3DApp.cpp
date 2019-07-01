@@ -268,17 +268,17 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	// update mesh cb
 	MeshCB meshCb;
 	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * *(m_camera->GetView()) * *(m_camera->GetProjection()));
-	meshCb.AmbientK = 0.9;
-	meshCb.EmissiveK = 0.5;
-	meshCb.DiffuseIntensity = 0.9;
-	meshCb.Roughness = 0.5;
+	meshCb.AmbientK = 0.9f;
+	meshCb.EmissiveK = 0.5f;
+	meshCb.DiffuseIntensity = 0.9f;
+	meshCb.Roughness = 0.5f;
 
 	m_deviceCtx->UpdateSubresource(mesh->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
 	
 	// update scene CB
-
-	DirectX::XMFLOAT3 eyePos; // todo: Get eyePos from camera
-	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &eyePos, 0, 0);
+	SceneCB sceneCb;
+	sceneCb.EyePos = *(m_camera->GetPosition());
+	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);
 
 	// IA
 	UINT stride = sizeof(Library::Vertex);
@@ -299,6 +299,8 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	m_deviceCtx->PSSetShader(ps, NULL, 0);
 	m_deviceCtx->PSSetSamplers(0, 1, g_sampler.GetAddressOf());
 	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetDiffuseTexture()));
+	m_deviceCtx->PSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
+	m_deviceCtx->PSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());
 
 	// draw call
 	m_deviceCtx->DrawIndexed(mesh->GetIndexCount(), 0, 0);
