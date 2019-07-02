@@ -1,3 +1,10 @@
+struct LightSource
+{
+	float3 lightPos;
+	float3 lightDir;
+	float4 lightPower;
+};
+
 Texture2D diffuseTexture : register(t0);
 SamplerState simpleSampler : register(s0);
 
@@ -13,6 +20,7 @@ cbuffer MVPbuffer : register(b0)
 cbuffer PerScene : register(b1)
 {
 	float3 eyePos;
+    LightSource lightS;
 }
 
 struct PS_INPUT
@@ -24,9 +32,11 @@ struct PS_INPUT
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-	//return float4(input.projPos.x / 1000, input.projPos.y / 1000, input.projPos.z / 1000, 1.f);
-
     float4 color = diffuseTexture.Sample(simpleSampler, input.textCoord) * ambientK;
+
+    float4 diffuseLight = max(dot(normalize(lightS.lightDir), input.normal), 0) * diffuseIntensity;
+
+    color.xyz *= diffuseLight;
 
     return color;
 }

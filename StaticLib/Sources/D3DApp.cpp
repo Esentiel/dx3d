@@ -248,6 +248,14 @@ void D3DApp::Draw(const GameTime &gameTime)
 	// set views to OM stage
 	m_deviceCtx->OMSetRenderTargets(1, m_rtv.GetAddressOf(), m_dsbView.Get());
 
+	// update scene CB
+	SceneCB sceneCb;
+	sceneCb.EyePos = *(m_camera->GetPosition());
+	sceneCb.Light.LightPos = DirectX::XMFLOAT3(-10.0f, 50.f, 10.0f);
+	sceneCb.Light.LightDir = DirectX::XMFLOAT3(1.0f, -0.7f, 1.0f);
+	sceneCb.Light.LightPower = DirectX::XMFLOAT4(0.9f, 0.7f, 0.7f, 0.8f);
+	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);
+
 	// IA
 	for (auto it = m_renderScene->BeginMesh(); it != m_renderScene->EndMesh(); ++it)
 	{
@@ -270,15 +278,10 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * *(m_camera->GetView()) * *(m_camera->GetProjection()));
 	meshCb.AmbientK = 0.9f;
 	meshCb.EmissiveK = 0.5f;
-	meshCb.DiffuseIntensity = 0.9f;
+	meshCb.DiffuseIntensity = 0.95f;
 	meshCb.Roughness = 0.5f;
 
 	m_deviceCtx->UpdateSubresource(mesh->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
-	
-	// update scene CB
-	SceneCB sceneCb;
-	sceneCb.EyePos = *(m_camera->GetPosition());
-	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);
 
 	// IA
 	UINT stride = sizeof(Library::Vertex);
