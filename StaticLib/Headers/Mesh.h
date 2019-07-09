@@ -15,6 +15,7 @@ namespace Library
 	struct MeshCB
 	{
 		DirectX::XMFLOAT4X4 WorldViewProj;
+		DirectX::XMFLOAT4X4 World;
 		float DiffuseIntensity;
 		float EmissiveK;
 		float AmbientK;

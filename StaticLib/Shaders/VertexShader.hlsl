@@ -1,6 +1,7 @@
 cbuffer MVPbuffer : register(b0)
 {
 	float4x4 mvp;
+    float4x4 world;
 	float diffuseIntensity;
 	float emissiveK;
 	float ambientK;
@@ -17,7 +18,7 @@ struct VS_IN
 struct VS_OUT
 {
 	float2 textCoord : TEXCOORD0;
-    float3 normal : NORMAL0;
+    float3 normalW : NORMAL0;
     float3 posW : POSITION0;
 	float4 projPos : SV_POSITION;
 };
@@ -28,8 +29,8 @@ VS_OUT main(VS_IN input)
 	float4 pos= float4(input.position, 1.0);
 	output.projPos = mul(pos, mvp);
 	output.textCoord = float2(input.textCoord.x, 1.0 - input.textCoord.y);
-    output.normal = normalize(input.normal);
-    output.posW = input.position;
+    output.normalW = mul(float4(input.normal, 1.0), world);
+    output.posW = mul(float4(input.position, 1.0), world);
 
 	return output;
 }

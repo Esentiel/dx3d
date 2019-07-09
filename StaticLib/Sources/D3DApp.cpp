@@ -250,9 +250,10 @@ void D3DApp::Draw(const GameTime &gameTime)
 
 	// update scene CB
 	SceneCB sceneCb;
-	sceneCb.EyePos = *(m_camera->GetPosition());
-	sceneCb.Light.LightPos = DirectX::XMFLOAT3(-10.0f, 50.f, 10.0f);
-	sceneCb.Light.LightDir = DirectX::XMFLOAT3(1.0f, -0.7f, 1.0f);
+	sceneCb.Light.LightPos = DirectX::XMFLOAT4(20.0f, 10.f, -10.0f, 1.0f);
+	auto camPos = *(m_camera->GetPosition());
+	sceneCb.EyePos = DirectX::XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.0f);
+	sceneCb.Light.LightDir = DirectX::XMFLOAT4(1.0f, -0.7f, 1.0f, 1.0f);
 	sceneCb.Light.LightPower = DirectX::XMFLOAT4(0.9f, 0.7f, 0.7f, 0.8f);
 	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);
 
@@ -276,6 +277,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	// update mesh cb
 	MeshCB meshCb;
 	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * *(m_camera->GetView()) * *(m_camera->GetProjection()));
+	DirectX::XMStoreFloat4x4(&meshCb.World, *(mesh->GetModelTransform()));
 	meshCb.AmbientK = 0.9f;
 	meshCb.EmissiveK = 0.5f;
 	meshCb.DiffuseIntensity = 0.95f;
