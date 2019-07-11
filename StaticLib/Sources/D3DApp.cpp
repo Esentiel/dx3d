@@ -250,7 +250,7 @@ void D3DApp::Draw(const GameTime &gameTime)
 
 	// update scene CB
 	SceneCB sceneCb;
-	sceneCb.Light.LightPos = DirectX::XMFLOAT4(20.0f, 10.f, -10.0f, 1.0f);
+	sceneCb.Light.LightPos = DirectX::XMFLOAT4(-5.0f, 10.f, 20.0f, 1.0f);
 	auto camPos = *(m_camera->GetPosition());
 	sceneCb.EyePos = DirectX::XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.0f);
 	sceneCb.Light.LightDir = DirectX::XMFLOAT4(1.0f, -0.7f, 1.0f, 1.0f);
