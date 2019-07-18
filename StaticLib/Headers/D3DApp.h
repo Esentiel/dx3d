@@ -32,7 +32,6 @@ namespace Library
 
 		void Initialize();
 		void Draw(const GameTime &gameTime);
-
 	private:
 		void DrawMesh(Mesh* mesh);
 

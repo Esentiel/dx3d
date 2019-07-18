@@ -18,6 +18,8 @@ namespace Library
 		virtual const D3D11_VIEWPORT* GetViewport() const;
 
 		DirectX::XMFLOAT3* GetPosition() const;
+		void UpdatePosition(float x, float y, float z);
+
 	protected:
 		virtual void UpdateView();
 		virtual void UpdateProjection();

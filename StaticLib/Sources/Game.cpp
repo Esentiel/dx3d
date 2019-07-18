@@ -3,6 +3,7 @@
 #include "Mesh.h"
 #include "FileManager.h"
 #include "RenderScene.h"
+#include "Camera.h"
 
 namespace Library
 {
@@ -166,6 +167,40 @@ namespace Library
 		case WM_DESTROY:
 			PostQuitMessage(0);
 			return 0;
+		case WM_KEYDOWN:
+		{
+			//bool alt = (::GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+
+			switch (wParam)
+			{
+			case 'A':
+			case VK_LEFT:
+				g_D3D->camera->UpdatePosition(-1, 0, 0);
+				break;
+			case 'D':
+			case VK_RIGHT:
+				g_D3D->camera->UpdatePosition(1, 0, 0);
+				break;
+			case 'W':
+			case VK_UP:
+				g_D3D->camera->UpdatePosition(0, 0, -1);
+				break;
+			case 'S':
+			case VK_DOWN:
+				g_D3D->camera->UpdatePosition(0, 0, 1);
+				break;
+			case 'Q':
+				g_D3D->camera->UpdatePosition(0, 1, 0);
+				break;
+			case 'E':
+				g_D3D->camera->UpdatePosition(0, -1, 0);
+				break;
+			}
+			break;
+		}
+		case WM_RBUTTONDOWN:
+			int i= 10;
+			break;
 		}
 
 		return DefWindowProc(windowHandle, message, wParam, lParam);

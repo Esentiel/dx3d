@@ -71,3 +71,12 @@ DirectX::XMFLOAT3* Library::Camera::GetPosition() const
 {
 	return m_position.get();
 }
+
+void Library::Camera::UpdatePosition(float x, float y, float z)
+{
+	m_position->x +=x;
+	m_position->y +=y;
+	m_position->z +=z;
+	UpdateView();
+}
+
