@@ -1,4 +1,7 @@
 #include "stdafx.h"
+
+#include <Windowsx.h>
+
 #include "Game.h"
 #include "Mesh.h"
 #include "FileManager.h"
@@ -18,6 +21,8 @@ namespace Library
 		mScreenWidth(DefaultScreenWidth), 
 		mScreenHeight(DefaultScreenHeight)
 	{
+		assert(m_game == nullptr);
+		m_game = this;
 	}
 
 	Game::~Game()
@@ -131,6 +136,29 @@ namespace Library
 		m_d3dApp->Draw(gameTime);
 	}
 
+
+	void Game::OnMouseButtonDown(int x, int y)
+	{
+		m_mouseLastX = x;
+		m_mouseLastY = y;
+	}
+
+
+	void Game::OnMouseMoved(WPARAM btnState, int x, int y)
+	{
+		if ((btnState & MK_RBUTTON) != 0)
+		{
+			float dx = DirectX::XMConvertToRadians(0.25f*static_cast<float>(x - m_mouseLastX));
+			float dy = DirectX::XMConvertToRadians(0.25f*static_cast<float>(y - m_mouseLastY));
+
+			g_D3D->camera->Pitch(dy);
+			g_D3D->camera->RotateY(dx);
+		}
+
+		m_mouseLastX = x;
+		m_mouseLastY = y;
+	}
+
 	void Game::InitializeWindow()
 	{
 		ZeroMemory(&mWindow, sizeof(mWindow));
@@ -160,6 +188,9 @@ namespace Library
 		UnregisterClass(mWindowClass.c_str(), mWindow.hInstance);
 	}
 
+
+	Library::Game* Game::m_game = nullptr;
+
 	LRESULT WINAPI Game::WndProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		switch (message)
@@ -183,11 +214,11 @@ namespace Library
 				break;
 			case 'W':
 			case VK_UP:
-				g_D3D->camera->UpdatePosition(0, 0, -1);
+				g_D3D->camera->UpdatePosition(0, 0, 1);
 				break;
 			case 'S':
 			case VK_DOWN:
-				g_D3D->camera->UpdatePosition(0, 0, 1);
+				g_D3D->camera->UpdatePosition(0, 0, -1);
 				break;
 			case 'Q':
 				g_D3D->camera->UpdatePosition(0, 1, 0);
@@ -199,9 +230,14 @@ namespace Library
 			break;
 		}
 		case WM_RBUTTONDOWN:
-			int i= 10;
+			Game::GetGame()->OnMouseButtonDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			break;
+		case WM_MOUSEMOVE:
+			Game::GetGame()->OnMouseMoved(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 			break;
 		}
+		if (g_D3D && g_D3D->camera)
+			g_D3D->camera->UpdateViewMatrix();
 
 		return DefWindowProc(windowHandle, message, wParam, lParam);
 	}

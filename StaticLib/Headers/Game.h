@@ -16,6 +16,8 @@ namespace Library
 		Game(HINSTANCE instance, const std::wstring& windowClass, const std::wstring& windowTitle, int showCommand);
 		~Game();
 
+		static Game* GetGame() { return m_game; }
+
 		HINSTANCE Instance() const;
 		HWND WindowHandle() const;
 		const WNDCLASSEX& Window() const;
@@ -30,9 +32,13 @@ namespace Library
 		virtual void Update(const GameTime& gameTime);
 		virtual void Draw(const GameTime& gameTime);
 
+		void OnMouseButtonDown(int x, int y);
+		void OnMouseMoved(WPARAM btnState, int x, int y);
 	protected:
 		virtual void InitializeWindow();
 		virtual void Shutdown();
+
+		static Game* m_game;
 
 		static const UINT DefaultScreenWidth;
 		static const UINT DefaultScreenHeight;
@@ -52,6 +58,9 @@ namespace Library
 		GameTime mGameTime;
 
 		std::unique_ptr<D3DApp> m_d3dApp;
+
+		int m_mouseLastX;
+		int m_mouseLastY;
 
 	private:
 		Game(const Game& rhs);
