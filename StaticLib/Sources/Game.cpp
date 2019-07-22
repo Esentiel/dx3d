@@ -129,6 +129,10 @@ namespace Library
 		std::string title("FPS: ");
 		title.insert(title.cend(), deltaText.cbegin(), deltaText.cend());
 		SetWindowTextA(mWindowHandle, title.c_str());
+
+		//// camera
+		//if (g_D3D && g_D3D->camera)
+		//	g_D3D->camera->UpdateViewMatrix();
 	}
 
 	void Game::Draw(const GameTime& gameTime)
@@ -151,8 +155,8 @@ namespace Library
 			float dx = DirectX::XMConvertToRadians(0.25f*static_cast<float>(x - m_mouseLastX));
 			float dy = DirectX::XMConvertToRadians(0.25f*static_cast<float>(y - m_mouseLastY));
 
-			g_D3D->camera->Pitch(dy);
-			g_D3D->camera->RotateY(dx);
+			g_D3D->camera->Pitch(-dy);
+			g_D3D->camera->RotateY(-dx);
 		}
 
 		m_mouseLastX = x;
@@ -206,25 +210,25 @@ namespace Library
 			{
 			case 'A':
 			case VK_LEFT:
-				g_D3D->camera->UpdatePosition(-1, 0, 0);
+				g_D3D->camera->Move(Camera::MoveDir::Left);
 				break;
 			case 'D':
 			case VK_RIGHT:
-				g_D3D->camera->UpdatePosition(1, 0, 0);
+				g_D3D->camera->Move(Camera::MoveDir::Right);
 				break;
 			case 'W':
 			case VK_UP:
-				g_D3D->camera->UpdatePosition(0, 0, 1);
+				g_D3D->camera->Move(Camera::MoveDir::Forward);
 				break;
 			case 'S':
 			case VK_DOWN:
-				g_D3D->camera->UpdatePosition(0, 0, -1);
+				g_D3D->camera->Move(Camera::MoveDir::Backward);
 				break;
 			case 'Q':
-				g_D3D->camera->UpdatePosition(0, 1, 0);
+				g_D3D->camera->Move(Camera::MoveDir::Down);
 				break;
 			case 'E':
-				g_D3D->camera->UpdatePosition(0, -1, 0);
+				g_D3D->camera->Move(Camera::MoveDir::Up);
 				break;
 			}
 			break;
@@ -236,8 +240,6 @@ namespace Library
 			Game::GetGame()->OnMouseMoved(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 			break;
 		}
-		if (g_D3D && g_D3D->camera)
-			g_D3D->camera->UpdateViewMatrix();
 
 		return DefWindowProc(windowHandle, message, wParam, lParam);
 	}

@@ -10,6 +10,15 @@ namespace Library
 	class Camera
 	{
 	public:
+		enum class MoveDir 
+		{ 
+			Forward, 
+			Backward, 
+			Right, 
+			Left, 
+			Up, 
+			Down 
+		};
 		Camera(float fov, int width, int height, float nearPlane, float farPlane);
 		virtual ~Camera();
 
@@ -17,8 +26,8 @@ namespace Library
 		virtual const DirectX::XMMATRIX* GetProjection() const;
 		virtual const D3D11_VIEWPORT* GetViewport() const;
 
-		DirectX::XMFLOAT3* GetPosition() const;
-		void UpdatePosition(float x, float y, float z);
+		DirectX::XMVECTOR* GetPosition() const;
+		void Move(MoveDir dir);
 		void Pitch(float angle);
 		void RotateY(float angle);
 		void UpdateViewMatrix();
@@ -26,14 +35,16 @@ namespace Library
 		virtual void UpdateProjection();
 		virtual void UpdateViewport();
 
-		DirectX::XMFLOAT4X4 m_view;
-		std::unique_ptr<DirectX::XMMATRIX> m_viewM;
+		std::unique_ptr<DirectX::XMMATRIX> m_view;
 		std::unique_ptr<DirectX::XMMATRIX> m_projection;
+
 		std::unique_ptr<D3D11_VIEWPORT> m_viewport;
-		std::unique_ptr<DirectX::XMFLOAT3> m_position;
-		std::unique_ptr<DirectX::XMFLOAT3> m_look;
-		std::unique_ptr<DirectX::XMFLOAT3> m_up;
-		std::unique_ptr<DirectX::XMFLOAT3> m_right;
+
+		std::unique_ptr<DirectX::XMVECTOR> m_positionV;
+
+		std::unique_ptr<DirectX::XMVECTOR> m_lookV;
+		std::unique_ptr<DirectX::XMVECTOR> m_upV;
+		std::unique_ptr<DirectX::XMVECTOR> m_rightV;
 
 		float m_fov;
 		int m_width;
