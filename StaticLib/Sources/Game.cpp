@@ -130,9 +130,9 @@ namespace Library
 		title.insert(title.cend(), deltaText.cbegin(), deltaText.cend());
 		SetWindowTextA(mWindowHandle, title.c_str());
 
-		//// camera
-		//if (g_D3D && g_D3D->camera)
-		//	g_D3D->camera->UpdateViewMatrix();
+		// camera
+		if (g_D3D && g_D3D->camera)
+			g_D3D->camera->UpdateViewMatrix();
 	}
 
 	void Game::Draw(const GameTime& gameTime)
@@ -155,7 +155,7 @@ namespace Library
 			float dx = DirectX::XMConvertToRadians(0.25f*static_cast<float>(x - m_mouseLastX));
 			float dy = DirectX::XMConvertToRadians(0.25f*static_cast<float>(y - m_mouseLastY));
 
-			g_D3D->camera->Pitch(-dy);
+			g_D3D->camera->Pitch(dy);
 			g_D3D->camera->RotateY(-dx);
 		}
 

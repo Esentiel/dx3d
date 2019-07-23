@@ -40,11 +40,11 @@ namespace Library
 
 		std::unique_ptr<D3D11_VIEWPORT> m_viewport;
 
-		std::unique_ptr<DirectX::XMVECTOR> m_positionV;
+		std::unique_ptr<DirectX::XMVECTOR> m_position;
 
-		std::unique_ptr<DirectX::XMVECTOR> m_lookV;
-		std::unique_ptr<DirectX::XMVECTOR> m_upV;
-		std::unique_ptr<DirectX::XMVECTOR> m_rightV;
+		std::unique_ptr<DirectX::XMVECTOR> m_look;
+		std::unique_ptr<DirectX::XMVECTOR> m_up;
+		std::unique_ptr<DirectX::XMVECTOR> m_right;
 
 		float m_fov;
 		int m_width;
