@@ -1,111 +1,3 @@
-<<<<<<< HEAD
-#include "stdafx.h"
-
-#include <Windowsx.h>
-
-#include "Game.h"
-#include "Mesh.h"
-#include "FileManager.h"
-#include "RenderScene.h"
-#include "Camera.h"
-
-namespace Library
-{
-	const UINT Game::DefaultScreenWidth = 1280;
-	const UINT Game::DefaultScreenHeight = 960;
-
-	Game::Game(HINSTANCE instance, const std::wstring& windowClass, const std::wstring& windowTitle, int showCommand)
-		: mInstance(instance), 
-		mWindowClass(windowClass), 
-		mWindowTitle(windowTitle), 
-		mShowCommand(showCommand),
-		mScreenWidth(DefaultScreenWidth), 
-		mScreenHeight(DefaultScreenHeight)
-	{
-		assert(m_game == nullptr);
-		m_game = this;
-	}
-
-	Game::~Game()
-	{
-	}
-
-	HINSTANCE Game::Instance() const
-	{
-		return mInstance;
-	}
-
-	HWND Game::WindowHandle() const
-	{
-		return mWindowHandle;
-	}
-
-	const WNDCLASSEX& Game::Window() const
-	{
-		return mWindow;
-	}
-
-	const std::wstring& Game::WindowClass() const
-	{
-		return mWindowClass;
-	}
-
-	const std::wstring& Game::WindowTitle() const
-	{
-		return mWindowTitle;
-	}
-
-	int Game::ScreenWidth() const
-	{
-		return mScreenWidth;
-	}
-
-	int Game::ScreenHeight() const
-	{
-		return mScreenHeight;
-	}
-
-	void Game::Run()
-	{
-		InitializeWindow();
-		Initialize();
-
-		MSG message;
-		ZeroMemory(&message, sizeof(message));
-
-		mGameClock.Reset();
-
-		while (message.message != WM_QUIT)
-		{
-			if (PeekMessage(&message, nullptr, 0, 0, PM_REMOVE))
-			{
-				TranslateMessage(&message);
-				DispatchMessage(&message);
-			}
-			else
-			{
-				mGameClock.UpdateGameTime(mGameTime);
-				Update(mGameTime);
-				Draw(mGameTime);
-			}
-		}
-
-		Shutdown();
-	}
-
-	void Game::Exit()
-	{
-		PostQuitMessage(0);
-	}
-
-	void Game::Initialize()
-	{
-		m_d3dApp.reset(new D3DApp(mWindowHandle, mScreenWidth, mScreenHeight));
-		m_d3dApp->Initialize();
-
-		// create test meshes
-		std::string filePath = "C:\\Users\\aburs.DESKTOP-DI240N9\\Documents\\box.fbx";
-=======
 #include "stdafx.h"
 
 #include <Windowsx.h>
@@ -212,7 +104,7 @@ namespace Library
 
 		// create test meshes
 		std::string filePath = "../Content/models/Arissa.fbx";
->>>>>>> 0b25efb1998418c9b6b1b8cc4f64685fb169e376
+
 		uint32_t numMesh = 0;
 		uint32_t meshID = 0;
 		do
@@ -237,7 +129,7 @@ namespace Library
 		do
 		{
 			std::unique_ptr<Mesh> mesh(new Mesh);
-			bool res = g_D3D->fileMgr->ReamModelFromFBX(filePath.c_str(), meshID, mesh.get(), &numMesh);
+			bool res = g_D3D->fileMgr->ReadModelFromFBX(filePath.c_str(), meshID, mesh.get(), &numMesh);
 
 			if (res)
 			{
