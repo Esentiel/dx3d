@@ -96,8 +96,8 @@ void D3DApp::Initialize()
 	swapChainDesc.SampleDesc.Count = 4;
 	swapChainDesc.SampleDesc.Quality = numQlvls - 1;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.BufferCount = 1;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+	swapChainDesc.BufferCount = 3;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_SEQUENTIAL;
 
 	IDXGIDevice* dxgiDevice = nullptr;
 	if (FAILED(hr = m_device->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**>(&dxgiDevice))))
@@ -123,16 +123,57 @@ void D3DApp::Initialize()
 	}
 
 	// create RTV
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
-	if (FAILED(hr = m_swapChain->GetBuffer(0, IID_PPV_ARGS(backbuffer.GetAddressOf()))))
+	m_backBuffers.resize(1);
+	if (FAILED(hr = m_swapChain->GetBuffer(0, IID_PPV_ARGS(m_backBuffers.at(0).GetAddressOf()))))
 	{
 		throw GameException("GetBuffer() failed", hr);
 	}
-
-	if (FAILED(hr = m_device->CreateRenderTargetView(backbuffer.Get(), NULL, m_rtv.GetAddressOf())))
+	m_rtvs.resize(3);
+	m_currentRtv = 0;
+	if (FAILED(hr = m_device->CreateRenderTargetView(m_backBuffers.at(0).Get(), NULL, m_rtvs.at(0).GetAddressOf())))
 	{
 		throw GameException("CreateRenderTargetView() failed", hr);
 	}
+
+	// 2
+	D3D11_TEXTURE2D_DESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.Width = m_width;
+	desc.Height = m_height;
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.SampleDesc.Count = 4;
+	desc.SampleDesc.Quality = numQlvls - 1;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> pTexture = NULL;
+	if (FAILED(hr = m_device->CreateTexture2D(&desc, NULL, &pTexture)))
+	{
+		throw GameException("CreateTexture2D() failed for 2nd RTV", hr);
+	}
+
+	m_backBuffers.push_back(pTexture);
+	pTexture.Reset();
+
+	if (FAILED(hr = m_device->CreateRenderTargetView(m_backBuffers.at(1).Get(), NULL, m_rtvs.at(1).GetAddressOf())))
+	{
+		throw GameException("CreateRenderTargetView() failed for 2nd RTV", hr);
+	}
+
+	// 3
+	if (FAILED(hr = m_device->CreateTexture2D(&desc, NULL, &pTexture)))
+	{
+		throw GameException("CreateTexture2D() failed for 3rd RTV", hr);
+	}
+
+	m_backBuffers.push_back(pTexture);
+	if (FAILED(hr = m_device->CreateRenderTargetView(m_backBuffers.at(2).Get(), NULL, m_rtvs.at(2).GetAddressOf())))
+	{
+		throw GameException("CreateRenderTargetView() failed for 3rd RTV", hr);
+	}
+
 
 	// create DSB
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> dsb;
@@ -243,11 +284,11 @@ void D3DApp::Draw(const GameTime &gameTime)
 {
 	// clear rt
 	const DirectX::XMVECTORF32 BackgroundColor = { 0.392f,0.584f, 0.929f, 1.0f };
-	m_deviceCtx->ClearRenderTargetView(m_rtv.Get(), reinterpret_cast<const float*>(&BackgroundColor));
+	m_deviceCtx->ClearRenderTargetView(m_rtvs.at(0).Get(), reinterpret_cast<const float*>(&BackgroundColor));
 	m_deviceCtx->ClearDepthStencilView(m_dsbView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	// set views to OM stage
-	m_deviceCtx->OMSetRenderTargets(1, m_rtv.GetAddressOf(), m_dsbView.Get());
+	m_deviceCtx->OMSetRenderTargets(1, m_rtvs.at(0).GetAddressOf(), m_dsbView.Get());
 
 	// update scene CB
 	SceneCB sceneCb;

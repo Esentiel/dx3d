@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include <wrl.h>
 
 #include "GameTime.h"
@@ -13,6 +14,7 @@ struct IDXGISwapChain1;
 struct ID3D11RenderTargetView;
 struct ID3D11DepthStencilView;
 struct ID3D11RasterizerState;
+struct ID3D11Texture2D;
 
 namespace Library
 {
@@ -44,9 +46,11 @@ namespace Library
 		Microsoft::WRL::ComPtr<ID3D11Device> m_device;
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_deviceCtx;
 		Microsoft::WRL::ComPtr<IDXGISwapChain1> m_swapChain;
-		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_rtv;
+		std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> m_rtvs;
+		int m_currentRtv;
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_dsbView;
 		
+		std::vector<Microsoft::WRL::ComPtr<ID3D11Texture2D>> m_backBuffers;
 
 		Microsoft::WRL::ComPtr <ID3D11RasterizerState> m_rasterState;
 
