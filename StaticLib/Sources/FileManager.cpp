@@ -177,7 +177,7 @@ bool FileManager::ReamModelFromFBX(const char * inFilePath, uint32_t id, Mesh* o
 			}
 
 			// todo: hard-code for a better look
-			outMesh->Scale(DirectX::XMFLOAT3(.2f, 0.2f, 0.2f));
+			//outMesh->Scale(DirectX::XMFLOAT3(.1f, 0.1f, 0.1f));
 		}
 
 		return true;

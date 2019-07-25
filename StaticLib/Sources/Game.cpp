@@ -115,6 +115,26 @@ namespace Library
 			{
 				mesh->Initialize();
 				mesh->LoadVertexDataBuffer();
+				mesh->Scale(DirectX::XMFLOAT3(0.2f, 0.2f, 0.2f));
+				g_D3D->renderScene->AddMesh(std::move(mesh));
+			}
+			meshID++;
+		} while (meshID < numMesh);
+		
+		// box
+		filePath = "../Content/models/box_ddc_true.fbx";
+		numMesh = 0;
+		meshID = 0;
+		do
+		{
+			std::unique_ptr<Mesh> mesh(new Mesh);
+			bool res = g_D3D->fileMgr->ReamModelFromFBX(filePath.c_str(), meshID, mesh.get(), &numMesh);
+
+			if (res)
+			{
+				mesh->Initialize();
+				mesh->LoadVertexDataBuffer();
+				mesh->Scale(DirectX::XMFLOAT3(2.f, 2.f, 2.f));
 				g_D3D->renderScene->AddMesh(std::move(mesh));
 			}
 			meshID++;
