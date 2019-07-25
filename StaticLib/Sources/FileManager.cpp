@@ -52,7 +52,7 @@ FileManager::~FileManager()
 {
 }
 
-bool FileManager::ReamModelFromFBX(const char * inFilePath, uint32_t id, Mesh* outMesh, uint32_t *outMeshNum)
+bool FileManager::ReadModelFromFBX(const char * inFilePath, uint32_t id, Mesh* outMesh, uint32_t *outMeshNum)
 {
 	// fetch data
 	const aiScene* scene = m_modelImporter->ReadFile(inFilePath,

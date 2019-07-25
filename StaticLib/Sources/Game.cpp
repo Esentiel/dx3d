@@ -103,13 +103,13 @@ namespace Library
 		m_d3dApp->Initialize();
 
 		// create test meshes
-		std::string filePath = "../Content/models/Arissa.fbx";
+		std::string filePath = "C:\\Users\\aburs.DESKTOP-DI240N9\\Documents\\box.fbx";
 		uint32_t numMesh = 0;
 		uint32_t meshID = 0;
 		do
 		{
 			std::unique_ptr<Mesh> mesh(new Mesh);
-			bool res = g_D3D->fileMgr->ReamModelFromFBX(filePath.c_str(), meshID, mesh.get(), &numMesh);
+			bool res = g_D3D->fileMgr->ReadModelFromFBX(filePath.c_str(), meshID, mesh.get(), &numMesh);
 
 			if (res)
 			{

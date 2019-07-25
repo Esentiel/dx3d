@@ -19,7 +19,7 @@ namespace Library
 		FileManager();
 		~FileManager();
 
-		bool ReamModelFromFBX(const char * inFilePath, uint32_t id, Mesh* outMesh, uint32_t *outMeshNum);
+		bool ReadModelFromFBX(const char * inFilePath, uint32_t id, Mesh* outMesh, uint32_t *outMeshNum);
 	private:
 		std::unique_ptr<Assimp::Importer> m_modelImporter;
 
