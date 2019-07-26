@@ -29,7 +29,7 @@ VS_OUT main(VS_IN input)
 	float4 pos= float4(input.position, 1.0);
 	output.projPos = mul(pos, mvp);
 	output.textCoord = float2(input.textCoord.x, 1.0 - input.textCoord.y);
-    output.normalW = mul(float4(input.normal, 1.0), world);
+    output.normalW = mul(float4(input.normal, 0.0), world);
     output.posW = mul(float4(input.position, 1.0), world);
 
 	return output;

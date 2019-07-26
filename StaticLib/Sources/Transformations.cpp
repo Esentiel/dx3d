@@ -24,16 +24,16 @@ DirectX::XMMATRIX* Transformations::GetModel()
 	DirectX::XMMATRIX scale = DirectX::XMMatrixScaling(m_scale->x, m_scale->y, m_scale->z);
 	DirectX::XMMATRIX rotation = DirectX::XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(m_rotation.get()));
 
-	*m_model = translation * rotation * scale;
+	*m_model = scale * rotation * translation;
 
 	return m_model.get();
 }
 
 void Transformations::Move(const DirectX::XMFLOAT3 &direction)
 {
-	m_position->x = direction.x;
-	m_position->y = direction.y;
-	m_position->z = direction.z;
+	m_position->x += direction.x;
+	m_position->y += direction.y;
+	m_position->z += direction.z;
 }
 
 void Transformations::Rotate(const DirectX::XMFLOAT3 &rotation)

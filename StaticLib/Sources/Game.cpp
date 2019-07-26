@@ -136,6 +136,7 @@ namespace Library
 				mesh->Initialize();
 				mesh->LoadVertexDataBuffer();
 				mesh->Scale(DirectX::XMFLOAT3(2.f, 2.f, 2.f));
+				mesh->Move(DirectX::XMFLOAT3(1.f, -12.f, 1.f));
 				g_D3D->renderScene->AddMesh(std::move(mesh));
 			}
 			meshID++;
