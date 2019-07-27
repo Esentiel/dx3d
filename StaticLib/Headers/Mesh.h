@@ -20,6 +20,7 @@ namespace Library
 		float EmissiveK;
 		float AmbientK;
 		float Roughness;
+		int CalcLight;
 	};
 
 	struct Vertex  // todo: 2 places to edit vertex(
@@ -70,6 +71,8 @@ namespace Library
 		//
 
 		void Initialize();
+		bool IsCalcLight() const;
+		void SetCalcLight(bool flag);
 	private:
 		void CreateInputLayout();
 		void CreateConstMeshBuffer();
@@ -98,5 +101,6 @@ namespace Library
 		int m_indexCnt;
 
 		bool m_dirtyVertex;
+		bool m_calcLight;
 	};
 }

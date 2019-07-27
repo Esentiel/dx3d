@@ -325,6 +325,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	meshCb.EmissiveK = 0.5f;
 	meshCb.DiffuseIntensity = 0.95f;
 	meshCb.Roughness = 0.5f;
+	meshCb.CalcLight = (int)mesh->IsCalcLight();
 
 	m_deviceCtx->UpdateSubresource(mesh->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
 

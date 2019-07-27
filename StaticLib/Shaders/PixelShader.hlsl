@@ -16,6 +16,7 @@ cbuffer MVPbuffer : register(b0)
     float emissiveK;
     float ambientK;
     float roughness;
+    int calcLight;
 }
 
 cbuffer PerScene : register(b1)
@@ -34,6 +35,11 @@ struct PS_INPUT
 float4 main(PS_INPUT input) : SV_TARGET
 {
     float4 color = diffuseTexture.Sample(simpleSampler, input.textCoord) * float4(0.8, 0.8, 0.8, 0.8);
+
+    if (!calcLight)
+    {
+        return color;
+    }
 
     float4 diffuseLight = max(dot(normalize(lightS.lightPos - input.posW), normalize(input.normalW)), 0) * float4(0.8, 0.8, 0.8, 0.8);
 

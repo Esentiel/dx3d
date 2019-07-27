@@ -38,7 +38,8 @@ void Mesh::CreateInputLayout()
 
 Mesh::Mesh() :
 	m_transformations(std::make_unique<Transformations>()),
-	m_dirtyVertex(true)
+	m_dirtyVertex(true),
+	m_calcLight(true)
 {
 }
 
@@ -169,10 +170,11 @@ void Mesh::Initialize()
 void Mesh::CreateConstMeshBuffer()
 {
 	MeshCB VsConstData;
-	//VsConstData.WorldViewProj = DirectX::XMFLOAT4X4();
+
+	auto size = std::ceil(sizeof(VsConstData) / 16.f) * 16;
 
 	CD3D11_BUFFER_DESC cbDesc(
-		sizeof(VsConstData),
+		size,
 		D3D11_BIND_CONSTANT_BUFFER
 	);
 
@@ -243,4 +245,14 @@ void Mesh::LoadVertexDataBuffer()
 
 		m_dirtyVertex = false;
 	}
+}
+
+bool Library::Mesh::IsCalcLight() const
+{
+	return m_calcLight;
+}
+
+void Library::Mesh::SetCalcLight(bool flag)
+{
+	m_calcLight = flag;
 }
