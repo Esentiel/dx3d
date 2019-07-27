@@ -142,6 +142,25 @@ namespace Library
 			meshID++;
 		} while (meshID < numMesh);
 
+		// sun
+		filePath = "../Content/models/sun.fbx";
+		numMesh = 0;
+		meshID = 0;
+		do
+		{
+			std::unique_ptr<Mesh> mesh(new Mesh);
+			bool res = g_D3D->fileMgr->ReadModelFromFBX(filePath.c_str(), meshID, mesh.get(), &numMesh);
+
+			if (res)
+			{
+				mesh->Initialize();
+				mesh->LoadVertexDataBuffer();
+				mesh->Scale(DirectX::XMFLOAT3(1.f, 1.f, 1.f));
+				mesh->Move(DirectX::XMFLOAT3(-15.0f, 30.f, 20.0f));
+				g_D3D->renderScene->AddMesh(std::move(mesh));
+			}
+			meshID++;
+		} while (meshID < numMesh);
 	}
 
 	void Game::Update(const GameTime& gameTime)
