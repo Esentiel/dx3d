@@ -171,7 +171,7 @@ void Mesh::CreateConstMeshBuffer()
 {
 	MeshCB VsConstData;
 
-	auto size = std::ceil(sizeof(VsConstData) / 16.f) * 16;
+	auto size = (UINT)std::ceil(sizeof(VsConstData) / 16.f) * 16;
 
 	CD3D11_BUFFER_DESC cbDesc(
 		size,

@@ -123,6 +123,8 @@ ID3D11DepthStencilView* PostProcessor::GetOffscreenDsb()
 
 void Library::PostProcessor::Draw()
 {
+	g_D3D->deviceCtx->RSSetState(m_rasterState.Get());
+
 	// IA
 	UINT stride = sizeof(VertexPP);
 	UINT offset = 0;
@@ -234,4 +236,21 @@ void Library::PostProcessor::CreateIndexBuffer()
 	{
 		throw GameException("PostProcessor::CreateIndexBuffer(): CreateBuffer() failed", hr);
 	}
+}
+
+void Library::PostProcessor::CreateRasterState()
+{
+	// rasterizer
+	D3D11_RASTERIZER_DESC rasterizerState;
+	rasterizerState.FillMode = D3D11_FILL_SOLID;
+	rasterizerState.CullMode = D3D11_CULL_BACK;
+	rasterizerState.FrontCounterClockwise = false;
+	rasterizerState.DepthBias = false;
+	rasterizerState.DepthBiasClamp = 0;
+	rasterizerState.SlopeScaledDepthBias = 0;
+	rasterizerState.DepthClipEnable = true;
+	rasterizerState.ScissorEnable = true;
+	rasterizerState.MultisampleEnable = false;
+	rasterizerState.AntialiasedLineEnable = false;
+	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }

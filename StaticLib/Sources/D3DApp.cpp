@@ -217,13 +217,11 @@ void D3DApp::Initialize()
 	rasterizerState.DepthBias = false;
 	rasterizerState.DepthBiasClamp = 0;
 	rasterizerState.SlopeScaledDepthBias = 0;
-	rasterizerState.DepthClipEnable = false;
-	rasterizerState.ScissorEnable = false;
+	rasterizerState.DepthClipEnable = true;
+	rasterizerState.ScissorEnable = true;
 	rasterizerState.MultisampleEnable = false;
 	rasterizerState.AntialiasedLineEnable = false;
 	m_device->CreateRasterizerState(&rasterizerState, &m_rasterState);
-
-	m_deviceCtx->RSSetState(m_rasterState.Get());
 
 	// global
 	m_globalApp.reset(new GD3DApp);
@@ -274,6 +272,8 @@ void D3DApp::Draw(const GameTime &gameTime)
 	sceneCb.Light.LightDir = DirectX::XMFLOAT4(1.0f, -0.7f, 1.0f, 1.0f);
 	sceneCb.Light.LightPower = DirectX::XMFLOAT4(0.9f, 0.7f, 0.7f, 0.8f);
 	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);
+
+	m_deviceCtx->RSSetState(m_rasterState.Get());
 
 	// meshes
 	for (auto it = m_renderScene->BeginMesh(); it != m_renderScene->EndMesh(); ++it)

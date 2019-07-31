@@ -8,6 +8,7 @@ struct ID3D11RenderTargetView;
 struct ID3D11DepthStencilView;
 struct ID3D11InputLayout;
 struct ID3D11Buffer;
+struct ID3D11RasterizerState;
 
 namespace Library
 {
@@ -31,6 +32,9 @@ namespace Library
 		void CreateInputLayout();
 		void CreateVertexBuffer();
 		void CreateIndexBuffer();
+		void CreateRasterState();
+		
+		Microsoft::WRL::ComPtr <ID3D11RasterizerState> m_rasterState;
 
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderRes;
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_offscreenRtv;
