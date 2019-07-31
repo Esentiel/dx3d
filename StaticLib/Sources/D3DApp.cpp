@@ -16,12 +16,13 @@
 #include "Mesh.h"
 #include "Camera.h"
 #include "GameException.h"
+#include "PostProcessor.h"
 
 using namespace Library;
 
-static Microsoft::WRL::ComPtr<ID3D11SamplerState> g_sampler;
+static Microsoft::WRL::ComPtr<ID3D11SamplerState> s_sampler;
 
-void CreateSampler()
+void CreateSampler(ID3D11SamplerState **sampler)
 {
 	// Create a sampler state for texture sampling in the pixel shader
 	
@@ -43,7 +44,7 @@ void CreateSampler()
 	samplerDesc.MaxLOD = FLT_MAX;
 
 	HRESULT hr;
-	if (FAILED(hr = g_D3D->device->CreateSamplerState(&samplerDesc, g_sampler.GetAddressOf())))
+	if (FAILED(hr = g_D3D->device->CreateSamplerState(&samplerDesc, sampler)))
 	{
 		throw GameException("CreateSamplerState() failed", hr);
 	}
@@ -216,8 +217,8 @@ void D3DApp::Initialize()
 	rasterizerState.DepthBias = false;
 	rasterizerState.DepthBiasClamp = 0;
 	rasterizerState.SlopeScaledDepthBias = 0;
-	rasterizerState.DepthClipEnable = true;
-	rasterizerState.ScissorEnable = true;
+	rasterizerState.DepthClipEnable = false;
+	rasterizerState.ScissorEnable = false;
 	rasterizerState.MultisampleEnable = false;
 	rasterizerState.AntialiasedLineEnable = false;
 	m_device->CreateRasterizerState(&rasterizerState, &m_rasterState);
@@ -251,44 +252,18 @@ void D3DApp::Initialize()
 	// scene
 	m_renderScene.reset(new RenderScene);
 	g_D3D->renderScene = m_renderScene.get();
-	CreateSampler();
-	//// todo: Mocking meshes
-	//std::unique_ptr<Vertex[]> vertices(new Vertex[8]
-	//	{
-	//		Vertex(DirectX::XMFLOAT3(-1.0f, -1.0f, -1.0f), DirectX::XMFLOAT2(0.25f, 2.f / 3)),
-	//		Vertex(DirectX::XMFLOAT3(-1.0f, 1.0f, -1.0f), DirectX::XMFLOAT2(0.25f, 1.f / 3)),
-	//		Vertex(DirectX::XMFLOAT3(1.0f, 1.0f, -1.0f), DirectX::XMFLOAT2(0.5f, 1.f / 3)),
-	//		Vertex(DirectX::XMFLOAT3(1.0f, -1.0f, -1.0f), DirectX::XMFLOAT2(0.5f, 2.f / 3)),
-	//		Vertex(DirectX::XMFLOAT3(-1.0f, -1.0f, 1.0f), DirectX::XMFLOAT2(0.f, 2.f / 3)),
-	//		Vertex(DirectX::XMFLOAT3(-1.0f, 1.0f, 1.0f), DirectX::XMFLOAT2(0.f, 1.f / 3)),
-	//		Vertex(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f), DirectX::XMFLOAT2(0.75f, 1.f / 3)),
-	//		Vertex(DirectX::XMFLOAT3(1.0f, -1.0f, 1.0f), DirectX::XMFLOAT2(0.75f, 2.f / 3))
-	//	});
+	CreateSampler(s_sampler.GetAddressOf());
 
-	//std::unique_ptr<UINT[]> indices(new UINT[36]
-	//	{
-	//		0, 1, 2, 0, 2, 3,
-	//		4, 6, 5, 4, 7, 6,
-	//		4, 5, 1, 4, 1, 0,
-	//		3, 2, 6, 3, 6, 7,
-	//		1, 5, 6, 1, 6, 2,
-	//		4, 0, 3, 4, 3, 7
-	//	});
-
-	//std::unique_ptr<Mesh> mesh(new Mesh(std::move(vertices), 8, std::move(indices), 36, "crate_diffuse.dds"));
-	//m_renderScene->AddMesh(std::move(mesh));
+	// Post-processor
+	m_postProcessor.reset(new PostProcessor(m_width, m_height));
+	m_postProcessor->Initialize();
 }
 
 
 void D3DApp::Draw(const GameTime &gameTime) 
 {
-	// clear rt
-	const DirectX::XMVECTORF32 BackgroundColor = { 0.392f,0.584f, 0.929f, 1.0f };
-	m_deviceCtx->ClearRenderTargetView(m_rtvs.at(0).Get(), reinterpret_cast<const float*>(&BackgroundColor));
-	m_deviceCtx->ClearDepthStencilView(m_dsbView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
-	// set views to OM stage
-	m_deviceCtx->OMSetRenderTargets(1, m_rtvs.at(0).GetAddressOf(), m_dsbView.Get());
+	// begin Post processing
+	m_postProcessor->Begin();
 
 	// update scene CB
 	SceneCB sceneCb;
@@ -300,12 +275,22 @@ void D3DApp::Draw(const GameTime &gameTime)
 	sceneCb.Light.LightPower = DirectX::XMFLOAT4(0.9f, 0.7f, 0.7f, 0.8f);
 	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);
 
-	// IA
+	// meshes
 	for (auto it = m_renderScene->BeginMesh(); it != m_renderScene->EndMesh(); ++it)
 	{
 		DrawMesh((*it).get());
-		//break;
 	}
+	
+	// set views to OM stage
+	m_deviceCtx->OMSetRenderTargets(1, m_rtvs.at(0).GetAddressOf(), m_dsbView.Get());
+
+	// clear rt
+	const DirectX::XMVECTORF32 BackgroundColor = { 0.392f,0.584f, 0.929f, 1.0f };
+	m_deviceCtx->ClearRenderTargetView(m_rtvs.at(0).Get(), reinterpret_cast<const float*>(&BackgroundColor));
+	m_deviceCtx->ClearDepthStencilView(m_dsbView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+	// draw offscreen texture to backbuffer
+	m_postProcessor->Draw();
 
 	// present
 	HRESULT hr = m_swapChain->Present(0, 0);
@@ -346,7 +331,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	// PS
 	ID3D11PixelShader* ps = m_shaderManager->GetPixelShader(mesh->GetPixelShader());
 	m_deviceCtx->PSSetShader(ps, NULL, 0);
-	m_deviceCtx->PSSetSamplers(0, 1, g_sampler.GetAddressOf());
+	m_deviceCtx->PSSetSamplers(0, 1, s_sampler.GetAddressOf());
 	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetDiffuseTexture()));
 	m_deviceCtx->PSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
 	m_deviceCtx->PSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());

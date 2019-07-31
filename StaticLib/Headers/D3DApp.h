@@ -24,6 +24,8 @@ namespace Library
 	class TextureManager;
 	class FileManager;
 	class Camera;
+	class PostProcessor;
+
 	struct GD3DApp;
 
 	class D3DApp
@@ -59,6 +61,7 @@ namespace Library
 		std::unique_ptr<TextureManager> m_textureManager;
 		std::unique_ptr<FileManager> m_fileManager;
 		std::unique_ptr<Camera> m_camera;
+		std::unique_ptr<PostProcessor> m_postProcessor;
 	};
 }
 

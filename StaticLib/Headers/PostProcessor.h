@@ -1,28 +1,46 @@
 #pragma once
 
 #include <wrl.h>
+#include <string>
 
 struct ID3D11ShaderResourceView;
 struct ID3D11RenderTargetView;
 struct ID3D11DepthStencilView;
+struct ID3D11InputLayout;
+struct ID3D11Buffer;
 
-class PostProcessor
+namespace Library
 {
-public:
-	PostProcessor(int width, int height);
-	~PostProcessor();
+	class PostProcessor
+	{
+	public:
+		PostProcessor(int width, int height);
+		~PostProcessor();
 
-	ID3D11ShaderResourceView* GetShaderRes();
-	ID3D11RenderTargetView* GetOffscreenRtv();
-	ID3D11DepthStencilView* GetOffscreenDsb();
+		void Initialize();
+		void Draw();
+		void Begin();
 
-	void Start();
+		ID3D11ShaderResourceView* GetShaderRes();
+		ID3D11RenderTargetView* GetOffscreenRtv();
+		ID3D11DepthStencilView* GetOffscreenDsb();
 
-	PostProcessor(const PostProcessor& rhs) = delete;
-	PostProcessor& operator=(const PostProcessor& rhs) = delete;
-private:
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderRes;
-	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_offscreenRtv;
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_offscreenDsb;
-};
+		PostProcessor(const PostProcessor& rhs) = delete;
+		PostProcessor& operator=(const PostProcessor& rhs) = delete;
+	private:
+		void CreateInputLayout();
+		void CreateVertexBuffer();
+		void CreateIndexBuffer();
 
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderRes;
+		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_offscreenRtv;
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_offscreenDsb;
+		
+		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputlayout;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> m_indexBuffer;
+
+		std::string m_vertexShaderName;
+		std::string m_pixelShaderName;
+	};
+}

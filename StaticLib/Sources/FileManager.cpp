@@ -175,9 +175,6 @@ bool FileManager::ReadModelFromFBX(const char * inFilePath, uint32_t id, Mesh* o
 
 				outMesh->SetTextureCoords(std::move(textCoords_));
 			}
-
-			// todo: hard-code for a better look
-			//outMesh->Scale(DirectX::XMFLOAT3(.1f, 0.1f, 0.1f));
 		}
 
 		return true;

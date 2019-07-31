@@ -46,12 +46,10 @@ ID3D11Buffer** Library::RenderScene::GetConstSceneBufferRef()
 
 void Library::RenderScene::CreateConstSceneBuffer()
 {
-	
-
-	SceneCB sceneCB;
+	int sizeCb = (int)std::ceil(sizeof(SceneCB) / 16.f) * 16;
 
 	CD3D11_BUFFER_DESC cbDesc(
-		64, // todo: hardcoded size. should be division of 16 for CB
+		sizeCb,
 		D3D11_BIND_CONSTANT_BUFFER
 	);
 

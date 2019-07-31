@@ -23,7 +23,7 @@ namespace Library
 		int CalcLight;
 	};
 
-	struct Vertex  // todo: 2 places to edit vertex(
+	struct Vertex
 	{
 		DirectX::XMFLOAT3 Position;
 		DirectX::XMFLOAT2 TextCoord;
