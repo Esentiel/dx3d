@@ -23,6 +23,11 @@ namespace Library
 		int CalcLight;
 	};
 
+	struct MeshLightCB
+	{
+		DirectX::XMFLOAT4X4 WorldViewLightProj;
+	};
+
 	struct Vertex
 	{
 		DirectX::XMFLOAT3 Position;
@@ -44,6 +49,7 @@ namespace Library
 		ID3D11Buffer* GetConstMeshBuffer() const;
 		ID3D11Buffer** GetConstMeshBufferRef();
 		ID3D11Buffer** GetVertexBufferRef();
+		ID3D11Buffer** GetVertexLightBufferRef();
 		ID3D11Buffer* GetIndexBuffer() const;
 		ID3D11InputLayout* GetInputLayout() const; // todo: should move layout out from Mesh, as long as I will create several types of mashes with differemt layout
 		const DirectX::XMMATRIX* GetModelTransform() const;
@@ -77,6 +83,7 @@ namespace Library
 		void CreateInputLayout();
 		void CreateConstMeshBuffer();
 		void CreateVertexBuffer();
+		void CreateVertexLightBuffer();
 		void CreateIndexBuffer();
 
 		std::unique_ptr<Transformations> m_transformations;
@@ -90,6 +97,7 @@ namespace Library
 
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_constMeshBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexLightBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_indexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputlayout;
 

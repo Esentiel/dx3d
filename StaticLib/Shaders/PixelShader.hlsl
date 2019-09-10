@@ -41,9 +41,9 @@ float4 main(PS_INPUT input) : SV_TARGET
         return color;
     }
 
-    float4 diffuseLight = max(dot(normalize(lightS.lightPos - input.posW), normalize(input.normalW)), 0) * float4(0.8, 0.8, 0.8, 0.8);
+    float4 diffuseLight = max(dot(normalize(lightS.lightDir), normalize(input.normalW)), 0) * float4(0.8, 0.8, 0.8, 0.8);
 
-    float3 L = normalize(lightS.lightPos - input.posW);
+    float3 L = normalize(lightS.lightDir);
     float3 E = normalize(eyePos - input.posW);
     float3 H = normalize(L + E);
 

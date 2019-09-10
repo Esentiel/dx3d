@@ -149,7 +149,7 @@ void Library::PostProcessor::Draw()
 
 void Library::PostProcessor::Begin()
 {
-	//
+	// fix
 	ID3D11ShaderResourceView *const pSRV[1] = { NULL };
 	g_D3D->deviceCtx->PSSetShaderResources(0, 1, pSRV);
 

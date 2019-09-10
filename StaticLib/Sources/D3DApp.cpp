@@ -17,6 +17,7 @@
 #include "Camera.h"
 #include "GameException.h"
 #include "PostProcessor.h"
+#include "ShadowMap.h"
 
 using namespace Library;
 
@@ -255,25 +256,35 @@ void D3DApp::Initialize()
 	// Post-processor
 	m_postProcessor.reset(new PostProcessor(m_width, m_height));
 	m_postProcessor->Initialize();
+
+	//ShadowMap
+	m_shadowMap.reset(new ShadowMap);
 }
 
 
 void D3DApp::Draw(const GameTime &gameTime) 
 {
-	// begin Post processing
-	m_postProcessor->Begin();
-
-	// update scene CB
 	SceneCB sceneCb;
 	sceneCb.Light.LightPos = DirectX::XMFLOAT4(-15.0f, 30.f, 20.0f, 1.0f);
 	DirectX::XMFLOAT3 camPos;
 	DirectX::XMStoreFloat3(&camPos, *(m_camera->GetPosition()));
 	sceneCb.EyePos = DirectX::XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.0f);
-	sceneCb.Light.LightDir = DirectX::XMFLOAT4(1.0f, -0.7f, 1.0f, 1.0f);
+	sceneCb.Light.LightDir = DirectX::XMFLOAT4(0.0f, 0.3f, 1.0f, 0.0f);
 	sceneCb.Light.LightPower = DirectX::XMFLOAT4(0.9f, 0.7f, 0.7f, 0.8f);
-	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);
 
+	// raster state
 	m_deviceCtx->RSSetState(m_rasterState.Get());
+
+	// Generate shadow map
+	m_shadowMap->Initialize(m_width, m_height);
+	m_shadowMap->SetLightSource(&(sceneCb.Light));
+	m_shadowMap->Generate(m_renderScene.get());
+
+	// begin Post processing
+	m_postProcessor->Begin();
+
+	// update scene CB
+	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);	
 
 	// meshes
 	for (auto it = m_renderScene->BeginMesh(); it != m_renderScene->EndMesh(); ++it)

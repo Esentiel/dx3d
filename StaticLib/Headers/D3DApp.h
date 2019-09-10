@@ -25,6 +25,7 @@ namespace Library
 	class FileManager;
 	class Camera;
 	class PostProcessor;
+	class ShadowMap;
 
 	struct GD3DApp;
 
@@ -62,6 +63,7 @@ namespace Library
 		std::unique_ptr<FileManager> m_fileManager;
 		std::unique_ptr<Camera> m_camera;
 		std::unique_ptr<PostProcessor> m_postProcessor;
+		std::unique_ptr<ShadowMap> m_shadowMap;
 	};
 }
 

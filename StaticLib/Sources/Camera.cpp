@@ -139,9 +139,9 @@ void Library::Camera::UpdateViewMatrix()
 		*m_right = DirectX::XMVector3Cross(*m_up, *m_look);
 
 		// Fill in the view matrix entries.
-		float x = -DirectX::XMVectorGetX(DirectX::XMVector3Dot(*m_position, *m_right));
-		float y = -DirectX::XMVectorGetX(DirectX::XMVector3Dot(*m_position, *m_up));
-		float z = -DirectX::XMVectorGetX(DirectX::XMVector3Dot(*m_position, *m_look));
+		DirectX::XMVector3Dot(*m_position, *m_right);
+		DirectX::XMVector3Dot(*m_position, *m_up);
+		DirectX::XMVector3Dot(*m_position, *m_look);
 
 		*m_view =  DirectX::XMMatrixLookToRH(*m_position, *m_look, *m_up);
 

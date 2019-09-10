@@ -62,6 +62,11 @@ ID3D11Buffer** Mesh::GetVertexBufferRef()
 	return m_vertexBuffer.GetAddressOf();
 }
 
+ID3D11Buffer** Mesh::GetVertexLightBufferRef()
+{
+	return m_vertexLightBuffer.GetAddressOf();
+}
+
 ID3D11Buffer* Mesh::GetIndexBuffer() const
 {
 	return m_indexBuffer.Get();
@@ -242,6 +247,7 @@ void Mesh::LoadVertexDataBuffer()
 		}
 
 		CreateVertexBuffer();
+		CreateVertexLightBuffer();
 
 		m_dirtyVertex = false;
 	}
@@ -255,4 +261,26 @@ bool Library::Mesh::IsCalcLight() const
 void Library::Mesh::SetCalcLight(bool flag)
 {
 	m_calcLight = flag;
+}
+
+void Library::Mesh::CreateVertexLightBuffer()
+{
+	m_vertexLightBuffer.Reset();
+
+	CD3D11_BUFFER_DESC vDesc(
+		sizeof(DirectX::XMFLOAT3) * m_vertexCnt,
+		D3D11_BIND_VERTEX_BUFFER
+	);
+
+	D3D11_SUBRESOURCE_DATA vData;
+	ZeroMemory(&vData, sizeof(D3D11_SUBRESOURCE_DATA));
+	vData.pSysMem = m_vertices.get();
+	vData.SysMemPitch = 0;
+	vData.SysMemSlicePitch = 0;
+
+	HRESULT hr;
+	if (FAILED(hr = g_D3D->device->CreateBuffer(&vDesc, &vData, m_vertexLightBuffer.GetAddressOf())))
+	{
+		throw GameException("Mesh::CreateVertexLightBuffer(): CreateBuffer() failed", hr);
+	}
 }
