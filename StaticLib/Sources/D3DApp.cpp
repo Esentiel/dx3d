@@ -269,7 +269,7 @@ void D3DApp::Draw(const GameTime &gameTime)
 	DirectX::XMFLOAT3 camPos;
 	DirectX::XMStoreFloat3(&camPos, *(m_camera->GetPosition()));
 	sceneCb.EyePos = DirectX::XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.0f);
-	sceneCb.Light.LightDir = DirectX::XMFLOAT4(0.0f, 0.3f, 1.0f, 0.0f);
+	sceneCb.Light.LightDir = DirectX::XMFLOAT4(-1.0f, 0.4f, 1.0f, 0.0f);
 	sceneCb.Light.LightPower = DirectX::XMFLOAT4(0.9f, 0.7f, 0.7f, 0.8f);
 
 	// raster state
@@ -317,6 +317,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	MeshCB meshCb;
 	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * *(m_camera->GetView()) * *(m_camera->GetProjection()));
 	DirectX::XMStoreFloat4x4(&meshCb.World, *(mesh->GetModelTransform()));
+	DirectX::XMStoreFloat4x4(&meshCb.ShadowMapMatrix, *(mesh->GetModelTransform()) * *(m_shadowMap->GetViewMatrix()) * *(m_camera->GetProjection()));
 	meshCb.AmbientK = 0.9f;
 	meshCb.EmissiveK = 0.5f;
 	meshCb.DiffuseIntensity = 0.95f;
@@ -346,6 +347,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetDiffuseTexture()));
 	m_deviceCtx->PSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
 	m_deviceCtx->PSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());
+	m_deviceCtx->PSSetShaderResources(1, 1, m_shadowMap->GetShadowMapRef());
 
 	// draw call
 	m_deviceCtx->DrawIndexed(mesh->GetIndexCount(), 0, 0);

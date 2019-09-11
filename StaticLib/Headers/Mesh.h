@@ -16,6 +16,7 @@ namespace Library
 	{
 		DirectX::XMFLOAT4X4 WorldViewProj;
 		DirectX::XMFLOAT4X4 World;
+		DirectX::XMFLOAT4X4 ShadowMapMatrix;
 		float DiffuseIntensity;
 		float EmissiveK;
 		float AmbientK;

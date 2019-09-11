@@ -27,6 +27,7 @@ namespace Library
 		ID3D11Buffer* GetConstMeshLightBuffer() const;
 		ID3D11Buffer** GetConstMeshLightBufferRef();
 		const DirectX::XMMATRIX* GetViewMatrix();
+		ID3D11ShaderResourceView** GetShadowMapRef();
 	private:
 		void CreateInputLayout();
 		void CreateConstLightMeshBuffer();

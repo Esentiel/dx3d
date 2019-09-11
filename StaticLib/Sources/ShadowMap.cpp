@@ -28,6 +28,10 @@ ShadowMap::~ShadowMap()
 
 void ShadowMap::Initialize(int width, int height)
 {
+	// fix
+	ID3D11ShaderResourceView *const pSRV[1] = { NULL };
+	g_D3D->deviceCtx->PSSetShaderResources(1, 1, pSRV);
+
 	if (m_width != width || m_height != height)
 	{
 		HRESULT hr;
@@ -178,13 +182,18 @@ void ShadowMap::SetLightSource(LightSource * light)
 	m_lightSource = light;
 
 	auto pos = DirectX::XMLoadFloat4(&(light->LightPos));
-	auto dir = DirectX::XMVector3Normalize(DirectX::XMVectorNegate(DirectX::XMLoadFloat4(&(light->LightDir))));
+	auto dir = DirectX::XMVector4Normalize(DirectX::XMVectorNegate(DirectX::XMLoadFloat4(&(light->LightDir))));
 
-	*m_lightView = DirectX::XMMatrixLookToRH(pos, dir, DirectX::XMVectorSet(0.0f, -1.0f, 0.0f, 0.f));
+	*m_lightView = DirectX::XMMatrixLookToRH(pos, dir, DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
 }
 
 const DirectX::XMMATRIX* ShadowMap::GetViewMatrix()
 {
 	return m_lightView.get();
+}
+
+ID3D11ShaderResourceView** Library::ShadowMap::GetShadowMapRef()
+{
+	return m_shaderRes.GetAddressOf();
 }
 

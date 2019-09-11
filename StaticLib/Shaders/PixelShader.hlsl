@@ -5,13 +5,28 @@ struct LightSource
 	float4 lightPower;
 };
 
+static const float4 ColorWhite = { 1, 1, 1, 1 };
+static const float3 ColorBlack = { 0, 0, 0 };
+static const float DepthBias = 0.005;
+
 Texture2D diffuseTexture : register(t0);
+Texture2D shadowMap : register(t1);
 SamplerState simpleSampler : register(s0);
+
+SamplerState DepthMapSampler
+{
+    Filter = MIN_MAG_MIP_POINT;
+    AddressU = BORDER;
+    AddressV = BORDER;
+    BorderColor = ColorWhite;
+};
+
 
 cbuffer MVPbuffer : register(b0)
 {
     float4x4 mvp;
     float4x4 world;
+    float4x4 shadowMapMatrix;
     float diffuseIntensity;
     float emissiveK;
     float ambientK;
@@ -30,6 +45,7 @@ struct PS_INPUT
 	float2 textCoord : TEXCOORD0;
     float3 normalW : NORMAL0;
     float3 posW : POSITION0;
+    float4 posSM : POSITION1;
 };
 
 float4 main(PS_INPUT input) : SV_TARGET
@@ -51,6 +67,17 @@ float4 main(PS_INPUT input) : SV_TARGET
     diffuseLight += spec;
 
     color *= diffuseLight;
+    if (input.posSM.w >= 0.0f)
+    {
+        input.posSM.xy /= input.posSM.w;
+        float pixelDepth = input.posSM.z;
+
+        float sampledDepth = shadowMap.Sample(DepthMapSampler, input.posSM.xy).x + DepthBias;
+
+        float3 shadow = (pixelDepth > sampledDepth ? ColorBlack : ColorWhite.rgb);
+
+        color.rgb *= shadow;
+    }
 
     return color;
 }
