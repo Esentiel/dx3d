@@ -25,6 +25,7 @@ namespace Library
 		virtual const DirectX::XMMATRIX* GetView();
 		virtual const DirectX::XMMATRIX* GetProjection() const;
 		virtual const D3D11_VIEWPORT* GetViewport() const;
+		virtual void UpdateViewport();
 
 		DirectX::XMVECTOR* GetPosition() const;
 		void Move(MoveDir dir);
@@ -32,8 +33,7 @@ namespace Library
 		void RotateY(float angle);
 		void UpdateViewMatrix();
 	protected:
-		virtual void UpdateProjection();
-		virtual void UpdateViewport();
+		virtual void UpdateProjection();		
 
 		std::unique_ptr<DirectX::XMMATRIX> m_view;
 		std::unique_ptr<DirectX::XMMATRIX> m_projection;

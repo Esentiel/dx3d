@@ -8,6 +8,7 @@ struct ID3D11ShaderResourceView;
 struct ID3D11DepthStencilView;
 struct ID3D11InputLayout;
 struct ID3D11Buffer;
+struct D3D11_VIEWPORT;
 
 namespace Library
 {
@@ -27,6 +28,7 @@ namespace Library
 		ID3D11Buffer* GetConstMeshLightBuffer() const;
 		ID3D11Buffer** GetConstMeshLightBufferRef();
 		const DirectX::XMMATRIX* GetViewMatrix();
+		virtual const DirectX::XMMATRIX* GetProjection() const;
 		ID3D11ShaderResourceView** GetShadowMapRef();
 	private:
 		void CreateInputLayout();
@@ -40,6 +42,8 @@ namespace Library
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_constMeshLightBuffer;
 		
 		std::unique_ptr<DirectX::XMMATRIX> m_lightView;
+		std::unique_ptr<DirectX::XMMATRIX> m_projection;
+		std::unique_ptr<D3D11_VIEWPORT> m_viewport;
 
 		int m_width;
 		int m_height;

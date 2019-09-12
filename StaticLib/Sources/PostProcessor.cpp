@@ -6,6 +6,7 @@
 
 #include "ShaderManager.h"
 #include "GameException.h"
+#include "Camera.h"
 
 using namespace Library;
 
@@ -160,6 +161,8 @@ void Library::PostProcessor::Begin()
 	const DirectX::XMVECTORF32 BackgroundColor = { 0.392f,0.584f, 0.929f, 1.0f };
 	g_D3D->deviceCtx->ClearRenderTargetView(m_offscreenRtv.Get(), reinterpret_cast<const float*>(&BackgroundColor));
 	g_D3D->deviceCtx->ClearDepthStencilView(m_offscreenDsb.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+	//g_D3D->camera->UpdateViewport();
 }
 
 void Library::PostProcessor::Initialize()

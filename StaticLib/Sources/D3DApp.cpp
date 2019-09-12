@@ -22,6 +22,7 @@
 using namespace Library;
 
 static Microsoft::WRL::ComPtr<ID3D11SamplerState> s_sampler;
+static Microsoft::WRL::ComPtr<ID3D11SamplerState> s_sampler2;
 
 void CreateSampler(ID3D11SamplerState **sampler)
 {
@@ -51,6 +52,33 @@ void CreateSampler(ID3D11SamplerState **sampler)
 	}
 }
 
+void CreateSampler2(ID3D11SamplerState **sampler)
+{
+	// Create a sampler state for texture sampling in the pixel shader
+
+	D3D11_SAMPLER_DESC samplerDesc;
+	ZeroMemory(&samplerDesc, sizeof(D3D11_SAMPLER_DESC));
+
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	samplerDesc.BorderColor[0] = 1.0f;
+	samplerDesc.BorderColor[1] = 1.0f;
+	samplerDesc.BorderColor[2] = 1.0f;
+	samplerDesc.BorderColor[3] = 1.0f;
+	samplerDesc.MinLOD = -FLT_MAX;
+	samplerDesc.MaxLOD = FLT_MAX;
+
+	HRESULT hr;
+	if (FAILED(hr = g_D3D->device->CreateSamplerState(&samplerDesc, sampler)))
+	{
+		throw GameException("CreateSamplerState() failed", hr);
+	}
+}
 
 
 D3DApp::D3DApp(HWND hwnd, unsigned int width, unsigned int height) :
@@ -218,7 +246,7 @@ void D3DApp::Initialize()
 	rasterizerState.DepthBias = false;
 	rasterizerState.DepthBiasClamp = 0;
 	rasterizerState.SlopeScaledDepthBias = 0;
-	rasterizerState.DepthClipEnable = true;
+	rasterizerState.DepthClipEnable = false;
 	rasterizerState.ScissorEnable = true;
 	rasterizerState.MultisampleEnable = false;
 	rasterizerState.AntialiasedLineEnable = false;
@@ -252,6 +280,7 @@ void D3DApp::Initialize()
 	m_renderScene.reset(new RenderScene);
 	g_D3D->renderScene = m_renderScene.get();
 	CreateSampler(s_sampler.GetAddressOf());
+	CreateSampler2(s_sampler2.GetAddressOf());
 
 	// Post-processor
 	m_postProcessor.reset(new PostProcessor(m_width, m_height));
@@ -287,6 +316,7 @@ void D3DApp::Draw(const GameTime &gameTime)
 	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);	
 
 	// meshes
+	m_deviceCtx->PSSetShaderResources(1, 1, m_shadowMap->GetShadowMapRef());
 	for (auto it = m_renderScene->BeginMesh(); it != m_renderScene->EndMesh(); ++it)
 	{
 		DrawMesh((*it).get());
@@ -314,10 +344,17 @@ void D3DApp::Draw(const GameTime &gameTime)
 void Library::D3DApp::DrawMesh(Mesh* mesh)
 {
 	// update mesh cb
+	DirectX::XMFLOAT4X4 mProjectedTextureScalingMatrix;
+	mProjectedTextureScalingMatrix._11 = 0.5f;
+	mProjectedTextureScalingMatrix._22 = -0.5f;
+	mProjectedTextureScalingMatrix._33 = 1.0f;
+	mProjectedTextureScalingMatrix._41 = 0.5f;
+	mProjectedTextureScalingMatrix._42 = 0.5f;
+	mProjectedTextureScalingMatrix._44 = 1.0f;
 	MeshCB meshCb;
 	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * *(m_camera->GetView()) * *(m_camera->GetProjection()));
 	DirectX::XMStoreFloat4x4(&meshCb.World, *(mesh->GetModelTransform()));
-	DirectX::XMStoreFloat4x4(&meshCb.ShadowMapMatrix, *(mesh->GetModelTransform()) * *(m_shadowMap->GetViewMatrix()) * *(m_camera->GetProjection()));
+	DirectX::XMStoreFloat4x4(&meshCb.ShadowMapMatrix, *(mesh->GetModelTransform()) * *(m_shadowMap->GetViewMatrix()) * *(m_shadowMap->GetProjection()) * DirectX::XMLoadFloat4x4(&mProjectedTextureScalingMatrix));
 	meshCb.AmbientK = 0.9f;
 	meshCb.EmissiveK = 0.5f;
 	meshCb.DiffuseIntensity = 0.95f;
@@ -344,10 +381,11 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	ID3D11PixelShader* ps = m_shaderManager->GetPixelShader(mesh->GetPixelShader());
 	m_deviceCtx->PSSetShader(ps, NULL, 0);
 	m_deviceCtx->PSSetSamplers(0, 1, s_sampler.GetAddressOf());
+	m_deviceCtx->PSSetSamplers(1, 1, s_sampler2.GetAddressOf());
 	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetDiffuseTexture()));
 	m_deviceCtx->PSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
 	m_deviceCtx->PSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());
-	m_deviceCtx->PSSetShaderResources(1, 1, m_shadowMap->GetShadowMapRef());
+	//m_deviceCtx->PSSetShaderResources(1, 1, m_shadowMap->GetShadowMapRef());
 
 	// draw call
 	m_deviceCtx->DrawIndexed(mesh->GetIndexCount(), 0, 0);

@@ -15,10 +15,20 @@ using namespace Library;
 
 ShadowMap::ShadowMap() :
 	m_lightView(new DirectX::XMMATRIX),
-	m_vertexShaderName("VertexShaderSM")
+	m_vertexShaderName("VertexShaderSM"),
+	m_viewport(new D3D11_VIEWPORT)
 {
 	CreateInputLayout();
 	CreateConstLightMeshBuffer();
+
+	m_viewport->Width = (float)1024;
+	m_viewport->Height = (float)1024;
+	m_viewport->TopLeftX = 0.f;
+	m_viewport->TopLeftY = 0.f;
+	m_viewport->MinDepth = 0.f;
+	m_viewport->MaxDepth = 1.f;
+
+	
 }
 
 
@@ -79,6 +89,9 @@ void ShadowMap::Initialize(int width, int height)
 		{
 			throw GameException("ShadowMap::CreateDepthStencilView() failed.", hr);
 		}
+
+		float aspectRatio = (float)m_width / m_height;
+		m_projection.reset(new DirectX::XMMATRIX(DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 0.001f, 1000.0f)));
 	}
 }
 
@@ -93,13 +106,15 @@ void ShadowMap::Generate(RenderScene * scene)
 	const DirectX::XMVECTORF32 BackgroundColor = { 0.392f,0.584f, 0.929f, 1.0f };
 	g_D3D->deviceCtx->ClearDepthStencilView(m_shadowMap.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
+	//g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());
+
 	// PER MESH
 	for (auto it = scene->BeginMesh(); it != scene->EndMesh(); ++it)
 	{
 		auto mesh = (*it).get();
 		// update mesh cb
 		MeshLightCB meshCb;
-		DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, *(mesh->GetModelTransform()) * *(GetViewMatrix()) * *(g_D3D->camera->GetProjection()));
+		DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, *(mesh->GetModelTransform()) * *(GetViewMatrix()) * *(GetProjection()));
 		//DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, *(mesh->GetModelTransform()) * *(g_D3D->camera->GetView()) * *(g_D3D->camera->GetProjection()));
 
 		g_D3D->deviceCtx->UpdateSubresource(GetConstMeshLightBuffer(), 0, nullptr, &meshCb, 0, 0);
@@ -184,12 +199,18 @@ void ShadowMap::SetLightSource(LightSource * light)
 	auto pos = DirectX::XMLoadFloat4(&(light->LightPos));
 	auto dir = DirectX::XMVector4Normalize(DirectX::XMVectorNegate(DirectX::XMLoadFloat4(&(light->LightDir))));
 
-	*m_lightView = DirectX::XMMatrixLookToRH(pos, dir, DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
+	*m_lightView = DirectX::XMMatrixLookToRH(DirectX::XMVectorSet(.0f, 30.f, 40.0f, 1.f), DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 0.f), DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
+	//*m_lightView = DirectX::XMMatrixLookToRH(DirectX::XMVectorSet(0.999229014, 30.0000000, 39.9607391, 1.00000000), DirectX::XMVectorSet(0.0452261493, -0.333807409, -0.941555798, 0.000000000), DirectX::XMVectorSet(0.0160154551, 0.942641377, -0.333423018, 0.000000000));
 }
 
 const DirectX::XMMATRIX* ShadowMap::GetViewMatrix()
 {
 	return m_lightView.get();
+}
+
+const DirectX::XMMATRIX* Library::ShadowMap::GetProjection() const
+{
+	return m_projection.get();
 }
 
 ID3D11ShaderResourceView** Library::ShadowMap::GetShadowMapRef()
