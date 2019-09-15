@@ -301,13 +301,13 @@ void D3DApp::Draw(const GameTime &gameTime)
 	sceneCb.Light.LightDir = DirectX::XMFLOAT4(-1.0f, 0.4f, 1.0f, 0.0f);
 	sceneCb.Light.LightPower = DirectX::XMFLOAT4(0.9f, 0.7f, 0.7f, 0.8f);
 
-	// raster state
-	m_deviceCtx->RSSetState(m_rasterState.Get());
-
 	// Generate shadow map
 	m_shadowMap->Initialize(m_width, m_height);
 	m_shadowMap->SetLightSource(&(sceneCb.Light));
 	m_shadowMap->Generate(m_renderScene.get());
+
+	// raster state
+	m_deviceCtx->RSSetState(m_rasterState.Get());
 
 	// begin Post processing
 	m_postProcessor->Begin();

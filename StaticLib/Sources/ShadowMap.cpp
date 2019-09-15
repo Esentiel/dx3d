@@ -42,6 +42,8 @@ void ShadowMap::Initialize(int width, int height)
 	ID3D11ShaderResourceView *const pSRV[1] = { NULL };
 	g_D3D->deviceCtx->PSSetShaderResources(1, 1, pSRV);
 
+	g_D3D->deviceCtx->RSSetState(m_rasterState.Get());
+
 	if (m_width != width || m_height != height)
 	{
 		HRESULT hr;
@@ -199,8 +201,8 @@ void ShadowMap::SetLightSource(LightSource * light)
 	auto pos = DirectX::XMLoadFloat4(&(light->LightPos));
 	auto dir = DirectX::XMVector4Normalize(DirectX::XMVectorNegate(DirectX::XMLoadFloat4(&(light->LightDir))));
 
-	*m_lightView = DirectX::XMMatrixLookToRH(DirectX::XMVectorSet(.0f, 30.f, 40.0f, 1.f), DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 0.f), DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
-	//*m_lightView = DirectX::XMMatrixLookToRH(DirectX::XMVectorSet(0.999229014, 30.0000000, 39.9607391, 1.00000000), DirectX::XMVectorSet(0.0452261493, -0.333807409, -0.941555798, 0.000000000), DirectX::XMVectorSet(0.0160154551, 0.942641377, -0.333423018, 0.000000000));
+	//*m_lightView = DirectX::XMMatrixLookToRH(DirectX::XMVectorSet(.0f, 30.f, 40.0f, 1.f), DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 0.f), DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
+	*m_lightView = DirectX::XMMatrixLookToRH(DirectX::XMVectorSet(35.5316048, 67.4720230, 59.0638657, 1.00000000), DirectX::XMVectorSet(-0.350119293, -0.548293114, -0.759467721, 0.000000000), DirectX::XMVectorSet(-0.229548156, 0.836286247, -0.497928649, 0.000000000));
 }
 
 const DirectX::XMMATRIX* ShadowMap::GetViewMatrix()
@@ -218,3 +220,19 @@ ID3D11ShaderResourceView** Library::ShadowMap::GetShadowMapRef()
 	return m_shaderRes.GetAddressOf();
 }
 
+void Library::ShadowMap::CreateRasterState()
+{
+	// rasterizer
+	D3D11_RASTERIZER_DESC rasterizerState;
+	rasterizerState.FillMode = D3D11_FILL_SOLID;
+	rasterizerState.CullMode = D3D11_CULL_FRONT;
+	//rasterizerState.FrontCounterClockwise = false;
+	rasterizerState.DepthBias = false;
+	rasterizerState.DepthBiasClamp = 0;
+	rasterizerState.SlopeScaledDepthBias = 0;
+	rasterizerState.DepthClipEnable = true;
+	rasterizerState.ScissorEnable = true;
+	rasterizerState.MultisampleEnable = false;
+	rasterizerState.AntialiasedLineEnable = false;
+	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
+}

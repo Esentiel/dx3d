@@ -9,6 +9,7 @@ struct ID3D11DepthStencilView;
 struct ID3D11InputLayout;
 struct ID3D11Buffer;
 struct D3D11_VIEWPORT;
+struct ID3D11RasterizerState;
 
 namespace Library
 {
@@ -33,6 +34,7 @@ namespace Library
 	private:
 		void CreateInputLayout();
 		void CreateConstLightMeshBuffer();
+		void CreateRasterState();
 
 		std::string m_vertexShaderName;
 		LightSource * m_lightSource;
@@ -40,6 +42,7 @@ namespace Library
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_shadowMap;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputlayout;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_constMeshLightBuffer;
+		Microsoft::WRL::ComPtr <ID3D11RasterizerState> m_rasterState;
 		
 		std::unique_ptr<DirectX::XMMATRIX> m_lightView;
 		std::unique_ptr<DirectX::XMMATRIX> m_projection;
