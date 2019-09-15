@@ -21,7 +21,7 @@ struct VS_OUT
 	float2 textCoord : TEXCOORD0;
     float3 normalW : NORMAL0;
     float3 posW : POSITION0;
-    float4 SMpos : TEXCOORD1;
+    float4 SMpos : POSITION1;
 	float4 projPos : SV_POSITION;
 };
 

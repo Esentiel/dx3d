@@ -346,10 +346,20 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	// update mesh cb
 	DirectX::XMFLOAT4X4 mProjectedTextureScalingMatrix;
 	mProjectedTextureScalingMatrix._11 = 0.5f;
+	mProjectedTextureScalingMatrix._12 = 0.f;
+	mProjectedTextureScalingMatrix._13 = 0.f;
+	mProjectedTextureScalingMatrix._14 = 0.f;
+	mProjectedTextureScalingMatrix._21 = 0.0f;
 	mProjectedTextureScalingMatrix._22 = -0.5f;
+	mProjectedTextureScalingMatrix._23 = 0.0f;
+	mProjectedTextureScalingMatrix._24 = 0.0f;
+	mProjectedTextureScalingMatrix._31 = 0.0f;
+	mProjectedTextureScalingMatrix._32 = 0.0f;
 	mProjectedTextureScalingMatrix._33 = 1.0f;
+	mProjectedTextureScalingMatrix._34 = 0.0f;
 	mProjectedTextureScalingMatrix._41 = 0.5f;
 	mProjectedTextureScalingMatrix._42 = 0.5f;
+	mProjectedTextureScalingMatrix._43 = 0.0f;
 	mProjectedTextureScalingMatrix._44 = 1.0f;
 	MeshCB meshCb;
 	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * *(m_camera->GetView()) * *(m_camera->GetProjection()));
