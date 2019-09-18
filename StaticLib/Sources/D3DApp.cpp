@@ -18,6 +18,7 @@
 #include "GameException.h"
 #include "PostProcessor.h"
 #include "ShadowMap.h"
+#include "SkyBox.h"
 
 using namespace Library;
 
@@ -286,8 +287,11 @@ void D3DApp::Initialize()
 	m_postProcessor.reset(new PostProcessor(m_width, m_height));
 	m_postProcessor->Initialize();
 
-	//ShadowMap
+	// ShadowMap
 	m_shadowMap.reset(new ShadowMap);
+
+	// SkyBox
+	m_skyBox.reset(new SkyBox);
 }
 
 
@@ -305,16 +309,19 @@ void D3DApp::Draw(const GameTime &gameTime)
 	m_shadowMap->Initialize(m_width, m_height);
 	m_shadowMap->SetLightSource(&(sceneCb.Light));
 	m_shadowMap->Generate(m_renderScene.get());
-
-	// raster state
-	m_deviceCtx->RSSetState(m_rasterState.Get());
 	m_camera->UpdateViewport();
 
 	// begin Post processing
 	m_postProcessor->Begin();
 
+	// skyBox
+	m_skyBox->Draw();
+
+	// raster state
+	m_deviceCtx->RSSetState(m_rasterState.Get());
+
 	// update scene CB
-	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);	
+	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);
 
 	// meshes
 	m_deviceCtx->PSSetShaderResources(1, 1, m_shadowMap->GetShadowMapRef());

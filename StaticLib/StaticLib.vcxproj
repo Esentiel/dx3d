@@ -110,11 +110,13 @@
     <ClInclude Include="Headers\PostProcessor.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Headers\ShadowMap.h" />
+    <ClInclude Include="Headers\SkyBox.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Headers\TextureManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Sources\SkyBox.cpp" />
     <ClCompile Include="Sources\ShadowMap.cpp" />
     <ClCompile Include="Sources\PostProcessor.cpp" />
     <ClCompile Include="Sources\LightSource.cpp" />
@@ -144,6 +146,14 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Zpr</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/Zpr</AdditionalOptions>
     </FxCompile>
+    <FxCompile Include="Shaders\PixelShaderSB.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Zpr</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/Zpr</AdditionalOptions>
+    </FxCompile>
     <FxCompile Include="Shaders\VertexShaderPP.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
@@ -161,6 +171,14 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/Zpr</AdditionalOptions>
     </FxCompile>
     <FxCompile Include="Shaders\VertexShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Zpr</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/Zpr</AdditionalOptions>
+    </FxCompile>
+    <FxCompile Include="Shaders\VertexShaderSB.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>

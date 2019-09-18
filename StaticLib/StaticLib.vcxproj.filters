@@ -69,6 +69,9 @@
     <ClInclude Include="Headers\ShadowMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\SkyBox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -119,6 +122,9 @@
     <ClCompile Include="Sources\ShadowMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Sources\SkyBox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\VertexShader.hlsl" />
@@ -126,6 +132,8 @@
     <FxCompile Include="Shaders\VertexShaderPP.hlsl" />
     <FxCompile Include="Shaders\PixelShaderPP.hlsl" />
     <FxCompile Include="Shaders\VertexShaderSM.hlsl" />
+    <FxCompile Include="Shaders\VertexShaderSB.hlsl" />
+    <FxCompile Include="Shaders\PixelShaderSB.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="StaticLib.rc">

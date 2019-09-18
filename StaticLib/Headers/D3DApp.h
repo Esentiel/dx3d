@@ -26,6 +26,7 @@ namespace Library
 	class Camera;
 	class PostProcessor;
 	class ShadowMap;
+	class SkyBox;
 
 	struct GD3DApp;
 
@@ -64,6 +65,7 @@ namespace Library
 		std::unique_ptr<Camera> m_camera;
 		std::unique_ptr<PostProcessor> m_postProcessor;
 		std::unique_ptr<ShadowMap> m_shadowMap;
+		std::unique_ptr<SkyBox> m_skyBox;
 	};
 }
 

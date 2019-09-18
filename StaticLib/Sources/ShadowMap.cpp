@@ -20,10 +20,6 @@ ShadowMap::ShadowMap() :
 {
 	CreateInputLayout();
 	CreateConstLightMeshBuffer();
-
-	
-
-	
 }
 
 
