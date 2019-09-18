@@ -7,7 +7,7 @@ struct LightSource
 
 static const float4 ColorWhite = { 1, 1, 1, 1 };
 static const float3 ColorBlack = { 0, 0, 0 };
-static const float DepthBias = 0.005;
+static const float DepthBias = 0.0000005;
 
 Texture2D diffuseTexture : register(t0);
 Texture2D shadowMap : register(t1);
@@ -62,14 +62,31 @@ float4 main(PS_INPUT input) : SV_TARGET
     color *= diffuseLight;
     if (input.posSM.w >= 0.0f)
     {
+		float width = 0, height = 0;
+		shadowMap.GetDimensions(width, height);
+		float2 ShadowMapSize = 1 / float2(width, height);
+
         input.posSM.xyz /= input.posSM.w;
         float pixelDepth = input.posSM.z;
+		
+        float sampledDepth1 = shadowMap.Sample(DepthMapSampler, float2(input.posSM.x, input.posSM.y)).x + DepthBias;
+		float sampledDepth2 = shadowMap.Sample(DepthMapSampler, float2(input.posSM.x, input.posSM.y) + float2(ShadowMapSize.x, 0)).x + DepthBias;
+		float sampledDepth3 = shadowMap.Sample(DepthMapSampler, float2(input.posSM.x, input.posSM.y) + float2(0, ShadowMapSize.y)).x + DepthBias;
+		float sampledDepth4 = shadowMap.Sample(DepthMapSampler, float2(input.posSM.x, input.posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x + DepthBias;
 
-        float sampledDepth = shadowMap.Sample(DepthMapSampler, float2(input.posSM.x, input.posSM.y)).x /*+ DepthBias*/;
+		int shadowPCFvalue = 0;
+		shadowPCFvalue += (int)(pixelDepth > sampledDepth1);
+		shadowPCFvalue += (int)(pixelDepth > sampledDepth2);
+		shadowPCFvalue += (int)(pixelDepth > sampledDepth3);
+		shadowPCFvalue += (int)(pixelDepth > sampledDepth4);
 
-        float3 shadow = (pixelDepth > sampledDepth ? ColorBlack : ColorWhite.rgb);
+		float shadowFactorPCF = shadowPCFvalue / 4.0f;
 
-        color.rgb *= shadow;
+		if (shadowFactorPCF > 0.2)
+		{
+			float3 shadow = ColorBlack + (1 - shadowFactorPCF);
+			color.rgb *= shadow;
+		}       
     }
 
     return color;

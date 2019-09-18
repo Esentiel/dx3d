@@ -225,11 +225,11 @@ void Library::ShadowMap::CreateRasterState()
 	// rasterizer
 	D3D11_RASTERIZER_DESC rasterizerState;
 	rasterizerState.FillMode = D3D11_FILL_SOLID;
-	rasterizerState.CullMode = D3D11_CULL_FRONT;
+	rasterizerState.CullMode = D3D11_CULL_BACK;
 	//rasterizerState.FrontCounterClockwise = false;
-	rasterizerState.DepthBias = false;
+	rasterizerState.DepthBias = 100000;
 	rasterizerState.DepthBiasClamp = 0;
-	rasterizerState.SlopeScaledDepthBias = 0;
+	rasterizerState.SlopeScaledDepthBias = 1.0f;
 	rasterizerState.DepthClipEnable = true;
 	rasterizerState.ScissorEnable = true;
 	rasterizerState.MultisampleEnable = false;
