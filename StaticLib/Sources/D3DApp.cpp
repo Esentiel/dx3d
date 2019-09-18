@@ -308,6 +308,7 @@ void D3DApp::Draw(const GameTime &gameTime)
 
 	// raster state
 	m_deviceCtx->RSSetState(m_rasterState.Get());
+	m_camera->UpdateViewport();
 
 	// begin Post processing
 	m_postProcessor->Begin();

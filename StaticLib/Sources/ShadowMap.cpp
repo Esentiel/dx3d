@@ -21,12 +21,7 @@ ShadowMap::ShadowMap() :
 	CreateInputLayout();
 	CreateConstLightMeshBuffer();
 
-	m_viewport->Width = (float)1024;
-	m_viewport->Height = (float)1024;
-	m_viewport->TopLeftX = 0.f;
-	m_viewport->TopLeftY = 0.f;
-	m_viewport->MinDepth = 0.f;
-	m_viewport->MaxDepth = 1.f;
+	
 
 	
 }
@@ -94,6 +89,16 @@ void ShadowMap::Initialize(int width, int height)
 
 		float aspectRatio = (float)m_width / m_height;
 		m_projection.reset(new DirectX::XMMATRIX(DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 0.001f, 1000.0f)));
+
+
+		m_viewport->Width = (float)m_width;
+		m_viewport->Height = (float)m_height;
+		m_viewport->TopLeftX = 0.f;
+		m_viewport->TopLeftY = 0.f;
+		m_viewport->MinDepth = 0.f;
+		m_viewport->MaxDepth = 1.f;
+
+
 	}
 }
 
@@ -225,7 +230,7 @@ void Library::ShadowMap::CreateRasterState()
 	// rasterizer
 	D3D11_RASTERIZER_DESC rasterizerState;
 	rasterizerState.FillMode = D3D11_FILL_SOLID;
-	rasterizerState.CullMode = D3D11_CULL_BACK;
+	rasterizerState.CullMode = D3D11_CULL_FRONT;
 	//rasterizerState.FrontCounterClockwise = false;
 	rasterizerState.DepthBias = 100000;
 	rasterizerState.DepthBiasClamp = 0;

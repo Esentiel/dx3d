@@ -59,7 +59,7 @@ void Library::Camera::UpdateViewport()
 	m_viewport->Height = (float)m_height;
 	m_viewport->TopLeftX = 0.f;
 	m_viewport->TopLeftY = 0.f;
-	m_viewport->MinDepth = 0.f;
+	m_viewport->MinDepth = 0.1f;
 	m_viewport->MaxDepth = 1.f;
 
 	g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());

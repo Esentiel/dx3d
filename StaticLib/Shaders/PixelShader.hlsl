@@ -7,7 +7,7 @@ struct LightSource
 
 static const float4 ColorWhite = { 1, 1, 1, 1 };
 static const float3 ColorBlack = { 0, 0, 0 };
-static const float DepthBias = 0.0000005;
+static const float DepthBias = 0.00000005;
 
 Texture2D diffuseTexture : register(t0);
 Texture2D shadowMap : register(t1);

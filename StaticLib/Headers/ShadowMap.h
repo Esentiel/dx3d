@@ -10,6 +10,7 @@ struct ID3D11InputLayout;
 struct ID3D11Buffer;
 struct D3D11_VIEWPORT;
 struct ID3D11RasterizerState;
+struct D3D11_VIEWPORT;
 
 namespace Library
 {
