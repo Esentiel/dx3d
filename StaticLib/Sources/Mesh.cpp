@@ -19,7 +19,9 @@ void Mesh::CreateInputLayout()
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXTCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENTS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BITANGENTS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	ID3DBlob* vertexShaderBLOB = g_D3D->shaderMgr->GetShaderBLOB(m_vertexShaderName);
@@ -128,7 +130,7 @@ void Mesh::SetIndices(std::unique_ptr<UINT[]> &&indices, uint32_t cnt)
 	CreateIndexBuffer();
 }
 
-void Mesh::SetTexturePath(const std::string& path)
+void Mesh::SetDiffuseTexturePath(const std::string& path)
 {
 	m_diffuseTexture = path;
 }
@@ -244,6 +246,12 @@ void Mesh::LoadVertexDataBuffer()
 			m_vertexDataBuffer[i].Position = m_vertices[i];
 			m_vertexDataBuffer[i].TextCoord = m_textCoords[i];
 			m_vertexDataBuffer[i].Normal = m_normals[i];
+
+			if (m_tangents)
+			{
+				m_vertexDataBuffer[i].Bitangents = m_bitangents[i];
+				m_vertexDataBuffer[i].Tangents = m_tangents[i];
+			}
 		}
 
 		CreateVertexBuffer();
@@ -251,6 +259,22 @@ void Mesh::LoadVertexDataBuffer()
 
 		m_dirtyVertex = false;
 	}
+}
+
+const std::string& Library::Mesh::GetNormalTexture() const
+{
+	return m_normalTexture;
+}
+
+void Library::Mesh::SetNormalTexturePath(const std::string& path)
+{
+	m_normalTexture = path;
+}
+
+void Library::Mesh::SetTangents(std::unique_ptr<DirectX::XMFLOAT3[]> &&tangents, std::unique_ptr<DirectX::XMFLOAT3[]> &&bitangents)
+{
+	m_tangents.swap(tangents);
+	m_bitangents.swap(bitangents);
 }
 
 bool Library::Mesh::IsCalcLight() const

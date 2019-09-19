@@ -60,5 +60,7 @@ ID3D11ShaderResourceView** Library::TextureManager::GetTexture(const std::string
 		return it->second.GetAddressOf();
 	
 	std::string text("GetTexture() failed for texture: " + name);
-	throw GameException(text.c_str());
+	//throw GameException(text.c_str());
+
+	return nullptr;
 }

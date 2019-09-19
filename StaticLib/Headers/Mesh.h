@@ -23,6 +23,7 @@ namespace Library
 		float AmbientK;
 		float Roughness;
 		int CalcLight;
+		int HasNormalMap;
 	};
 
 	struct MeshLightCB
@@ -35,6 +36,8 @@ namespace Library
 		DirectX::XMFLOAT3 Position;
 		DirectX::XMFLOAT2 TextCoord;
 		DirectX::XMFLOAT3 Normal;
+		DirectX::XMFLOAT3 Tangents;
+		DirectX::XMFLOAT3 Bitangents;
 
 		Vertex() {}
 		Vertex(DirectX::XMFLOAT3 pos, DirectX::XMFLOAT2 textCoord) : Position(pos), TextCoord(textCoord) {}
@@ -62,15 +65,18 @@ namespace Library
 		const std::string& GetPixelShader() const;
 		const int GetIndexCount() const;
 		const std::string& GetDiffuseTexture() const;
+		const std::string& GetNormalTexture() const;
 
 		//
 		void LoadVertexDataBuffer();
 
 		void SetVertices(std::unique_ptr<DirectX::XMFLOAT3[]> &&vertices, uint32_t cnt);
 		void SetIndices(std::unique_ptr<UINT[]> &&indices, uint32_t cnt);
-		void SetTexturePath(const std::string& path);
+		void SetDiffuseTexturePath(const std::string& path);
+		void SetNormalTexturePath(const std::string& path);
 		void SetTextureCoords(std::unique_ptr<DirectX::XMFLOAT2[]> &&textureCoords);
 		void SetNormals(std::unique_ptr<DirectX::XMFLOAT3[]> &&normals);
+		void SetTangents(std::unique_ptr<DirectX::XMFLOAT3[]> &&tangents, std::unique_ptr<DirectX::XMFLOAT3[]> &&bitangents);
 
 		void Move(const DirectX::XMFLOAT3 &direction);
 		void Rotate(const DirectX::XMFLOAT3 &rotation);
@@ -93,6 +99,8 @@ namespace Library
 		std::unique_ptr<DirectX::XMFLOAT3[]> m_vertices;
 		std::unique_ptr<UINT[]> m_indices;
 		std::unique_ptr<DirectX::XMFLOAT3[]> m_normals;
+		std::unique_ptr<DirectX::XMFLOAT3[]> m_tangents;
+		std::unique_ptr<DirectX::XMFLOAT3[]> m_bitangents;
 		std::unique_ptr<DirectX::XMFLOAT2[]> m_textCoords;
 
 		std::vector<Vertex> m_vertexDataBuffer;
@@ -104,6 +112,7 @@ namespace Library
 		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputlayout;
 
 		std::string m_diffuseTexture;
+		std::string m_normalTexture;
 
 		std::string m_vertexShaderName;
 		std::string m_pixelShaderName;

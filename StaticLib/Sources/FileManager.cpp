@@ -98,6 +98,8 @@ bool FileManager::ReadModelFromFBX(const char * inFilePath, uint32_t id, Mesh* o
 		uint32_t indicesNum = mesh->mNumFaces * 3;
 		std::unique_ptr<DirectX::XMFLOAT3[]> vertices = std::make_unique<DirectX::XMFLOAT3[]>(verticesNum);
 		std::unique_ptr<DirectX::XMFLOAT3[]> normals = std::make_unique<DirectX::XMFLOAT3[]>(verticesNum);
+		std::unique_ptr<DirectX::XMFLOAT3[]> tangents = std::make_unique<DirectX::XMFLOAT3[]>(verticesNum);
+		std::unique_ptr<DirectX::XMFLOAT3[]> bitangents = std::make_unique<DirectX::XMFLOAT3[]>(verticesNum);
 		std::unique_ptr<UINT[]> indices = std::make_unique<UINT[]>(indicesNum);
 		
 		for (; i < verticesNum; i++)
@@ -123,9 +125,25 @@ bool FileManager::ReadModelFromFBX(const char * inFilePath, uint32_t id, Mesh* o
 				normals[i].x = mesh->mNormals[i].x;
 				normals[i].y = mesh->mNormals[i].y;
 				normals[i].z = mesh->mNormals[i].z;
+
+				if (mesh->HasTangentsAndBitangents())
+				{
+					tangents[i].x = mesh->mTangents[i].x;
+					tangents[i].y = mesh->mTangents[i].y;
+					tangents[i].z = mesh->mTangents[i].z;
+
+					bitangents[i].x = mesh->mBitangents[i].x;
+					bitangents[i].y = mesh->mBitangents[i].y;
+					bitangents[i].z = mesh->mBitangents[i].z;
+				}
 			}
 
 			outMesh->SetNormals(std::move(normals));
+
+			if (mesh->HasTangentsAndBitangents())
+			{
+				outMesh->SetTangents(std::move(tangents), std::move(bitangents));
+			}
 		}
 
 		// materials, textures
@@ -157,7 +175,24 @@ bool FileManager::ReadModelFromFBX(const char * inFilePath, uint32_t id, Mesh* o
 					else
 					{
 						g_D3D->textureMgr->LoadTexture(texturePath.C_Str());
-						outMesh->SetTexturePath(texturePath.C_Str());
+						outMesh->SetDiffuseTexturePath(texturePath.C_Str());
+					}
+				}
+			}
+			for (unsigned int k = 0; k < material->GetTextureCount(aiTextureType_NORMALS); k++)
+			{
+				assert(k == 0);
+				aiString texturePath;
+				if (material->GetTexture(aiTextureType_NORMALS, k, &texturePath) == aiReturn_SUCCESS)
+				{
+					if (auto texture = scene->GetEmbeddedTexture(texturePath.C_Str()))
+					{
+						throw GameException("Engine doesn't work with embedded textures!");
+					}
+					else
+					{
+						g_D3D->textureMgr->LoadTexture(texturePath.C_Str());
+						outMesh->SetNormalTexturePath(texturePath.C_Str());
 					}
 				}
 			}

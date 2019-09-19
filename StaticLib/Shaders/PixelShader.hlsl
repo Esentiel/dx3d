@@ -11,6 +11,7 @@ static const float DepthBias = 0.00000005;
 
 Texture2D diffuseTexture : register(t0);
 Texture2D shadowMap : register(t1);
+Texture2D normalMap : register(t3);
 SamplerState simpleSampler : register(s0);
 
 SamplerState DepthMapSampler : register(s1);
@@ -26,6 +27,7 @@ cbuffer MVPbuffer : register(b0)
     float ambientK;
     float roughness;
     int calcLight;
+    int hasNormalMap;
 }
 
 cbuffer PerScene : register(b1)
@@ -38,6 +40,8 @@ struct PS_INPUT
 {
 	float2 textCoord : TEXCOORD0;
     float3 normalW : NORMAL0;
+    float3 tangentsW : TANGENTS0;
+    float3 bitangentsW : BITANGENTS0;
     float3 posW : POSITION0;
     float4 posSM : POSITION1;
 };
@@ -51,13 +55,35 @@ float4 main(PS_INPUT input) : SV_TARGET
         return color;
     }
 
-    float4 diffuseLight = max(dot(normalize(lightS.lightDir), normalize(input.normalW)), 0) * float4(0.8, 0.8, 0.8, 0.8);
+    float4 bumpMap;
+    float3 bumpNormal;
+    if (hasNormalMap)
+    {
+        // normal
+        bumpMap = normalMap.Sample(simpleSampler, input.textCoord);
+    
+    // Expand the range of the normal value from (0, +1) to (-1, +1).
+        bumpMap = (bumpMap * 2.0f) - 1.0f;
+
+    // Calculate the normal from the data in the bump map.
+        bumpNormal = (bumpMap.x * input.tangentsW) + (bumpMap.y * input.bitangentsW) + (bumpMap.z * input.normalW);
+
+    // Normalize the resulting bump normal.
+        bumpNormal = normalize(bumpNormal);
+    }
+    else
+    {
+        bumpNormal = input.normalW;
+    }
+    
+
+    float4 diffuseLight = max(dot(normalize(lightS.lightDir), normalize(bumpNormal)), 0) * float4(0.8, 0.8, 0.8, 0.8);
 
     float3 L = normalize(lightS.lightDir);
     float3 E = normalize(eyePos - input.posW);
     float3 H = normalize(L + E);
 
-    float4 spec = pow(max(dot(input.normalW, H), 0), 0.1) * float4(0.8, 0.8, 0.8, 0.8);
+    float4 spec = pow(max(dot(bumpNormal, H), 0), 0.1) * float4(0.8, 0.8, 0.8, 0.8);
     diffuseLight += spec;
 
     color *= diffuseLight;

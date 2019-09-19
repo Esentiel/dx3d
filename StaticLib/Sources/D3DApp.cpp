@@ -383,6 +383,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	meshCb.DiffuseIntensity = 0.95f;
 	meshCb.Roughness = 0.5f;
 	meshCb.CalcLight = (int)mesh->IsCalcLight();
+	meshCb.HasNormalMap = g_D3D->textureMgr->GetTexture(mesh->GetNormalTexture()) != nullptr;
 
 	m_deviceCtx->UpdateSubresource(mesh->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
 
@@ -406,6 +407,8 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	m_deviceCtx->PSSetSamplers(0, 1, s_sampler.GetAddressOf());
 	m_deviceCtx->PSSetSamplers(1, 1, s_sampler2.GetAddressOf());
 	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetDiffuseTexture()));
+	if (meshCb.HasNormalMap)
+		m_deviceCtx->PSSetShaderResources(3, 1, g_D3D->textureMgr->GetTexture(mesh->GetNormalTexture()));
 	m_deviceCtx->PSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
 	m_deviceCtx->PSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());
 
