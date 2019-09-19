@@ -75,7 +75,7 @@ void ShadowMap::Initialize(int width, int height)
 		ZeroMemory(&depthStencilViewDesc, sizeof
 		(depthStencilViewDesc));
 		depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
 		depthStencilViewDesc.Texture2D.MipSlice = 0;
 
 		if (FAILED(hr = g_D3D->device->CreateDepthStencilView(fullScreenTexture.Get(), &depthStencilViewDesc, m_shadowMap.GetAddressOf())))
@@ -233,7 +233,7 @@ void Library::ShadowMap::CreateRasterState()
 	rasterizerState.SlopeScaledDepthBias = 1.0f;
 	rasterizerState.DepthClipEnable = true;
 	rasterizerState.ScissorEnable = true;
-	rasterizerState.MultisampleEnable = false;
+	rasterizerState.MultisampleEnable = true;
 	rasterizerState.AntialiasedLineEnable = false;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }

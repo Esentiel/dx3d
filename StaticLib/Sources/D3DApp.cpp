@@ -112,10 +112,15 @@ void D3DApp::Initialize()
 	}
 
 	// check MSAA levels
-	UINT numQlvls;
-	if (FAILED(hr = m_device->CheckMultisampleQualityLevels(DXGI_FORMAT_R8G8B8A8_UNORM, 4, &numQlvls)))
+	DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	for (m_sampleCount = D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT;
+		m_sampleCount > 1; m_sampleCount--)
 	{
-		throw GameException("CheckMultisampleQualityLevels() failed", hr);
+		if (FAILED(m_device->CheckMultisampleQualityLevels(format, m_sampleCount, &m_levels)))
+			continue;
+
+		if (m_levels > 0)
+			break;
 	}
 
 	// create SwapChain
@@ -123,9 +128,9 @@ void D3DApp::Initialize()
 	ZeroMemory(&swapChainDesc, sizeof(swapChainDesc));
 	swapChainDesc.Width = m_width;
 	swapChainDesc.Height = m_height;
-	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swapChainDesc.SampleDesc.Count = 4;
-	swapChainDesc.SampleDesc.Quality = numQlvls - 1;
+	swapChainDesc.Format = format;
+	swapChainDesc.SampleDesc.Count = m_sampleCount;
+	swapChainDesc.SampleDesc.Quality = m_levels - 1;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.BufferCount = 3;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_SEQUENTIAL;
@@ -160,8 +165,8 @@ void D3DApp::Initialize()
 		throw GameException("GetBuffer() failed", hr);
 	}
 	m_rtvs.resize(3);
-	m_currentRtv = 0;
-	if (FAILED(hr = m_device->CreateRenderTargetView(m_backBuffers.at(0).Get(), NULL, m_rtvs.at(0).GetAddressOf())))
+	CD3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc(D3D11_RTV_DIMENSION_TEXTURE2DMS);
+	if (FAILED(hr = m_device->CreateRenderTargetView(m_backBuffers.at(0).Get(), &renderTargetViewDesc, m_rtvs.at(0).GetAddressOf())))
 	{
 		throw GameException("CreateRenderTargetView() failed", hr);
 	}
@@ -171,9 +176,9 @@ void D3DApp::Initialize()
 	ZeroMemory(&desc, sizeof(desc));
 	desc.Width = m_width;
 	desc.Height = m_height;
-	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	desc.SampleDesc.Count = 4;
-	desc.SampleDesc.Quality = numQlvls - 1;
+	desc.Format = format;
+	desc.SampleDesc.Count = m_sampleCount;
+	desc.SampleDesc.Quality = m_levels - 1;
 	desc.MipLevels = 1;
 	desc.ArraySize = 1;
 	desc.Usage = D3D11_USAGE_DEFAULT;
@@ -188,7 +193,7 @@ void D3DApp::Initialize()
 	m_backBuffers.push_back(pTexture);
 	pTexture.Reset();
 
-	if (FAILED(hr = m_device->CreateRenderTargetView(m_backBuffers.at(1).Get(), NULL, m_rtvs.at(1).GetAddressOf())))
+	if (FAILED(hr = m_device->CreateRenderTargetView(m_backBuffers.at(1).Get(), &renderTargetViewDesc, m_rtvs.at(1).GetAddressOf())))
 	{
 		throw GameException("CreateRenderTargetView() failed for 2nd RTV", hr);
 	}
@@ -200,11 +205,10 @@ void D3DApp::Initialize()
 	}
 
 	m_backBuffers.push_back(pTexture);
-	if (FAILED(hr = m_device->CreateRenderTargetView(m_backBuffers.at(2).Get(), NULL, m_rtvs.at(2).GetAddressOf())))
+	if (FAILED(hr = m_device->CreateRenderTargetView(m_backBuffers.at(2).Get(), &renderTargetViewDesc, m_rtvs.at(2).GetAddressOf())))
 	{
 		throw GameException("CreateRenderTargetView() failed for 3rd RTV", hr);
 	}
-
 
 	// create DSB
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> dsb;
@@ -217,15 +221,16 @@ void D3DApp::Initialize()
 	dsbDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsbDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	dsbDesc.Usage = D3D11_USAGE_DEFAULT;
-	dsbDesc.SampleDesc.Count = 4;
-	dsbDesc.SampleDesc.Quality = numQlvls - 1;
+	dsbDesc.SampleDesc.Count =  m_sampleCount;
+	dsbDesc.SampleDesc.Quality = m_levels - 1;
 
 	if (FAILED(hr = m_device->CreateTexture2D(&dsbDesc, NULL, dsb.GetAddressOf())))
 	{
 		throw GameException("CreateTexture2D() failed", hr);
 	}
 
-	if (FAILED(hr = m_device->CreateDepthStencilView(dsb.Get(), NULL, m_dsbView.GetAddressOf())))
+	CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2DMS);
+	if (FAILED(hr = m_device->CreateDepthStencilView(dsb.Get(), &depthStencilViewDesc, m_dsbView.GetAddressOf())))
 	{
 		throw GameException("CreateDepthStencilView() failed", hr);
 	}
@@ -247,9 +252,9 @@ void D3DApp::Initialize()
 	rasterizerState.DepthBias = false;
 	rasterizerState.DepthBiasClamp = 0;
 	rasterizerState.SlopeScaledDepthBias = 0;
-	rasterizerState.DepthClipEnable = false;
+	rasterizerState.DepthClipEnable = true;
 	rasterizerState.ScissorEnable = true;
-	rasterizerState.MultisampleEnable = false;
+	rasterizerState.MultisampleEnable = true;
 	rasterizerState.AntialiasedLineEnable = false;
 	m_device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 
@@ -340,6 +345,14 @@ void D3DApp::Draw(const GameTime &gameTime)
 
 	// draw offscreen texture to backbuffer
 	m_postProcessor->Draw();
+
+	// MSAA
+	if (m_sampleCount > 1)
+	{
+		unsigned int sub = D3D11CalcSubresource(0, 0, 1);
+
+		//m_deviceCtx->ResolveSubresource(m_backBuffers.front().Get(), sub, m_offScreenSurface.Get(), sub,	DXGI_FORMAT_B8G8R8A8_UNORM);
+	}
 
 	// present
 	HRESULT hr = m_swapChain->Present(0, 0);

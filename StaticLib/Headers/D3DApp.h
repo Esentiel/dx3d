@@ -46,12 +46,14 @@ namespace Library
 		HWND m_hwnd;
 		unsigned int m_width;
 		unsigned int m_height;
+		
+		unsigned int m_sampleCount;
+		unsigned int m_levels;
 
 		Microsoft::WRL::ComPtr<ID3D11Device> m_device;
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_deviceCtx;
 		Microsoft::WRL::ComPtr<IDXGISwapChain1> m_swapChain;
 		std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> m_rtvs;
-		int m_currentRtv;
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_dsbView;
 		
 		std::vector<Microsoft::WRL::ComPtr<ID3D11Texture2D>> m_backBuffers;

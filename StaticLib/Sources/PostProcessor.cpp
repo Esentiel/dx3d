@@ -96,7 +96,8 @@ PostProcessor::PostProcessor(int width, int height)
 	}
 
 	// create view for dsb
-	if (FAILED(hr = g_D3D->device->CreateDepthStencilView(depthStencilBuffer.Get(), nullptr, m_offscreenDsb.GetAddressOf())))
+	CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2DMS);
+	if (FAILED(hr = g_D3D->device->CreateDepthStencilView(depthStencilBuffer.Get(), &depthStencilViewDesc, m_offscreenDsb.GetAddressOf())))
 	{
 		throw GameException("IDXGIDevice::CreateDepthStencilView() failed.", hr);
 	}
@@ -253,7 +254,7 @@ void Library::PostProcessor::CreateRasterState()
 	rasterizerState.SlopeScaledDepthBias = 0;
 	rasterizerState.DepthClipEnable = true;
 	rasterizerState.ScissorEnable = true;
-	rasterizerState.MultisampleEnable = false;
+	rasterizerState.MultisampleEnable = true;
 	rasterizerState.AntialiasedLineEnable = false;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
