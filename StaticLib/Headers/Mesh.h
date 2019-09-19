@@ -16,6 +16,7 @@ namespace Library
 	{
 		DirectX::XMFLOAT4X4 WorldViewProj;
 		DirectX::XMFLOAT4X4 World;
+		DirectX::XMFLOAT4X4 ViewProj;
 		DirectX::XMFLOAT4X4 ShadowMapMatrix;
 		float DiffuseIntensity;
 		float EmissiveK;
@@ -84,7 +85,7 @@ namespace Library
 		void CreateInputLayout();
 		void CreateConstMeshBuffer();
 		void CreateVertexBuffer();
-		void CreateVertexLightBuffer();
+		void CreateVertexLightBuffer(); // ass light input layout to support SM and SB
 		void CreateIndexBuffer();
 
 		std::unique_ptr<Transformations> m_transformations;

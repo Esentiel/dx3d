@@ -19,24 +19,35 @@ TextureManager::~TextureManager()
 {
 }
 
-void TextureManager::LoadTexture(const std::string &name)
+void TextureManager::LoadTexture(const std::string &name, ID3D11Texture2D** texture)
 {
 	assert(g_D3D->device);
 	assert(g_D3D->deviceCtx);
 
 	if (m_textures.find(name) == m_textures.end())
 	{
-		Microsoft::WRL::ComPtr<ID3D11Resource> texture;
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> internalTexture;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> textureView;
+		HRESULT hr;
 
 		std::string path = s_texturesDir + name;
 		std::wstring pathW(path.begin(), path.end());
 
-		HRESULT hr;
-		if (FAILED(hr = DirectX::CreateDDSTextureFromFile(g_D3D->device, pathW.c_str(), texture.GetAddressOf(), textureView.GetAddressOf())))
+		if (texture)
 		{
-			throw GameException("LoadTexture(): CreateDDSTextureFromFile() failed", hr);
+			if (FAILED(hr = DirectX::CreateDDSTextureFromFile(g_D3D->device, pathW.c_str(), (ID3D11Resource**)texture, textureView.GetAddressOf())))
+			{
+				throw GameException("LoadTexture(): CreateDDSTextureFromFile() failed", hr);
+			}
 		}
+		else
+		{
+			if (FAILED(hr = DirectX::CreateDDSTextureFromFile(g_D3D->device, pathW.c_str(), (ID3D11Resource**)internalTexture.GetAddressOf(), textureView.GetAddressOf())))
+			{
+				throw GameException("LoadTexture(): CreateDDSTextureFromFile() failed", hr);
+			}
+		}
+		
 
 		m_textures.insert({ name , textureView });
 	}

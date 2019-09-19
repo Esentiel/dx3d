@@ -26,8 +26,6 @@ cbuffer PerScene : register(b1)
 struct VS_IN
 {
     float3 position : POSITION;
-    float2 textCoord : TEXTCOORD;
-    float3 normal : NORMAL;
 };
 
 struct VS_OUT

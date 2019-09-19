@@ -3,14 +3,28 @@
 
 #include <d3d11.h>
 #include <DirectXMath.h>
+#include "TextureManager.h"
+#include "Mesh.h"
+#include "Transformations.h"
+#include "GameException.h"
+#include "RenderScene.h"
+#include "Camera.h"
+#include "ShaderManager.h"
 
 using namespace Library;
 
-SkyBox::SkyBox()
+SkyBox::SkyBox() :
+	m_transformations(std::make_unique<Transformations>())
 {
-	CreateSkySphere
+	CreateSkySphere();
 	CreateRasterState();
 	CreateDSState();
+	CreateSamplerState();
+	CreateTexture();
+	CreateInputLayout();
+	CreateVertexBuffer();
+	CreateIndexBuffer();
+	CreateConstMeshBuffer();
 }
 
 
@@ -29,27 +43,60 @@ void SkyBox::CreateRasterState()
 	rasterizerState.DepthBias = 0;
 	rasterizerState.DepthBiasClamp = 0;
 	rasterizerState.SlopeScaledDepthBias = 0.0f;
-	rasterizerState.DepthClipEnable = true;
+	rasterizerState.DepthClipEnable = false;
 	rasterizerState.ScissorEnable = false;
 	rasterizerState.MultisampleEnable = false;
 	rasterizerState.AntialiasedLineEnable = false;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
 
-void Library::SkyBox::Draw()
+void Library::SkyBox::Draw(RenderScene * renderScene) // TODO: rewrite to use Mesh
 {
 	// change raster state
 	g_D3D->deviceCtx->RSSetState(m_rasterState.Get());
 
+	// draw sphere
+	// update mesh cb
+	MeshCB meshCb;
+	DirectX::XMStoreFloat4x4(&meshCb.ViewProj, *(g_D3D->camera->GetView()) * *(g_D3D->camera->GetProjection()));
+	DirectX::XMStoreFloat4x4(&meshCb.World, *(m_transformations->GetModel()));
 
+	g_D3D->deviceCtx->UpdateSubresource(m_constMeshBuffer.Get(), 0, nullptr, &meshCb, 0, 0);
 
+	// IA
+	UINT stride = sizeof(Library::Vertex);
+	UINT offset = 0;
+	g_D3D->deviceCtx->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
+	g_D3D->deviceCtx->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+	g_D3D->deviceCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	g_D3D->deviceCtx->IASetInputLayout(m_inputlayout.Get());
 
+	// VS
+	ID3D11VertexShader* vs = g_D3D->shaderMgr->GetVertexShader(m_VSName);
+	g_D3D->deviceCtx->VSSetShader(vs, NULL, 0);
+	g_D3D->deviceCtx->VSSetConstantBuffers(0, 1, m_constMeshBuffer.GetAddressOf());
+	g_D3D->deviceCtx->VSSetConstantBuffers(1, 1, renderScene->GetConstSceneBufferRef());
+
+	// PS
+	ID3D11PixelShader* ps = g_D3D->shaderMgr->GetPixelShader(m_PSName);
+	g_D3D->deviceCtx->PSSetShader(ps, NULL, 0);
+	g_D3D->deviceCtx->PSSetSamplers(2, 1, m_cubesTexSamplerState.GetAddressOf());
+	g_D3D->deviceCtx->PSSetShaderResources(2, 1, m_cubesTextureRes.GetAddressOf());
+
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> prevState;
+	UINT ref = 0 ;
+	g_D3D->deviceCtx->OMGetDepthStencilState(prevState.GetAddressOf(), &ref);
+
+	g_D3D->deviceCtx->OMSetDepthStencilState(m_dsv.Get(), 0);
+
+	// draw call
+	g_D3D->deviceCtx->DrawIndexed(m_indices.size(), 0, 0);
+
+	g_D3D->deviceCtx->OMSetDepthStencilState(prevState.Get(), 0);
 }
 
 void Library::SkyBox::CreateSkySphere()
 {
-	MeshData meshData;
-
 	//
 	// Compute the vertices stating at the top pole and moving down the stacks.
 	//
@@ -57,61 +104,52 @@ void Library::SkyBox::CreateSkySphere()
 	// Poles: note that there will be texture coordinate distortion as there is
 	// not a unique point on the texture map to assign to the pole when mapping
 	// a rectangular texture onto a sphere.
-	Vertex topVertex(0.0f, +radius, 0.0f, 0.0f, +1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-	Vertex bottomVertex(0.0f, -radius, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+
+	float radius = 100.f;
+	int stackCount = 20;
+	int sliceCount = 20;
+
+	DirectX::XMFLOAT3 topVertex(0.0f, +radius, 0.0f);
+	DirectX::XMFLOAT3 bottomVertex(0.0f, -radius, 0.0f);
 
 	m_vertices.push_back(topVertex);
 
-	float phiStep = XM_PI / stackCount;
-	float thetaStep = 2.0f*XM_PI / sliceCount;
+	float phiStep = DirectX::XM_PI / stackCount;
+	float thetaStep = 2.0f * DirectX::XM_PI / sliceCount;
 
 	// Compute vertices for each stack ring (do not count the poles as rings).
-	for (uint32 i = 1; i <= stackCount - 1; ++i)
+	for (int i = 1; i <= stackCount - 1; ++i)
 	{
 		float phi = i * phiStep;
 
 		// Vertices of ring.
-		for (uint32 j = 0; j <= sliceCount; ++j)
+		for (int j = 0; j <= sliceCount; ++j)
 		{
 			float theta = j * thetaStep;
 
-			Vertex v;
+			DirectX::XMFLOAT3 v;
 
 			// spherical to cartesian
-			v.Position.x = radius * sinf(phi)*cosf(theta);
-			v.Position.y = radius * cosf(phi);
-			v.Position.z = radius * sinf(phi)*sinf(theta);
+			v.x = radius * sinf(phi)*cosf(theta);
+			v.y = radius * cosf(phi);
+			v.z = radius * sinf(phi)*sinf(theta);
 
-			// Partial derivative of P with respect to theta
-			v.TangentU.x = -radius * sinf(phi)*sinf(theta);
-			v.TangentU.y = 0.0f;
-			v.TangentU.z = +radius * sinf(phi)*cosf(theta);
-
-			XMVECTOR T = XMLoadFloat3(&v.TangentU);
-			XMStoreFloat3(&v.TangentU, XMVector3Normalize(T));
-
-			XMVECTOR p = XMLoadFloat3(&v.Position);
-			XMStoreFloat3(&v.Normal, XMVector3Normalize(p));
-
-			v.TexC.x = theta / XM_2PI;
-			v.TexC.y = phi / XM_PI;
-
-			meshData.Vertices.push_back(v);
+			m_vertices.push_back(v);
 		}
 	}
 
-	meshData.Vertices.push_back(bottomVertex);
+	m_vertices.push_back(bottomVertex);
 
 	//
 	// Compute indices for top stack.  The top stack was written first to the vertex buffer
 	// and connects the top pole to the first ring.
 	//
 
-	for (uint32 i = 1; i <= sliceCount; ++i)
+	for (int i = 1; i <= sliceCount; ++i)
 	{
-		meshData.Indices32.push_back(0);
-		meshData.Indices32.push_back(i + 1);
-		meshData.Indices32.push_back(i);
+		m_indices.push_back(0);
+		m_indices.push_back(i + 1);
+		m_indices.push_back(i);
 	}
 
 	//
@@ -120,19 +158,19 @@ void Library::SkyBox::CreateSkySphere()
 
 	// Offset the indices to the index of the first vertex in the first ring.
 	// This is just skipping the top pole vertex.
-	uint32 baseIndex = 1;
-	uint32 ringVertexCount = sliceCount + 1;
-	for (uint32 i = 0; i < stackCount - 2; ++i)
+	int baseIndex = 1;
+	int ringVertexCount = sliceCount + 1;
+	for (int i = 0; i < stackCount - 2; ++i)
 	{
-		for (uint32 j = 0; j < sliceCount; ++j)
+		for (int j = 0; j < sliceCount; ++j)
 		{
-			meshData.Indices32.push_back(baseIndex + i * ringVertexCount + j);
-			meshData.Indices32.push_back(baseIndex + i * ringVertexCount + j + 1);
-			meshData.Indices32.push_back(baseIndex + (i + 1)*ringVertexCount + j);
+			m_indices.push_back(baseIndex + i * ringVertexCount + j);
+			m_indices.push_back(baseIndex + i * ringVertexCount + j + 1);
+			m_indices.push_back(baseIndex + (i + 1)*ringVertexCount + j);
 
-			meshData.Indices32.push_back(baseIndex + (i + 1)*ringVertexCount + j);
-			meshData.Indices32.push_back(baseIndex + i * ringVertexCount + j + 1);
-			meshData.Indices32.push_back(baseIndex + (i + 1)*ringVertexCount + j + 1);
+			m_indices.push_back(baseIndex + (i + 1)*ringVertexCount + j);
+			m_indices.push_back(baseIndex + i * ringVertexCount + j + 1);
+			m_indices.push_back(baseIndex + (i + 1)*ringVertexCount + j + 1);
 		}
 	}
 
@@ -142,19 +180,17 @@ void Library::SkyBox::CreateSkySphere()
 	//
 
 	// South pole vertex was added last.
-	uint32 southPoleIndex = (uint32)meshData.Vertices.size() - 1;
+	int southPoleIndex = (int)m_indices.size() - 1;
 
 	// Offset the indices to the index of the first vertex in the last ring.
 	baseIndex = southPoleIndex - ringVertexCount;
 
-	for (uint32 i = 0; i < sliceCount; ++i)
+	for (int i = 0; i < sliceCount; ++i)
 	{
-		meshData.Indices32.push_back(southPoleIndex);
-		meshData.Indices32.push_back(baseIndex + i);
-		meshData.Indices32.push_back(baseIndex + i + 1);
+		m_indices.push_back(southPoleIndex);
+		m_indices.push_back(baseIndex + i);
+		m_indices.push_back(baseIndex + i + 1);
 	}
-
-	return meshData;
 }
 
 void Library::SkyBox::CreateDSState()
@@ -182,26 +218,113 @@ void Library::SkyBox::CreateSamplerState()
 	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	//Create the Sample State
-	g_D3D->device->CreateSamplerState(&sampDesc, &CubesTexSamplerState);
+	g_D3D->device->CreateSamplerState(&sampDesc, m_cubesTexSamplerState.GetAddressOf());
 }
 
 void Library::SkyBox::CreateTexture()
 {
-	/*srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-	srvDesc.TextureCube.MostDetailedMip = 0;
-	srvDesc.TextureCube.MipLevels = skyTex->GetDesc().MipLevels;
-	srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
-	srvDesc.Format = skyTex->GetDesc().Format;*/
-	
-	ID3D11Texture2D Create here;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> boxTexture;
+	g_D3D->textureMgr->LoadTexture(m_textureName, boxTexture.GetAddressOf()); // TODO: LoadTexture creates and stores useless SRV for box texture. should rewrite this
 
-	D3D11_SHADER_RESOURCE_VIEW_DESC SMViewDesc;
-	ZeroMemory(&SMViewDesc, sizeof(SMViewDesc));
-	SMViewDesc.Format = SMTextureDesc.Format;
-	SMViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-	SMViewDesc.TextureCube.MipLevels = 0;
-	SMViewDesc.TextureCube.MostDetailedMip = 0;
+	D3D11_TEXTURE2D_DESC  boxTextureDesc;
+	boxTexture->GetDesc(&boxTextureDesc);
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC boxViewDesc;
+	ZeroMemory(&boxViewDesc, sizeof(boxViewDesc));
+	boxViewDesc.Format = boxTextureDesc.Format;
+	boxViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+	boxViewDesc.TextureCube.MipLevels = 1;
+	boxViewDesc.TextureCube.MostDetailedMip = 0;
 
 	//Create the Resource view
-	hr = d3d11Device->CreateShaderResourceView(SMTexture, &SMViewDesc, &smrv);
+	HRESULT hr;
+	if (FAILED(hr = g_D3D->device->CreateShaderResourceView(boxTexture.Get(), &boxViewDesc, m_cubesTextureRes.GetAddressOf())))
+	{
+		throw GameException("SkyBox::CreateIndexBuffer(): CreateBuffer() failed", hr);
+	}
+}
+
+void SkyBox::CreateConstMeshBuffer()
+{
+	MeshCB VsConstData;
+
+	auto size = (UINT)std::ceil(sizeof(VsConstData) / 16.f) * 16;
+
+	CD3D11_BUFFER_DESC cbDesc(
+		size,
+		D3D11_BIND_CONSTANT_BUFFER
+	);
+
+	HRESULT hr;
+	if (FAILED(hr = g_D3D->device->CreateBuffer(&cbDesc, NULL, &m_constMeshBuffer)))
+	{
+		throw GameException("SkyBox::CreateConstMeshBuffer(): CreateBuffer() failed", hr);
+	}
+}
+
+void SkyBox::CreateInputLayout()
+{
+	// setup IA layout
+	HRESULT hr;
+	D3D11_INPUT_ELEMENT_DESC layout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+
+	ID3DBlob* vertexShaderBLOB = g_D3D->shaderMgr->GetShaderBLOB(m_VSName);
+	if (vertexShaderBLOB)
+	{
+		if (FAILED(hr = g_D3D->device->CreateInputLayout(layout, _countof(layout), vertexShaderBLOB->GetBufferPointer(), vertexShaderBLOB->GetBufferSize(), m_inputlayout.GetAddressOf())))
+		{
+			throw GameException("CreateInputLayout() failed", hr);
+		}
+	}
+	else
+	{
+		throw GameException("Mesh::CreateInputLayout() failed as vertexShaderBLOB is null");
+	}
+}
+
+void SkyBox::CreateVertexBuffer()
+{
+	m_vertexBuffer.Reset();
+
+	CD3D11_BUFFER_DESC vDesc(
+		sizeof(Vertex) * m_vertices.size(),
+		D3D11_BIND_VERTEX_BUFFER
+	);
+
+	D3D11_SUBRESOURCE_DATA vData;
+	ZeroMemory(&vData, sizeof(D3D11_SUBRESOURCE_DATA));
+	vData.pSysMem = m_vertices.data();
+	vData.SysMemPitch = 0;
+	vData.SysMemSlicePitch = 0;
+
+	HRESULT hr;
+	if (FAILED(hr = g_D3D->device->CreateBuffer(&vDesc, &vData, m_vertexBuffer.GetAddressOf())))
+	{
+		throw GameException("SkyBox::CreateVertexBuffer(): CreateBuffer() failed", hr);
+	}
+}
+
+void SkyBox::CreateIndexBuffer()
+{
+	m_indexBuffer.Reset();
+
+	CD3D11_BUFFER_DESC iDesc(
+		sizeof(UINT) * m_indices.size(),
+		D3D11_BIND_INDEX_BUFFER
+	);
+
+	D3D11_SUBRESOURCE_DATA iData;
+	ZeroMemory(&iData, sizeof(D3D11_SUBRESOURCE_DATA));
+	iData.pSysMem = m_indices.data();
+	iData.SysMemPitch = 0;
+	iData.SysMemSlicePitch = 0;
+
+	HRESULT hr;
+	if (FAILED(hr = g_D3D->device->CreateBuffer(&iDesc, &iData, m_indexBuffer.GetAddressOf())))
+	{
+		throw GameException("SkyBox::CreateIndexBuffer(): CreateBuffer() failed", hr);
+	}
 }

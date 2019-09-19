@@ -314,14 +314,14 @@ void D3DApp::Draw(const GameTime &gameTime)
 	// begin Post processing
 	m_postProcessor->Begin();
 
+	// update scene CB
+	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);
+
 	// skyBox
-	m_skyBox->Draw();
+	m_skyBox->Draw(m_renderScene.get());
 
 	// raster state
 	m_deviceCtx->RSSetState(m_rasterState.Get());
-
-	// update scene CB
-	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);
 
 	// meshes
 	m_deviceCtx->PSSetShaderResources(1, 1, m_shadowMap->GetShadowMapRef());
