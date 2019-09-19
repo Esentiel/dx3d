@@ -30,7 +30,7 @@ struct VS_IN
 
 struct VS_OUT
 {
-    float3 posL : POSITION0;
+    float3 posL : TEXCOORD;
     float4 projPos : SV_POSITION;
 };
 

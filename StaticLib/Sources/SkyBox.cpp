@@ -25,6 +25,8 @@ SkyBox::SkyBox() :
 	CreateVertexBuffer();
 	CreateIndexBuffer();
 	CreateConstMeshBuffer();
+
+	m_transformations->Scale(DirectX::XMFLOAT3(500.f, 500.f, 500.f));
 }
 
 
@@ -64,7 +66,7 @@ void Library::SkyBox::Draw(RenderScene * renderScene) // TODO: rewrite to use Me
 	g_D3D->deviceCtx->UpdateSubresource(m_constMeshBuffer.Get(), 0, nullptr, &meshCb, 0, 0);
 
 	// IA
-	UINT stride = sizeof(Library::Vertex);
+	UINT stride = sizeof(DirectX::XMFLOAT3);
 	UINT offset = 0;
 	g_D3D->deviceCtx->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 	g_D3D->deviceCtx->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
@@ -83,16 +85,12 @@ void Library::SkyBox::Draw(RenderScene * renderScene) // TODO: rewrite to use Me
 	g_D3D->deviceCtx->PSSetSamplers(2, 1, m_cubesTexSamplerState.GetAddressOf());
 	g_D3D->deviceCtx->PSSetShaderResources(2, 1, m_cubesTextureRes.GetAddressOf());
 
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> prevState;
-	UINT ref = 0 ;
-	g_D3D->deviceCtx->OMGetDepthStencilState(prevState.GetAddressOf(), &ref);
-
 	g_D3D->deviceCtx->OMSetDepthStencilState(m_dsv.Get(), 0);
 
 	// draw call
 	g_D3D->deviceCtx->DrawIndexed(m_indices.size(), 0, 0);
 
-	g_D3D->deviceCtx->OMSetDepthStencilState(prevState.Get(), 0);
+	g_D3D->deviceCtx->OMSetDepthStencilState(0, 0);
 }
 
 void Library::SkyBox::CreateSkySphere()
@@ -105,7 +103,7 @@ void Library::SkyBox::CreateSkySphere()
 	// not a unique point on the texture map to assign to the pole when mapping
 	// a rectangular texture onto a sphere.
 
-	float radius = 100.f;
+	float radius = 0.5f;
 	int stackCount = 20;
 	int sliceCount = 20;
 
@@ -290,7 +288,7 @@ void SkyBox::CreateVertexBuffer()
 	m_vertexBuffer.Reset();
 
 	CD3D11_BUFFER_DESC vDesc(
-		sizeof(Vertex) * m_vertices.size(),
+		sizeof(DirectX::XMFLOAT3) * m_vertices.size(),
 		D3D11_BIND_VERTEX_BUFFER
 	);
 
