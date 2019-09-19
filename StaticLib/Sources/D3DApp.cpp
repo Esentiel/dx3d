@@ -346,14 +346,6 @@ void D3DApp::Draw(const GameTime &gameTime)
 	// draw offscreen texture to backbuffer
 	m_postProcessor->Draw();
 
-	// MSAA
-	if (m_sampleCount > 1)
-	{
-		unsigned int sub = D3D11CalcSubresource(0, 0, 1);
-
-		//m_deviceCtx->ResolveSubresource(m_backBuffers.front().Get(), sub, m_offScreenSurface.Get(), sub,	DXGI_FORMAT_B8G8R8A8_UNORM);
-	}
-
 	// present
 	HRESULT hr = m_swapChain->Present(0, 0);
 	if (FAILED(hr))
@@ -416,7 +408,6 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetDiffuseTexture()));
 	m_deviceCtx->PSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
 	m_deviceCtx->PSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());
-	//m_deviceCtx->PSSetShaderResources(1, 1, m_shadowMap->GetShadowMapRef());
 
 	// draw call
 	m_deviceCtx->DrawIndexed(mesh->GetIndexCount(), 0, 0);
