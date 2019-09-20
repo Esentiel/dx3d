@@ -175,7 +175,7 @@ bool FileManager::ReadModelFromFBX(const char * inFilePath, uint32_t id, Mesh* o
 					else
 					{
 						g_D3D->textureMgr->LoadTexture(texturePath.C_Str());
-						outMesh->SetDiffuseTexturePath(texturePath.C_Str());
+						outMesh->SetTexturePath(texturePath.C_Str(), Mesh::TextureType::DiffuseTexture);
 					}
 				}
 			}
@@ -192,7 +192,7 @@ bool FileManager::ReadModelFromFBX(const char * inFilePath, uint32_t id, Mesh* o
 					else
 					{
 						g_D3D->textureMgr->LoadTexture(texturePath.C_Str());
-						outMesh->SetNormalTexturePath(texturePath.C_Str());
+						outMesh->SetTexturePath(texturePath.C_Str(), Mesh::TextureType::NormalTexture);
 					}
 				}
 			}
@@ -209,7 +209,7 @@ bool FileManager::ReadModelFromFBX(const char * inFilePath, uint32_t id, Mesh* o
 					else
 					{
 						g_D3D->textureMgr->LoadTexture(texturePath.C_Str());
-						outMesh->SetSpecularTesturePath(texturePath.C_Str());
+						outMesh->SetTexturePath(texturePath.C_Str(), Mesh::TextureType::SpecularTexture);
 					}
 				}
 			}

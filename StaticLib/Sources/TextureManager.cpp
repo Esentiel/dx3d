@@ -24,7 +24,7 @@ void TextureManager::LoadTexture(const std::string &name, ID3D11Texture2D** text
 	assert(g_D3D->device);
 	assert(g_D3D->deviceCtx);
 
-	if (m_textures.find(name) == m_textures.end())
+	if (name.size() && m_textures.find(name) == m_textures.end())
 	{
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> internalTexture;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> textureView;

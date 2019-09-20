@@ -384,8 +384,8 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	meshCb.DiffuseIntensity = 0.95f;
 	meshCb.Roughness = 0.9f;
 	meshCb.CalcLight = (int)mesh->IsCalcLight();
-	meshCb.HasNormalMap = g_D3D->textureMgr->GetTexture(mesh->GetNormalTexture()) != nullptr;
-	meshCb.HasSpecularMap = g_D3D->textureMgr->GetTexture(mesh->GetSpecularTexture()) != nullptr;
+	meshCb.HasNormalMap = g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::NormalTexture)) != nullptr;
+	meshCb.HasSpecularMap = g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::SpecularTexture)) != nullptr;
 
 	m_deviceCtx->UpdateSubresource(mesh->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
 
@@ -408,11 +408,11 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	m_deviceCtx->PSSetShader(ps, NULL, 0);
 	m_deviceCtx->PSSetSamplers(0, 1, s_sampler.GetAddressOf());
 	m_deviceCtx->PSSetSamplers(1, 1, s_sampler2.GetAddressOf());
-	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetDiffuseTexture()));
+	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::DiffuseTexture)));
 	if (meshCb.HasNormalMap)
-		m_deviceCtx->PSSetShaderResources(3, 1, g_D3D->textureMgr->GetTexture(mesh->GetNormalTexture()));
+		m_deviceCtx->PSSetShaderResources(3, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::NormalTexture)));
 	if (meshCb.HasSpecularMap)
-		m_deviceCtx->PSSetShaderResources(4, 1, g_D3D->textureMgr->GetTexture(mesh->GetSpecularTexture()));
+		m_deviceCtx->PSSetShaderResources(4, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::SpecularTexture)));
 	m_deviceCtx->PSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
 	m_deviceCtx->PSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());
 

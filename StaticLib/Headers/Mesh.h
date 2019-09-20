@@ -49,6 +49,14 @@ namespace Library
 	class Mesh
 	{
 	public:
+		enum TextureType 
+		{
+			DiffuseTexture = 0,
+			NormalTexture,
+			SpecularTexture,
+			Count
+		};
+	public:
 		Mesh();
 		~Mesh();
 
@@ -65,18 +73,14 @@ namespace Library
 		const std::string& GetVertexShader() const;
 		const std::string& GetPixelShader() const;
 		const int GetIndexCount() const;
-		const std::string& GetDiffuseTexture() const;
-		const std::string& GetNormalTexture() const;
-		const std::string& GetSpecularTexture() const;
+		const std::string& GetTexturePath(TextureType type) const;
 
 		//
 		void LoadVertexDataBuffer();
 
 		void SetVertices(std::unique_ptr<DirectX::XMFLOAT3[]> &&vertices, uint32_t cnt);
 		void SetIndices(std::unique_ptr<UINT[]> &&indices, uint32_t cnt);
-		void SetDiffuseTexturePath(const std::string& path);
-		void SetNormalTexturePath(const std::string& path);
-		void SetSpecularTesturePath(const std::string& path);
+		void SetTexturePath(const std::string& path, TextureType type);
 		void SetTextureCoords(std::unique_ptr<DirectX::XMFLOAT2[]> &&textureCoords);
 		void SetNormals(std::unique_ptr<DirectX::XMFLOAT3[]> &&normals);
 		void SetTangents(std::unique_ptr<DirectX::XMFLOAT3[]> &&tangents, std::unique_ptr<DirectX::XMFLOAT3[]> &&bitangents);
@@ -120,6 +124,7 @@ namespace Library
 
 		std::string m_vertexShaderName;
 		std::string m_pixelShaderName;
+		std::vector<std::string> m_textures;
 		int m_vertexCnt;
 		int m_indexCnt;
 

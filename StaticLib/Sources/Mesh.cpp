@@ -43,6 +43,7 @@ Mesh::Mesh() :
 	m_dirtyVertex(true),
 	m_calcLight(true)
 {
+	m_textures.resize(TextureType::Count);
 }
 
 Mesh::~Mesh()
@@ -109,11 +110,6 @@ const int Mesh::GetIndexCount() const
 	return m_indexCnt;
 }
 
-const std::string& Mesh::GetDiffuseTexture() const
-{
-	return m_diffuseTexture;
-}
-
 void Mesh::SetVertices(std::unique_ptr<DirectX::XMFLOAT3[]> &&vertices, uint32_t cnt)
 {
 	m_vertices.swap(vertices);
@@ -128,11 +124,6 @@ void Mesh::SetIndices(std::unique_ptr<UINT[]> &&indices, uint32_t cnt)
 	m_indexCnt = cnt;
 
 	CreateIndexBuffer();
-}
-
-void Mesh::SetDiffuseTexturePath(const std::string& path)
-{
-	m_diffuseTexture = path;
 }
 
 void Mesh::SetTextureCoords(std::unique_ptr<DirectX::XMFLOAT2[]> &&textureCoords)
@@ -261,24 +252,14 @@ void Mesh::LoadVertexDataBuffer()
 	}
 }
 
-const std::string& Library::Mesh::GetNormalTexture() const
+const std::string& Library::Mesh::GetTexturePath(TextureType type) const
 {
-	return m_normalTexture;
+	return m_textures[type];
 }
 
-const std::string& Library::Mesh::GetSpecularTexture() const
+void Library::Mesh::SetTexturePath(const std::string& path, TextureType type)
 {
-	return m_specularTexture;
-}
-
-void Library::Mesh::SetNormalTexturePath(const std::string& path)
-{
-	m_normalTexture = path;
-}
-
-void Library::Mesh::SetSpecularTesturePath(const std::string& path)
-{
-	m_specularTexture = path;
+	m_textures[type] = path;
 }
 
 void Library::Mesh::SetTangents(std::unique_ptr<DirectX::XMFLOAT3[]> &&tangents, std::unique_ptr<DirectX::XMFLOAT3[]> &&bitangents)
