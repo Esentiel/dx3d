@@ -196,6 +196,23 @@ bool FileManager::ReadModelFromFBX(const char * inFilePath, uint32_t id, Mesh* o
 					}
 				}
 			}
+			for (unsigned int k = 0; k < material->GetTextureCount(aiTextureType_SPECULAR); k++)
+			{
+				assert(k == 0);
+				aiString texturePath;
+				if (material->GetTexture(aiTextureType_SPECULAR, k, &texturePath) == aiReturn_SUCCESS)
+				{
+					if (auto texture = scene->GetEmbeddedTexture(texturePath.C_Str()))
+					{
+						throw GameException("Engine doesn't work with embedded textures!");
+					}
+					else
+					{
+						g_D3D->textureMgr->LoadTexture(texturePath.C_Str());
+						outMesh->SetSpecularTesturePath(texturePath.C_Str());
+					}
+				}
+			}
 
 			// texture coords
 			if (mesh->mTextureCoords)

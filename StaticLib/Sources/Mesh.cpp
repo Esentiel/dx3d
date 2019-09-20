@@ -266,9 +266,19 @@ const std::string& Library::Mesh::GetNormalTexture() const
 	return m_normalTexture;
 }
 
+const std::string& Library::Mesh::GetSpecularTexture() const
+{
+	return m_specularTexture;
+}
+
 void Library::Mesh::SetNormalTexturePath(const std::string& path)
 {
 	m_normalTexture = path;
+}
+
+void Library::Mesh::SetSpecularTesturePath(const std::string& path)
+{
+	m_specularTexture = path;
 }
 
 void Library::Mesh::SetTangents(std::unique_ptr<DirectX::XMFLOAT3[]> &&tangents, std::unique_ptr<DirectX::XMFLOAT3[]> &&bitangents)

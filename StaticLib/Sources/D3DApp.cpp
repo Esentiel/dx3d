@@ -303,12 +303,12 @@ void D3DApp::Initialize()
 void D3DApp::Draw(const GameTime &gameTime) 
 {
 	SceneCB sceneCb;
-	sceneCb.Light.LightPos = DirectX::XMFLOAT4(-15.0f, 30.f, 20.0f, 1.0f);
 	DirectX::XMFLOAT3 camPos;
 	DirectX::XMStoreFloat3(&camPos, *(m_camera->GetPosition()));
 	sceneCb.EyePos = DirectX::XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.0f);
-	sceneCb.Light.LightDir = DirectX::XMFLOAT4(-1.0f, 0.4f, 1.0f, 0.0f);
-	sceneCb.Light.LightPower = DirectX::XMFLOAT4(0.9f, 0.7f, 0.7f, 0.8f);
+	sceneCb.Light.LightPos = DirectX::XMFLOAT4(-22.5f, 36.8f, 46.8f, 1.0f);
+	sceneCb.Light.LightDir = DirectX::XMFLOAT4(0.41f, -0.39f, -0.83f, 0.0f);
+	sceneCb.Light.LightPower = DirectX::XMFLOAT4(0.3f, 0.3f, 0.3f, 0.1f);
 
 	// Generate shadow map
 	m_shadowMap->Initialize(m_width, m_height);
@@ -374,6 +374,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	mProjectedTextureScalingMatrix._42 = 0.5f;
 	mProjectedTextureScalingMatrix._43 = 0.0f;
 	mProjectedTextureScalingMatrix._44 = 1.0f;
+
 	MeshCB meshCb;
 	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * *(m_camera->GetView()) * *(m_camera->GetProjection()));
 	DirectX::XMStoreFloat4x4(&meshCb.World, *(mesh->GetModelTransform()));
@@ -381,9 +382,10 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	meshCb.AmbientK = 0.9f;
 	meshCb.EmissiveK = 0.5f;
 	meshCb.DiffuseIntensity = 0.95f;
-	meshCb.Roughness = 0.5f;
+	meshCb.Roughness = 0.9f;
 	meshCb.CalcLight = (int)mesh->IsCalcLight();
 	meshCb.HasNormalMap = g_D3D->textureMgr->GetTexture(mesh->GetNormalTexture()) != nullptr;
+	meshCb.HasSpecularMap = g_D3D->textureMgr->GetTexture(mesh->GetSpecularTexture()) != nullptr;
 
 	m_deviceCtx->UpdateSubresource(mesh->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
 
@@ -409,6 +411,8 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetDiffuseTexture()));
 	if (meshCb.HasNormalMap)
 		m_deviceCtx->PSSetShaderResources(3, 1, g_D3D->textureMgr->GetTexture(mesh->GetNormalTexture()));
+	if (meshCb.HasSpecularMap)
+		m_deviceCtx->PSSetShaderResources(4, 1, g_D3D->textureMgr->GetTexture(mesh->GetSpecularTexture()));
 	m_deviceCtx->PSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
 	m_deviceCtx->PSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());
 

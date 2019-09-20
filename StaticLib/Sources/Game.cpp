@@ -156,7 +156,7 @@ namespace Library
 				mesh->Initialize();
 				mesh->LoadVertexDataBuffer();
 				mesh->Scale(DirectX::XMFLOAT3(1.f, 1.f, 1.f));
-				mesh->Move(DirectX::XMFLOAT3(-15.0f, 30.f, 20.0f));
+				mesh->Move(DirectX::XMFLOAT3(-22.5f, 36.8f, 46.8f));
 				mesh->SetCalcLight(false);
 				g_D3D->renderScene->AddMesh(std::move(mesh));
 			}

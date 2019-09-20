@@ -115,6 +115,11 @@ void ShadowMap::Generate(RenderScene * scene)
 	for (auto it = scene->BeginMesh(); it != scene->EndMesh(); ++it)
 	{
 		auto mesh = (*it).get();
+
+		if (!mesh->IsCalcLight())
+		{
+			continue;
+		}
 		// update mesh cb
 		MeshLightCB meshCb;
 		DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, *(mesh->GetModelTransform()) * *(GetViewMatrix()) * *(GetProjection()));
@@ -200,10 +205,9 @@ void ShadowMap::SetLightSource(LightSource * light)
 	m_lightSource = light;
 
 	auto pos = DirectX::XMLoadFloat4(&(light->LightPos));
-	auto dir = DirectX::XMVector4Normalize(DirectX::XMVectorNegate(DirectX::XMLoadFloat4(&(light->LightDir))));
+	auto dir = DirectX::XMVector4Normalize((DirectX::XMLoadFloat4(&(light->LightDir))));
 
-	//*m_lightView = DirectX::XMMatrixLookToRH(DirectX::XMVectorSet(.0f, 30.f, 40.0f, 1.f), DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 0.f), DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
-	*m_lightView = DirectX::XMMatrixLookToRH(DirectX::XMVectorSet(35.5316048, 67.4720230, 59.0638657, 1.00000000), DirectX::XMVectorSet(-0.350119293, -0.548293114, -0.759467721, 0.000000000), DirectX::XMVectorSet(-0.229548156, 0.836286247, -0.497928649, 0.000000000));
+	*m_lightView = DirectX::XMMatrixLookToRH(pos, dir, DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
 }
 
 const DirectX::XMMATRIX* ShadowMap::GetViewMatrix()

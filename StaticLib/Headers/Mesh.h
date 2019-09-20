@@ -24,6 +24,7 @@ namespace Library
 		float Roughness;
 		int CalcLight;
 		int HasNormalMap;
+		int HasSpecularMap;
 	};
 
 	struct MeshLightCB
@@ -66,6 +67,7 @@ namespace Library
 		const int GetIndexCount() const;
 		const std::string& GetDiffuseTexture() const;
 		const std::string& GetNormalTexture() const;
+		const std::string& GetSpecularTexture() const;
 
 		//
 		void LoadVertexDataBuffer();
@@ -74,6 +76,7 @@ namespace Library
 		void SetIndices(std::unique_ptr<UINT[]> &&indices, uint32_t cnt);
 		void SetDiffuseTexturePath(const std::string& path);
 		void SetNormalTexturePath(const std::string& path);
+		void SetSpecularTesturePath(const std::string& path);
 		void SetTextureCoords(std::unique_ptr<DirectX::XMFLOAT2[]> &&textureCoords);
 		void SetNormals(std::unique_ptr<DirectX::XMFLOAT3[]> &&normals);
 		void SetTangents(std::unique_ptr<DirectX::XMFLOAT3[]> &&tangents, std::unique_ptr<DirectX::XMFLOAT3[]> &&bitangents);
@@ -113,6 +116,7 @@ namespace Library
 
 		std::string m_diffuseTexture;
 		std::string m_normalTexture;
+		std::string m_specularTexture;
 
 		std::string m_vertexShaderName;
 		std::string m_pixelShaderName;

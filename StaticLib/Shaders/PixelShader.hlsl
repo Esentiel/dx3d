@@ -12,6 +12,7 @@ static const float DepthBias = 0.00000005;
 Texture2D diffuseTexture : register(t0);
 Texture2D shadowMap : register(t1);
 Texture2D normalMap : register(t3);
+Texture2D specularMap : register(t4);
 SamplerState simpleSampler : register(s0);
 
 SamplerState DepthMapSampler : register(s1);
@@ -28,6 +29,7 @@ cbuffer MVPbuffer : register(b0)
     float roughness;
     int calcLight;
     int hasNormalMap;
+    int hasSpecularMap;
 }
 
 cbuffer PerScene : register(b1)
@@ -48,45 +50,67 @@ struct PS_INPUT
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-    float4 color = diffuseTexture.Sample(simpleSampler, input.textCoord) * float4(0.8, 0.8, 0.8, 0.8);
+    float4 textureColor = diffuseTexture.Sample(simpleSampler, input.textCoord);
 
     if (!calcLight)
     {
-        return color;
+        return textureColor;
     }
 
-    float4 bumpMap;
     float3 bumpNormal;
     if (hasNormalMap)
     {
+        float4 bumpMap;
         // normal
         bumpMap = normalMap.Sample(simpleSampler, input.textCoord);
     
-    // Expand the range of the normal value from (0, +1) to (-1, +1).
+        // Expand the range of the normal value from (0, +1) to (-1, +1).
         bumpMap = (bumpMap * 2.0f) - 1.0f;
 
-    // Calculate the normal from the data in the bump map.
+        // Calculate the normal from the data in the bump map.
         bumpNormal = (bumpMap.x * input.tangentsW) + (bumpMap.y * input.bitangentsW) + (bumpMap.z * input.normalW);
 
-    // Normalize the resulting bump normal.
+        // Normalize the resulting bump normal.
         bumpNormal = normalize(bumpNormal);
     }
     else
     {
-        bumpNormal = input.normalW;
+        bumpNormal = normalize(input.normalW);
     }
     
+    float4 spec;
+    float4 specIntensity;
+    float diffuseLight = saturate(dot(normalize(-(lightS.lightDir)), bumpNormal));
+    if (diffuseLight > 0)
+    {
+        
 
-    float4 diffuseLight = max(dot(normalize(lightS.lightDir), normalize(bumpNormal)), 0) * float4(0.8, 0.8, 0.8, 0.8);
+        float3 L = normalize(-(lightS.lightDir));
+        float3 E = normalize(eyePos - input.posW);
+        float3 H = normalize(L + E);
+        
+        spec = pow(saturate(dot(bumpNormal, H)), 4);
 
-    float3 L = normalize(lightS.lightDir);
-    float3 E = normalize(eyePos - input.posW);
-    float3 H = normalize(L + E);
+        
+        if (hasSpecularMap)
+        {
+            specIntensity = specularMap.Sample(simpleSampler, input.textCoord);
+            spec *= specIntensity;
+        }
+        else
+        {
+            spec *= (1.0 - roughness);
+        }
+    }
 
-    float4 spec = pow(max(dot(bumpNormal, H), 0), 0.1) * float4(0.8, 0.8, 0.8, 0.8);
-    diffuseLight += spec;
+    float4 color = saturate(lightS.lightPower * diffuseLight);
+    color = saturate(color + textureColor);
 
-    color *= diffuseLight;
+    if (diffuseLight > 0)
+    {
+        color = saturate(color + spec);
+    }
+
     if (input.posSM.w >= 0.0f)
     {
 		float width = 0, height = 0;
