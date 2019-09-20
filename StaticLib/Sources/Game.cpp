@@ -127,7 +127,6 @@ namespace Library
 			if (res)
 			{
 				mesh->Initialize();
-				mesh->LoadVertexDataBuffer();
 				mesh->Scale(DirectX::XMFLOAT3(0.2f, 0.2f, 0.2f));
 				g_D3D->renderScene->AddMesh(std::move(mesh));
 			}
@@ -146,7 +145,6 @@ namespace Library
 			if (res)
 			{
 				mesh->Initialize();
-				mesh->LoadVertexDataBuffer();
 				mesh->Scale(DirectX::XMFLOAT3(2.f, 2.f, 2.f));
 				mesh->Move(DirectX::XMFLOAT3(1.f, -12.f, 1.f));
 				g_D3D->renderScene->AddMesh(std::move(mesh));
@@ -166,10 +164,9 @@ namespace Library
 			if (res)
 			{
 				mesh->Initialize();
-				mesh->LoadVertexDataBuffer();
 				mesh->Scale(DirectX::XMFLOAT3(1.f, 1.f, 1.f));
 				mesh->Move(DirectX::XMFLOAT3(-22.5f, 36.8f, 46.8f));
-				mesh->SetCalcLight(false);
+				mesh->UnsetFlag(~Mesh::MeshFlags::CalcLight);
 				g_D3D->renderScene->AddMesh(std::move(mesh));
 			}
 			meshID++;

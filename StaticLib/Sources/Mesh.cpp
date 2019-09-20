@@ -41,7 +41,7 @@ void Mesh::CreateInputLayout()
 Mesh::Mesh() :
 	m_transformations(std::make_unique<Transformations>()),
 	m_dirtyVertex(true),
-	m_calcLight(true)
+	m_flags(1) // by default only CalcLight is enabled
 {
 	m_textures.resize(TextureType::Count);
 }
@@ -83,16 +83,6 @@ ID3D11InputLayout* Mesh::GetInputLayout() const
 const DirectX::XMMATRIX* Mesh::GetModelTransform() const
 {
 	return m_transformations->GetModel();
-}
-
-const DirectX::XMFLOAT3* Mesh::GetVertexData() const
-{
-	return m_vertices.get();
-}
-
-const UINT* Mesh::GetIndexData() const
-{
-	return m_indices.get();
 }
 
 const std::string& Mesh::GetVertexShader() const
@@ -156,13 +146,14 @@ void Mesh::Initialize()
 	assert(g_D3D->device);
 	assert(g_D3D->shaderMgr);
 
-	// todo: Mocking shaders names
+	// todo: Mocking shaders names move into Material
 	m_vertexShaderName = "VertexShader";
 	m_pixelShaderName = "PixelShader";
 
 	CreateInputLayout();
 	CreateConstMeshBuffer();
-	g_D3D->textureMgr->LoadTexture(m_diffuseTexture);
+
+	LoadVertexDataBuffer();
 }
 
 void Mesh::CreateConstMeshBuffer()
@@ -268,14 +259,19 @@ void Library::Mesh::SetTangents(std::unique_ptr<DirectX::XMFLOAT3[]> &&tangents,
 	m_bitangents.swap(bitangents);
 }
 
-bool Library::Mesh::IsCalcLight() const
+void Library::Mesh::SetFlag(unsigned int flag)
 {
-	return m_calcLight;
+	m_flags |= flag;
 }
 
-void Library::Mesh::SetCalcLight(bool flag)
+void Library::Mesh::UnsetFlag(unsigned int flag)
 {
-	m_calcLight = flag;
+	m_flags &= flag;
+}
+
+bool Library::Mesh::GetFlag(unsigned int flag) const
+{
+	return m_flags & flag;
 }
 
 void Library::Mesh::CreateVertexLightBuffer()

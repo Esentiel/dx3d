@@ -11,6 +11,7 @@ struct ID3D11Buffer;
 namespace Library
 {
 	class Mesh;
+	class SkyBox;
 
 	struct SceneCB
 	{
@@ -31,6 +32,7 @@ namespace Library
 
 		ID3D11Buffer* GetConstSceneBuffer() const;
 		ID3D11Buffer** GetConstSceneBufferRef();
+		void DrawSkyBox();
 
 	private:
 		void CreateConstSceneBuffer();
@@ -38,5 +40,7 @@ namespace Library
 		std::vector<std::unique_ptr<Mesh>> m_meshes;
 		
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_constSceneBuffer;
+
+		std::unique_ptr<SkyBox> m_skyBox;
 	};
 }

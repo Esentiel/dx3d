@@ -3,6 +3,7 @@
 #include "Mesh.h"
 #include "GameException.h"
 #include "LightSource.h"
+#include "SkyBox.h"
 
 #include <d3d11.h>
 #include <DirectXMath.h>
@@ -12,6 +13,7 @@ using namespace Library;
 RenderScene::RenderScene()
 {
 	CreateConstSceneBuffer();
+	m_skyBox.reset(new SkyBox);
 }
 
 
@@ -42,6 +44,11 @@ ID3D11Buffer* Library::RenderScene::GetConstSceneBuffer() const
 ID3D11Buffer** Library::RenderScene::GetConstSceneBufferRef()
 {
 	return m_constSceneBuffer.GetAddressOf();
+}
+
+void Library::RenderScene::DrawSkyBox()
+{
+	m_skyBox->Draw(this);
 }
 
 void Library::RenderScene::CreateConstSceneBuffer()

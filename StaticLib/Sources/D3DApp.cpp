@@ -18,7 +18,6 @@
 #include "GameException.h"
 #include "PostProcessor.h"
 #include "ShadowMap.h"
-#include "SkyBox.h"
 
 using namespace Library;
 
@@ -291,10 +290,7 @@ void D3DApp::Initialize()
 	m_postProcessor->Initialize();
 
 	// ShadowMap
-	m_shadowMap.reset(new ShadowMap);
-
-	// SkyBox
-	m_skyBox.reset(new SkyBox);
+	m_shadowMap.reset(new ShadowMap);	
 }
 
 
@@ -321,7 +317,7 @@ void D3DApp::Draw(const GameTime &gameTime)
 	m_deviceCtx->UpdateSubresource(m_renderScene->GetConstSceneBuffer(), 0, NULL, &sceneCb, 0, 0);
 
 	// skyBox
-	m_skyBox->Draw(m_renderScene.get());
+	m_renderScene->DrawSkyBox();
 
 	// raster state
 	m_deviceCtx->RSSetState(m_rasterState.Get());
@@ -354,6 +350,8 @@ void D3DApp::Draw(const GameTime &gameTime)
 
 void Library::D3DApp::DrawMesh(Mesh* mesh)
 {
+	ID3D11ShaderResourceView *const pSRV[1] = { NULL };
+
 	// update mesh cb
 	DirectX::XMFLOAT4X4 mProjectedTextureScalingMatrix;
 	mProjectedTextureScalingMatrix._11 = 0.5f;
@@ -381,9 +379,9 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	meshCb.EmissiveK = 0.5f;
 	meshCb.DiffuseIntensity = 0.95f;
 	meshCb.Roughness = 0.9f;
-	meshCb.CalcLight = (int)mesh->IsCalcLight();
-	meshCb.HasNormalMap = g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::NormalTexture)) != nullptr;
-	meshCb.HasSpecularMap = g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::SpecularTexture)) != nullptr;
+	meshCb.CalcLight = mesh->GetFlag(Mesh::MeshFlags::CalcLight);
+	meshCb.HasNormalMap = mesh->GetFlag(Mesh::MeshFlags::UseNormalMap); // todo: remove this, use GetSize() on texture in shader
+	meshCb.HasSpecularMap = mesh->GetFlag(Mesh::MeshFlags::UseSpecularMap); // todo: remove this, use GetSize() on texture in shader
 
 	m_deviceCtx->UpdateSubresource(mesh->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
 
@@ -409,8 +407,12 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::DiffuseTexture)));
 	if (meshCb.HasNormalMap)
 		m_deviceCtx->PSSetShaderResources(3, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::NormalTexture)));
+	else
+		g_D3D->deviceCtx->PSSetShaderResources(3, 1, pSRV);
 	if (meshCb.HasSpecularMap)
 		m_deviceCtx->PSSetShaderResources(4, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::SpecularTexture)));
+	else
+		g_D3D->deviceCtx->PSSetShaderResources(4, 1, pSRV);
 	m_deviceCtx->PSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
 	m_deviceCtx->PSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());
 

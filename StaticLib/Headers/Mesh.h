@@ -56,27 +56,33 @@ namespace Library
 			SpecularTexture,
 			Count
 		};
+		enum MeshFlags
+		{
+			CalcLight = 0x1,
+			UseNormalMap = 0x2,
+			UseSpecularMap = 0x4,
+
+			LastFlag = UseSpecularMap
+		};
 	public:
 		Mesh();
 		~Mesh();
+		void Initialize();
 
 		ID3D11Buffer* GetConstMeshBuffer() const;
 		ID3D11Buffer** GetConstMeshBufferRef();
 		ID3D11Buffer** GetVertexBufferRef();
-		ID3D11Buffer** GetVertexLightBufferRef();
 		ID3D11Buffer* GetIndexBuffer() const;
-		ID3D11InputLayout* GetInputLayout() const; // todo: should move layout out from Mesh, as long as I will create several types of mashes with differemt layout
-		const DirectX::XMMATRIX* GetModelTransform() const;
-		const DirectX::XMFLOAT3* GetVertexData() const;
-		const UINT* GetIndexData() const;
 
-		const std::string& GetVertexShader() const;
-		const std::string& GetPixelShader() const;
+		ID3D11Buffer** GetVertexLightBufferRef();
+		
+		void Move(const DirectX::XMFLOAT3 &direction);
+		void Rotate(const DirectX::XMFLOAT3 &rotation);
+		void Scale(const DirectX::XMFLOAT3 &scale);
+		const DirectX::XMMATRIX* GetModelTransform() const;
+
 		const int GetIndexCount() const;
 		const std::string& GetTexturePath(TextureType type) const;
-
-		//
-		void LoadVertexDataBuffer();
 
 		void SetVertices(std::unique_ptr<DirectX::XMFLOAT3[]> &&vertices, uint32_t cnt);
 		void SetIndices(std::unique_ptr<UINT[]> &&indices, uint32_t cnt);
@@ -85,21 +91,21 @@ namespace Library
 		void SetNormals(std::unique_ptr<DirectX::XMFLOAT3[]> &&normals);
 		void SetTangents(std::unique_ptr<DirectX::XMFLOAT3[]> &&tangents, std::unique_ptr<DirectX::XMFLOAT3[]> &&bitangents);
 
-		void Move(const DirectX::XMFLOAT3 &direction);
-		void Rotate(const DirectX::XMFLOAT3 &rotation);
-		void Scale(const DirectX::XMFLOAT3 &scale);
-		
-		//
+		void SetFlag(unsigned int flag);
+		void UnsetFlag(unsigned int flag);
+		bool GetFlag(unsigned int flag) const;
 
-		void Initialize();
-		bool IsCalcLight() const;
-		void SetCalcLight(bool flag);
+		ID3D11InputLayout* GetInputLayout() const; // todo: should move layout out from Mesh, as long as I will create several types of mashes with different layout (put layout into Material cause it is related with vertex shader input...)
+		const std::string& GetVertexShader() const; // todo: move to Material
+		const std::string& GetPixelShader() const; // todo: move to Material
 	private:
+		void LoadVertexDataBuffer();
 		void CreateInputLayout();
-		void CreateConstMeshBuffer();
 		void CreateVertexBuffer();
-		void CreateVertexLightBuffer(); // ass light input layout to support SM and SB
 		void CreateIndexBuffer();
+		void CreateConstMeshBuffer();
+
+		void CreateVertexLightBuffer(); // ass light input layout to support SM and SB
 
 		std::unique_ptr<Transformations> m_transformations;
 
@@ -118,10 +124,6 @@ namespace Library
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_indexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputlayout;
 
-		std::string m_diffuseTexture;
-		std::string m_normalTexture;
-		std::string m_specularTexture;
-
 		std::string m_vertexShaderName;
 		std::string m_pixelShaderName;
 		std::vector<std::string> m_textures;
@@ -129,6 +131,6 @@ namespace Library
 		int m_indexCnt;
 
 		bool m_dirtyVertex;
-		bool m_calcLight;
+		unsigned int m_flags;
 	};
 }

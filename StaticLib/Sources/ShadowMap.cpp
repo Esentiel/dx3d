@@ -116,7 +116,7 @@ void ShadowMap::Generate(RenderScene * scene)
 	{
 		auto mesh = (*it).get();
 
-		if (!mesh->IsCalcLight())
+		if (!mesh->GetFlag(Mesh::MeshFlags::CalcLight))
 		{
 			continue;
 		}
