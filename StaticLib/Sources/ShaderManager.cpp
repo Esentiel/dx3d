@@ -4,14 +4,16 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 
-#include "GameException.h"
+#include <filesystem>
 
-static const std::string s_shaderDir = "../Bin/x64/Debug/";
+#include "GameException.h"
 
 using namespace Library;
 
 ShaderManager::ShaderManager()
 {
+	std::filesystem::path p = std::filesystem::path(g_D3D->executablePath);
+	m_shaderFolderPath = p.parent_path().wstring() + L"\\Shaders\\";
 }
 
 
@@ -21,101 +23,42 @@ ShaderManager::~ShaderManager()
 
 void ShaderManager::Initialize()
 {
-	// todo: Mocking logic here. 
-	// supposed to scan dir and find all shaders and load them. Also distinct between shader types.
-	// but I'm to lazy now xD
-
-	// load shaders
-	// vertex
 	assert(g_D3D->device);
 
-	HRESULT hr;
-	Microsoft::WRL::ComPtr<ID3DBlob> VS_Buffer, PS_Buffer;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
+	for (const auto & entry : std::filesystem::directory_iterator(m_shaderFolderPath))
+	{
+		HRESULT hr;
+		Microsoft::WRL::ComPtr<ID3DBlob> buffer;
 
-	if (FAILED(hr = D3DReadFileToBlob(L"../Bin/x64/Debug/VertexShader.cso", VS_Buffer.GetAddressOf())))
-	{
-		throw GameException("D3DReadFileToBlob() for VS failed", hr);
-	}
-	if (FAILED(hr = g_D3D->device->CreateVertexShader(VS_Buffer->GetBufferPointer(), VS_Buffer->GetBufferSize(), nullptr, vertexShader.GetAddressOf())))
-	{
-		throw GameException("CreateVertexShader() failed", hr);
-	}
-	m_shaders.insert({"VertexShader", std::move(VS_Buffer)});
-	m_vertexShaders.insert({"VertexShader", std::move(vertexShader)});
+		std::wstring shaderPath = entry.path().wstring();
+		std::string shadername = entry.path().stem().string();
 
-	// vertex for PP
-	if (FAILED(hr = D3DReadFileToBlob(L"../Bin/x64/Debug/VertexShaderPP.cso", VS_Buffer.ReleaseAndGetAddressOf())))
-	{
-		throw GameException("D3DReadFileToBlob() for VS_PP failed", hr);
-	}
-	if (FAILED(hr = g_D3D->device->CreateVertexShader(VS_Buffer->GetBufferPointer(), VS_Buffer->GetBufferSize(), nullptr, vertexShader.ReleaseAndGetAddressOf())))
-	{
-		throw GameException("CreateVertexShader() for PP failed", hr);
-	}
-	m_shaders.insert({ "VertexShaderPP", std::move(VS_Buffer) });
-	m_vertexShaders.insert({ "VertexShaderPP", std::move(vertexShader) });
+		if (FAILED(hr = D3DReadFileToBlob(shaderPath.c_str(), buffer.GetAddressOf())))
+		{
+			throw GameException(std::string("D3DReadFileToBlob() failed for: ") + entry.path().string(), hr);
+		}
 
-	// vertex for SM
-	if (FAILED(hr = D3DReadFileToBlob(L"../Bin/x64/Debug/VertexShaderSM.cso", VS_Buffer.ReleaseAndGetAddressOf())))
-	{
-		throw GameException("D3DReadFileToBlob() for VS_SM failed", hr);
+		if (shadername._Starts_with("Vertex"))
+		{
+			Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
+			if (FAILED(hr = g_D3D->device->CreateVertexShader(buffer->GetBufferPointer(), buffer->GetBufferSize(), nullptr, vertexShader.GetAddressOf())))
+			{
+				throw GameException(std::string("CreateVertexShader() failed for: ")  + entry.path().string(), hr);
+			}
+			m_vertexShaders.insert({ shadername, std::move(vertexShader) });
+		}
+		else if (shadername._Starts_with("Pixel"))
+		{
+			Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
+			if (FAILED(hr = g_D3D->device->CreatePixelShader(buffer->GetBufferPointer(), buffer->GetBufferSize(), nullptr, pixelShader.GetAddressOf())))
+			{
+				throw GameException(std::string("CreatePixelShader() failed for: ")  + entry.path().string(), hr);
+			}
+			m_pixelShaders.insert({ shadername, std::move(pixelShader) });
+		}
+		
+		m_shaders.insert({ shadername, std::move(buffer) });
 	}
-	if (FAILED(hr = g_D3D->device->CreateVertexShader(VS_Buffer->GetBufferPointer(), VS_Buffer->GetBufferSize(), nullptr, vertexShader.ReleaseAndGetAddressOf())))
-	{
-		throw GameException("CreateVertexShader() for SM failed", hr);
-	}
-	m_shaders.insert({ "VertexShaderSM", std::move(VS_Buffer) });
-	m_vertexShaders.insert({ "VertexShaderSM", std::move(vertexShader) });
-
-	// vertex for SB
-	if (FAILED(hr = D3DReadFileToBlob(L"../Bin/x64/Debug/VertexShaderSB.cso", VS_Buffer.ReleaseAndGetAddressOf())))
-	{
-		throw GameException("D3DReadFileToBlob() for VS_SM failed", hr);
-	}
-	if (FAILED(hr = g_D3D->device->CreateVertexShader(VS_Buffer->GetBufferPointer(), VS_Buffer->GetBufferSize(), nullptr, vertexShader.ReleaseAndGetAddressOf())))
-	{
-		throw GameException("CreateVertexShader() for SM failed", hr);
-	}
-	m_shaders.insert({ "VertexShaderSB", std::move(VS_Buffer) });
-	m_vertexShaders.insert({ "VertexShaderSB", std::move(vertexShader) });
-
-	// pixel
-	if (FAILED(hr = D3DReadFileToBlob(L"../Bin/x64/Debug/PixelShader.cso", PS_Buffer.GetAddressOf())))
-	{
-		throw GameException("D3DReadFileToBlob() for PS failed", hr);
-	}
-	if (FAILED(hr = g_D3D->device->CreatePixelShader(PS_Buffer->GetBufferPointer(), PS_Buffer->GetBufferSize(), nullptr, pixelShader.GetAddressOf())))
-	{
-		throw GameException("CreateVertexShader() failed", hr);
-	}
-	m_shaders.insert({ "PixelShader", std::move(PS_Buffer) });
-	m_pixelShaders.insert({"PixelShader", std::move(pixelShader)});
-
-	// pixel for PP
-	if (FAILED(hr = D3DReadFileToBlob(L"../Bin/x64/Debug/PixelShaderPP.cso", PS_Buffer.ReleaseAndGetAddressOf())))
-	{
-		throw GameException("D3DReadFileToBlob() for PS_PP failed", hr);
-	}
-	if (FAILED(hr = g_D3D->device->CreatePixelShader(PS_Buffer->GetBufferPointer(), PS_Buffer->GetBufferSize(), nullptr, pixelShader.ReleaseAndGetAddressOf())))
-	{
-		throw GameException("CreateVertexShader() for PP failed", hr);
-	}
-	m_shaders.insert({ "PixelShaderPP", std::move(PS_Buffer) });
-	m_pixelShaders.insert({ "PixelShaderPP", std::move(pixelShader) });
-
-	// pixel for SB
-	if (FAILED(hr = D3DReadFileToBlob(L"../Bin/x64/Debug/PixelShaderSB.cso", PS_Buffer.ReleaseAndGetAddressOf())))
-	{
-		throw GameException("D3DReadFileToBlob() for PS_PP failed", hr);
-	}
-	if (FAILED(hr = g_D3D->device->CreatePixelShader(PS_Buffer->GetBufferPointer(), PS_Buffer->GetBufferSize(), nullptr, pixelShader.ReleaseAndGetAddressOf())))
-	{
-		throw GameException("CreateVertexShader() for PP failed", hr);
-	}
-	m_shaders.insert({ "PixelShaderSB", std::move(PS_Buffer) });
-	m_pixelShaders.insert({ "PixelShaderSB", std::move(pixelShader) });
 }
 
 ID3DBlob* Library::ShaderManager::GetShaderBLOB(const std::string &name) const

@@ -258,9 +258,7 @@ void D3DApp::Initialize()
 	rasterizerState.AntialiasedLineEnable = false;
 	m_device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 
-	// global
-	m_globalApp.reset(new GD3DApp);
-	g_D3D = m_globalApp.get();
+	// device
 	g_D3D->device = m_device.Get();
 	g_D3D->deviceCtx = m_deviceCtx.Get();
 

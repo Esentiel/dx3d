@@ -19,5 +19,6 @@ namespace Library
 		void LoadTexture(const std::string &name,  ID3D11Texture2D** texture = nullptr);
 	private:
 		std::map<std::string, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> m_textures;
+		std::string m_textureFolderPath;
 	};
 }

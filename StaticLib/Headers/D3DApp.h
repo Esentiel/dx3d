@@ -41,8 +41,6 @@ namespace Library
 	private:
 		void DrawMesh(Mesh* mesh);
 
-		std::unique_ptr<GD3DApp> m_globalApp;
-
 		HWND m_hwnd;
 		unsigned int m_width;
 		unsigned int m_height;

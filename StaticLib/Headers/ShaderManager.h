@@ -27,5 +27,7 @@ namespace Library
 		std::map<std::string, Microsoft::WRL::ComPtr<ID3DBlob>> m_shaders;
 		std::map<std::string, Microsoft::WRL::ComPtr<ID3D11VertexShader>> m_vertexShaders;
 		std::map<std::string, Microsoft::WRL::ComPtr<ID3D11PixelShader>> m_pixelShaders;
+
+		std::wstring m_shaderFolderPath;
 	};
 }

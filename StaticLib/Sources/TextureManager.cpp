@@ -3,15 +3,16 @@
 
 #include <d3d11.h>
 #include <DDSTextureLoader.h>
+#include <filesystem>
 
 #include "GameException.h"
-
-static const std::string s_texturesDir = "../Content/Textures/";
 
 using namespace Library;
 
 TextureManager::TextureManager()
 {
+	std::filesystem::path p = std::filesystem::path(g_D3D->executablePath);
+	m_textureFolderPath = p.parent_path().parent_path().parent_path().parent_path().string() + "\\Content\\Textures\\";
 }
 
 
@@ -30,7 +31,7 @@ void TextureManager::LoadTexture(const std::string &name, ID3D11Texture2D** text
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> textureView;
 		HRESULT hr;
 
-		std::string path = s_texturesDir + name;
+		std::string path = m_textureFolderPath + name;
 		std::wstring pathW(path.begin(), path.end());
 
 		if (texture)

@@ -6,8 +6,8 @@
 
 namespace Library
 {
-	GameException::GameException(const char* const& message, HRESULT hr)
-		: exception(message), mHR(hr)
+	GameException::GameException(std::string message, HRESULT hr)
+		: exception(message.c_str()), mHR(hr)
 	{
 	}
 

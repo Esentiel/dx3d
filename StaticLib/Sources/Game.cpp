@@ -99,6 +99,18 @@ namespace Library
 
 	void Game::Initialize()
 	{
+		// global
+		m_globalApp.reset(new Library::GD3DApp);
+		g_D3D = m_globalApp.get();
+
+		// exe path
+		g_D3D->executablePath = new wchar_t[MAX_PATH];
+		HMODULE hModule = GetModuleHandle(NULL);
+		if (hModule)
+		{
+			GetModuleFileName(hModule, g_D3D->executablePath, sizeof(wchar_t) * MAX_PATH);
+		}
+
 		m_d3dApp.reset(new D3DApp(mWindowHandle, mScreenWidth, mScreenHeight));
 		m_d3dApp->Initialize();
 
@@ -231,6 +243,7 @@ namespace Library
 
 	void Game::Shutdown()
 	{
+		delete[] g_D3D->executablePath;
 		UnregisterClass(mWindowClass.c_str(), mWindow.hInstance);
 	}
 

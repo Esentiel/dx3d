@@ -62,6 +62,8 @@ namespace Library
 		int m_mouseLastX;
 		int m_mouseLastY;
 
+		std::unique_ptr<GD3DApp> m_globalApp;
+
 	private:
 		Game(const Game& rhs);
 		Game& operator=(const Game& rhs);
