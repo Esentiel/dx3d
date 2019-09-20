@@ -35,7 +35,7 @@ void ShaderManager::Initialize()
 
 		if (FAILED(hr = D3DReadFileToBlob(shaderPath.c_str(), buffer.GetAddressOf())))
 		{
-			throw GameException(std::string("D3DReadFileToBlob() failed for: ") + entry.path().string(), hr);
+			THROW_GAME_EXCEPTION(std::string("D3DReadFileToBlob() failed for: ") + entry.path().string(), hr);
 		}
 
 		if (shadername._Starts_with("Vertex"))
@@ -43,7 +43,7 @@ void ShaderManager::Initialize()
 			Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
 			if (FAILED(hr = g_D3D->device->CreateVertexShader(buffer->GetBufferPointer(), buffer->GetBufferSize(), nullptr, vertexShader.GetAddressOf())))
 			{
-				throw GameException(std::string("CreateVertexShader() failed for: ")  + entry.path().string(), hr);
+				THROW_GAME_EXCEPTION(std::string("CreateVertexShader() failed for: ")  + entry.path().string(), hr);
 			}
 			m_vertexShaders.insert({ shadername, std::move(vertexShader) });
 		}
@@ -52,7 +52,7 @@ void ShaderManager::Initialize()
 			Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
 			if (FAILED(hr = g_D3D->device->CreatePixelShader(buffer->GetBufferPointer(), buffer->GetBufferSize(), nullptr, pixelShader.GetAddressOf())))
 			{
-				throw GameException(std::string("CreatePixelShader() failed for: ")  + entry.path().string(), hr);
+				THROW_GAME_EXCEPTION(std::string("CreatePixelShader() failed for: ")  + entry.path().string(), hr);
 			}
 			m_pixelShaders.insert({ shadername, std::move(pixelShader) });
 		}

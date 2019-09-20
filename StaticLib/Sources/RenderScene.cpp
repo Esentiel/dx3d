@@ -56,6 +56,6 @@ void Library::RenderScene::CreateConstSceneBuffer()
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateBuffer(&cbDesc, NULL, &m_constSceneBuffer)))
 	{
-		throw GameException("CreateConstSceneBuffer(): CreateBuffer() failed", hr);
+		THROW_GAME_EXCEPTION("CreateConstSceneBuffer(): CreateBuffer() failed", hr);
 	}
 }

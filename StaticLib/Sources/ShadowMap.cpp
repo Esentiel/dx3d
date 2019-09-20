@@ -56,7 +56,7 @@ void ShadowMap::Initialize(int width, int height)
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> fullScreenTexture = nullptr;
 		if (FAILED(hr = g_D3D->device->CreateTexture2D(&textureDesc, nullptr, fullScreenTexture.GetAddressOf())))
 		{
-			throw GameException("IDXGIDevice::CreateTexture2D() failed.", hr);
+			THROW_GAME_EXCEPTION("IDXGIDevice::CreateTexture2D() failed.", hr);
 		}
 
 		D3D11_SHADER_RESOURCE_VIEW_DESC resourceViewDesc;
@@ -67,7 +67,7 @@ void ShadowMap::Initialize(int width, int height)
 
 		if (FAILED(hr = g_D3D->device->CreateShaderResourceView(fullScreenTexture.Get(), &resourceViewDesc, m_shaderRes.GetAddressOf())))
 		{
-			throw GameException("IDXGIDevice::CreateShaderResourceView() failed.", hr);
+			THROW_GAME_EXCEPTION("IDXGIDevice::CreateShaderResourceView() failed.", hr);
 		}
 
 		// create DSB
@@ -80,7 +80,7 @@ void ShadowMap::Initialize(int width, int height)
 
 		if (FAILED(hr = g_D3D->device->CreateDepthStencilView(fullScreenTexture.Get(), &depthStencilViewDesc, m_shadowMap.GetAddressOf())))
 		{
-			throw GameException("ShadowMap::CreateDepthStencilView() failed.", hr);
+			THROW_GAME_EXCEPTION("ShadowMap::CreateDepthStencilView() failed.", hr);
 		}
 
 		float aspectRatio = (float)m_width / m_height;
@@ -162,12 +162,12 @@ void ShadowMap::CreateInputLayout()
 	{
 		if (FAILED(hr = g_D3D->device->CreateInputLayout(layout, _countof(layout), vertexShaderBLOB->GetBufferPointer(), vertexShaderBLOB->GetBufferSize(), m_inputlayout.GetAddressOf())))
 		{
-			throw GameException("CreateInputLayout() failed", hr);
+			THROW_GAME_EXCEPTION("CreateInputLayout() failed", hr);
 		}
 	}
 	else
 	{
-		throw GameException("Mesh::CreateInputLayout() failed as vertexShaderBLOB is null");
+		THROW_GAME_EXCEPTION_SIMPLE("Mesh::CreateInputLayout() failed as vertexShaderBLOB is null");
 	}
 }
 
@@ -186,7 +186,7 @@ void ShadowMap::CreateConstLightMeshBuffer()
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateBuffer(&cbDesc, NULL, &m_constMeshLightBuffer)))
 	{
-		throw GameException("CreateConstLightMeshBuffer(): CreateBuffer() failed", hr);
+		THROW_GAME_EXCEPTION("CreateConstLightMeshBuffer(): CreateBuffer() failed", hr);
 	}
 }
 

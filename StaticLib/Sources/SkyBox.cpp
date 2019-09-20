@@ -222,7 +222,7 @@ void Library::SkyBox::CreateSamplerState()
 void Library::SkyBox::CreateTexture()
 {
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> boxTexture;
-	g_D3D->textureMgr->LoadTexture(m_textureName, boxTexture.GetAddressOf()); // TODO: LoadTexture creates and stores useless SRV for box texture. should rewrite this
+	g_D3D->textureMgr->LoadTexture(m_textureName, boxTexture.GetAddressOf());
 
 	D3D11_TEXTURE2D_DESC  boxTextureDesc;
 	boxTexture->GetDesc(&boxTextureDesc);
@@ -238,7 +238,7 @@ void Library::SkyBox::CreateTexture()
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateShaderResourceView(boxTexture.Get(), &boxViewDesc, m_cubesTextureRes.GetAddressOf())))
 	{
-		throw GameException("SkyBox::CreateIndexBuffer(): CreateBuffer() failed", hr);
+		THROW_GAME_EXCEPTION("SkyBox::CreateIndexBuffer(): CreateBuffer() failed", hr);
 	}
 }
 
@@ -256,7 +256,7 @@ void SkyBox::CreateConstMeshBuffer()
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateBuffer(&cbDesc, NULL, &m_constMeshBuffer)))
 	{
-		throw GameException("SkyBox::CreateConstMeshBuffer(): CreateBuffer() failed", hr);
+		THROW_GAME_EXCEPTION("SkyBox::CreateConstMeshBuffer(): CreateBuffer() failed", hr);
 	}
 }
 
@@ -274,12 +274,12 @@ void SkyBox::CreateInputLayout()
 	{
 		if (FAILED(hr = g_D3D->device->CreateInputLayout(layout, _countof(layout), vertexShaderBLOB->GetBufferPointer(), vertexShaderBLOB->GetBufferSize(), m_inputlayout.GetAddressOf())))
 		{
-			throw GameException("CreateInputLayout() failed", hr);
+			THROW_GAME_EXCEPTION("CreateInputLayout() failed", hr);
 		}
 	}
 	else
 	{
-		throw GameException("Mesh::CreateInputLayout() failed as vertexShaderBLOB is null");
+		THROW_GAME_EXCEPTION_SIMPLE("Mesh::CreateInputLayout() failed as vertexShaderBLOB is null");
 	}
 }
 
@@ -301,7 +301,7 @@ void SkyBox::CreateVertexBuffer()
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateBuffer(&vDesc, &vData, m_vertexBuffer.GetAddressOf())))
 	{
-		throw GameException("SkyBox::CreateVertexBuffer(): CreateBuffer() failed", hr);
+		THROW_GAME_EXCEPTION("SkyBox::CreateVertexBuffer(): CreateBuffer() failed", hr);
 	}
 }
 
@@ -323,6 +323,6 @@ void SkyBox::CreateIndexBuffer()
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateBuffer(&iDesc, &iData, m_indexBuffer.GetAddressOf())))
 	{
-		throw GameException("SkyBox::CreateIndexBuffer(): CreateBuffer() failed", hr);
+		THROW_GAME_EXCEPTION("SkyBox::CreateIndexBuffer(): CreateBuffer() failed", hr);
 	}
 }

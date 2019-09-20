@@ -29,12 +29,12 @@ void Mesh::CreateInputLayout()
 	{
 		if (FAILED(hr = g_D3D->device->CreateInputLayout(layout, _countof(layout), vertexShaderBLOB->GetBufferPointer(), vertexShaderBLOB->GetBufferSize(), m_inputlayout.GetAddressOf())))
 		{
-			throw GameException("CreateInputLayout() failed", hr);
+			THROW_GAME_EXCEPTION("CreateInputLayout() failed", hr);
 		}
 	}
 	else
 	{
-		throw GameException("Mesh::CreateInputLayout() failed as vertexShaderBLOB is null");
+		THROW_GAME_EXCEPTION_SIMPLE("Mesh::CreateInputLayout() failed as vertexShaderBLOB is null");
 	}
 }
 
@@ -179,7 +179,7 @@ void Mesh::CreateConstMeshBuffer()
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateBuffer(&cbDesc, NULL, &m_constMeshBuffer)))
 	{
-		throw GameException("CreateConstMeshBuffer(): CreateBuffer() failed", hr);
+		THROW_GAME_EXCEPTION("CreateConstMeshBuffer(): CreateBuffer() failed", hr);
 	}
 }
 
@@ -201,7 +201,7 @@ void Mesh::CreateVertexBuffer()
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateBuffer(&vDesc, &vData, m_vertexBuffer.GetAddressOf())))
 	{
-		throw GameException("Mesh::CreateVertexBuffer(): CreateBuffer() failed", hr);
+		THROW_GAME_EXCEPTION("Mesh::CreateVertexBuffer(): CreateBuffer() failed", hr);
 	}
 }
 
@@ -223,7 +223,7 @@ void Mesh::CreateIndexBuffer()
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateBuffer(&iDesc, &iData, m_indexBuffer.GetAddressOf())))
 	{
-		throw GameException("Mesh::CreateIndexBuffer(): CreateBuffer() failed", hr);
+		THROW_GAME_EXCEPTION("Mesh::CreateIndexBuffer(): CreateBuffer() failed", hr);
 	}
 }
 
@@ -296,6 +296,6 @@ void Library::Mesh::CreateVertexLightBuffer()
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateBuffer(&vDesc, &vData, m_vertexLightBuffer.GetAddressOf())))
 	{
-		throw GameException("Mesh::CreateVertexLightBuffer(): CreateBuffer() failed", hr);
+		THROW_GAME_EXCEPTION("Mesh::CreateVertexLightBuffer(): CreateBuffer() failed", hr);
 	}
 }

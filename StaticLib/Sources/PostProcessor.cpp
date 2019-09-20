@@ -61,19 +61,19 @@ PostProcessor::PostProcessor(int width, int height)
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> fullScreenTexture = nullptr;
 	if (FAILED(hr = g_D3D->device->CreateTexture2D(&fullScreenTextureDesc, nullptr, fullScreenTexture.GetAddressOf())))
 	{
-		throw GameException("IDXGIDevice::CreateTexture2D() failed.", hr);
+		THROW_GAME_EXCEPTION("IDXGIDevice::CreateTexture2D() failed.", hr);
 	}
 
 	// create view for rtv
 	if (FAILED(hr = g_D3D->device->CreateRenderTargetView(fullScreenTexture.Get(), nullptr, m_offscreenRtv.GetAddressOf())))
 	{
-		throw GameException("IDXGIDevice::CreateRenderTargetView() failed.", hr);
+		THROW_GAME_EXCEPTION("IDXGIDevice::CreateRenderTargetView() failed.", hr);
 	}
 
 	// create view for shader res
 	if (FAILED(hr = g_D3D->device->CreateShaderResourceView(fullScreenTexture.Get(), nullptr, m_shaderRes.GetAddressOf())))
 	{
-		throw GameException("IDXGIDevice::CreateShaderResourceView() failed.", hr);
+		THROW_GAME_EXCEPTION("IDXGIDevice::CreateShaderResourceView() failed.", hr);
 	}
 
 	//create texture for dsb
@@ -92,14 +92,14 @@ PostProcessor::PostProcessor(int width, int height)
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencilBuffer = nullptr;
 	if (FAILED(hr = g_D3D->device->CreateTexture2D(&depthStencilDesc, nullptr, depthStencilBuffer.GetAddressOf())))
 	{
-		throw GameException("IDXGIDevice::CreateTexture2D() failed.", hr);
+		THROW_GAME_EXCEPTION("IDXGIDevice::CreateTexture2D() failed.", hr);
 	}
 
 	// create view for dsb
 	CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2DMS);
 	if (FAILED(hr = g_D3D->device->CreateDepthStencilView(depthStencilBuffer.Get(), &depthStencilViewDesc, m_offscreenDsb.GetAddressOf())))
 	{
-		throw GameException("IDXGIDevice::CreateDepthStencilView() failed.", hr);
+		THROW_GAME_EXCEPTION("IDXGIDevice::CreateDepthStencilView() failed.", hr);
 	}
 }
 
@@ -189,12 +189,12 @@ void Library::PostProcessor::CreateInputLayout()
 	{
 		if (FAILED(hr = g_D3D->device->CreateInputLayout(layout, _countof(layout), vertexShaderBLOB->GetBufferPointer(), vertexShaderBLOB->GetBufferSize(), m_inputlayout.GetAddressOf())))
 		{
-			throw GameException("CreateInputLayout() failed", hr);
+			THROW_GAME_EXCEPTION("CreateInputLayout() failed", hr);
 		}
 	}
 	else
 	{
-		throw GameException("Mesh::CreateInputLayout() failed as vertexShaderBLOB is null");
+		THROW_GAME_EXCEPTION_SIMPLE("Mesh::CreateInputLayout() failed as vertexShaderBLOB is null");
 	}
 }
 
@@ -216,7 +216,7 @@ void Library::PostProcessor::CreateVertexBuffer()
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateBuffer(&vDesc, &vData, m_vertexBuffer.GetAddressOf())))
 	{
-		throw GameException("PostProcessor::CreateVertexBuffer(): CreateBuffer() failed", hr);
+		THROW_GAME_EXCEPTION("PostProcessor::CreateVertexBuffer(): CreateBuffer() failed", hr);
 	}
 }
 
@@ -238,7 +238,7 @@ void Library::PostProcessor::CreateIndexBuffer()
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateBuffer(&iDesc, &iData, m_indexBuffer.GetAddressOf())))
 	{
-		throw GameException("PostProcessor::CreateIndexBuffer(): CreateBuffer() failed", hr);
+		THROW_GAME_EXCEPTION("PostProcessor::CreateIndexBuffer(): CreateBuffer() failed", hr);
 	}
 }
 

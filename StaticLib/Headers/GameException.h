@@ -17,4 +17,7 @@ namespace Library
 	private:
 		HRESULT mHR;
 	};
+
+	#define THROW_GAME_EXCEPTION(str_, hr_) throw GameException(std::string(str_) + "\n at " + std::string(__FILE__) + ":" + std::to_string(__LINE__), hr_);
+	#define THROW_GAME_EXCEPTION_SIMPLE(str_) throw GameException(std::string(str_) + "\n at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
 }

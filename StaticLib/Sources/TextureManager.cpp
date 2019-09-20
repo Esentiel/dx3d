@@ -38,14 +38,14 @@ void TextureManager::LoadTexture(const std::string &name, ID3D11Texture2D** text
 		{
 			if (FAILED(hr = DirectX::CreateDDSTextureFromFile(g_D3D->device, pathW.c_str(), (ID3D11Resource**)texture, textureView.GetAddressOf())))
 			{
-				throw GameException("LoadTexture(): CreateDDSTextureFromFile() failed", hr);
+				THROW_GAME_EXCEPTION("LoadTexture(): CreateDDSTextureFromFile() failed", hr);
 			}
 		}
 		else
 		{
 			if (FAILED(hr = DirectX::CreateDDSTextureFromFile(g_D3D->device, pathW.c_str(), (ID3D11Resource**)internalTexture.GetAddressOf(), textureView.GetAddressOf())))
 			{
-				throw GameException("LoadTexture(): CreateDDSTextureFromFile() failed", hr);
+				THROW_GAME_EXCEPTION("LoadTexture(): CreateDDSTextureFromFile() failed", hr);
 			}
 		}
 		
@@ -59,9 +59,6 @@ ID3D11ShaderResourceView** Library::TextureManager::GetTexture(const std::string
 	auto it = m_textures.find(name);
 	if (it != m_textures.end())
 		return it->second.GetAddressOf();
-	
-	std::string text("GetTexture() failed for texture: " + name);
-	//throw GameException(text.c_str());
 
 	return nullptr;
 }

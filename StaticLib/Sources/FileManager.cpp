@@ -170,7 +170,7 @@ bool FileManager::ReadModelFromFBX(const char * inFilePath, uint32_t id, Mesh* o
 					// Check if it's an embedded or external  texture.
 					if (auto texture = scene->GetEmbeddedTexture(texturePath.C_Str()))
 					{
-						throw GameException("Engine doesn't work with embedded textures!");
+						THROW_GAME_EXCEPTION_SIMPLE("Engine doesn't work with embedded textures!");
 					}
 					else
 					{
@@ -187,7 +187,7 @@ bool FileManager::ReadModelFromFBX(const char * inFilePath, uint32_t id, Mesh* o
 				{
 					if (auto texture = scene->GetEmbeddedTexture(texturePath.C_Str()))
 					{
-						throw GameException("Engine doesn't work with embedded textures!");
+						THROW_GAME_EXCEPTION_SIMPLE("Engine doesn't work with embedded textures!");
 					}
 					else
 					{
@@ -204,7 +204,7 @@ bool FileManager::ReadModelFromFBX(const char * inFilePath, uint32_t id, Mesh* o
 				{
 					if (auto texture = scene->GetEmbeddedTexture(texturePath.C_Str()))
 					{
-						throw GameException("Engine doesn't work with embedded textures!");
+						THROW_GAME_EXCEPTION_SIMPLE("Engine doesn't work with embedded textures!");
 					}
 					else
 					{

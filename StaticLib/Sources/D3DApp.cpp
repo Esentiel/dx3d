@@ -49,7 +49,7 @@ void CreateSampler(ID3D11SamplerState **sampler)
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateSamplerState(&samplerDesc, sampler)))
 	{
-		throw GameException("CreateSamplerState() failed", hr);
+		THROW_GAME_EXCEPTION("CreateSamplerState() failed", hr);
 	}
 }
 
@@ -77,7 +77,7 @@ void CreateSampler2(ID3D11SamplerState **sampler)
 	HRESULT hr;
 	if (FAILED(hr = g_D3D->device->CreateSamplerState(&samplerDesc, sampler)))
 	{
-		throw GameException("CreateSamplerState() failed", hr);
+		THROW_GAME_EXCEPTION("CreateSamplerState() failed", hr);
 	}
 }
 
@@ -108,7 +108,7 @@ void D3DApp::Initialize()
 
 	if (FAILED(hr = D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, flags, features, ARRAYSIZE(features), D3D11_SDK_VERSION, m_device.GetAddressOf(), &featureLvl, m_deviceCtx.GetAddressOf())))
 	{
-		throw GameException("D3D11CreateDevice() failed", hr);
+		THROW_GAME_EXCEPTION("D3D11CreateDevice() failed", hr);
 	}
 
 	// check MSAA levels
@@ -138,37 +138,37 @@ void D3DApp::Initialize()
 	IDXGIDevice* dxgiDevice = nullptr;
 	if (FAILED(hr = m_device->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**>(&dxgiDevice))))
 	{
-		throw GameException("ID3D11Device::QueryInterface() failed", hr);
+		THROW_GAME_EXCEPTION("ID3D11Device::QueryInterface() failed", hr);
 	}
 
 	IDXGIAdapter *dxgiAdapter = nullptr;
 	if (FAILED(hr = dxgiDevice->GetParent(__uuidof(IDXGIAdapter), reinterpret_cast<void**>(&dxgiAdapter))))
 	{
-		throw GameException("IDXGIDevice::GetParent() failed retrieving adapter.", hr);
+		THROW_GAME_EXCEPTION("IDXGIDevice::GetParent() failed retrieving adapter.", hr);
 	}
 
 	IDXGIFactory2* dxgiFactory = nullptr;
 	if (FAILED(hr = dxgiAdapter->GetParent(__uuidof(IDXGIFactory2), reinterpret_cast<void**>(&dxgiFactory))))
 	{
-		throw GameException("IDXGIAdapter::GetParent() failed retrieving factory.", hr);
+		THROW_GAME_EXCEPTION("IDXGIAdapter::GetParent() failed retrieving factory.", hr);
 	}
 
 	if (FAILED(hr = dxgiFactory->CreateSwapChainForHwnd(dxgiDevice, m_hwnd, &swapChainDesc, NULL, NULL, m_swapChain.GetAddressOf())))
 	{
-		throw GameException("CreateSwapChainForHwnd() failed", hr);
+		THROW_GAME_EXCEPTION("CreateSwapChainForHwnd() failed", hr);
 	}
 
 	// create RTV
 	m_backBuffers.resize(1);
 	if (FAILED(hr = m_swapChain->GetBuffer(0, IID_PPV_ARGS(m_backBuffers.at(0).GetAddressOf()))))
 	{
-		throw GameException("GetBuffer() failed", hr);
+		THROW_GAME_EXCEPTION("GetBuffer() failed", hr);
 	}
 	m_rtvs.resize(3);
 	CD3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc(D3D11_RTV_DIMENSION_TEXTURE2DMS);
 	if (FAILED(hr = m_device->CreateRenderTargetView(m_backBuffers.at(0).Get(), &renderTargetViewDesc, m_rtvs.at(0).GetAddressOf())))
 	{
-		throw GameException("CreateRenderTargetView() failed", hr);
+		THROW_GAME_EXCEPTION("CreateRenderTargetView() failed", hr);
 	}
 
 	// 2
@@ -187,7 +187,7 @@ void D3DApp::Initialize()
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> pTexture = NULL;
 	if (FAILED(hr = m_device->CreateTexture2D(&desc, NULL, &pTexture)))
 	{
-		throw GameException("CreateTexture2D() failed for 2nd RTV", hr);
+		THROW_GAME_EXCEPTION("CreateTexture2D() failed for 2nd RTV", hr);
 	}
 
 	m_backBuffers.push_back(pTexture);
@@ -195,19 +195,19 @@ void D3DApp::Initialize()
 
 	if (FAILED(hr = m_device->CreateRenderTargetView(m_backBuffers.at(1).Get(), &renderTargetViewDesc, m_rtvs.at(1).GetAddressOf())))
 	{
-		throw GameException("CreateRenderTargetView() failed for 2nd RTV", hr);
+		THROW_GAME_EXCEPTION("CreateRenderTargetView() failed for 2nd RTV", hr);
 	}
 
 	// 3
 	if (FAILED(hr = m_device->CreateTexture2D(&desc, NULL, &pTexture)))
 	{
-		throw GameException("CreateTexture2D() failed for 3rd RTV", hr);
+		THROW_GAME_EXCEPTION("CreateTexture2D() failed for 3rd RTV", hr);
 	}
 
 	m_backBuffers.push_back(pTexture);
 	if (FAILED(hr = m_device->CreateRenderTargetView(m_backBuffers.at(2).Get(), &renderTargetViewDesc, m_rtvs.at(2).GetAddressOf())))
 	{
-		throw GameException("CreateRenderTargetView() failed for 3rd RTV", hr);
+		THROW_GAME_EXCEPTION("CreateRenderTargetView() failed for 3rd RTV", hr);
 	}
 
 	// create DSB
@@ -226,13 +226,13 @@ void D3DApp::Initialize()
 
 	if (FAILED(hr = m_device->CreateTexture2D(&dsbDesc, NULL, dsb.GetAddressOf())))
 	{
-		throw GameException("CreateTexture2D() failed", hr);
+		THROW_GAME_EXCEPTION("CreateTexture2D() failed", hr);
 	}
 
 	CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2DMS);
 	if (FAILED(hr = m_device->CreateDepthStencilView(dsb.Get(), &depthStencilViewDesc, m_dsbView.GetAddressOf())))
 	{
-		throw GameException("CreateDepthStencilView() failed", hr);
+		THROW_GAME_EXCEPTION("CreateDepthStencilView() failed", hr);
 	}
 
 	// scissors test
@@ -348,7 +348,7 @@ void D3DApp::Draw(const GameTime &gameTime)
 	HRESULT hr = m_swapChain->Present(0, 0);
 	if (FAILED(hr))
 	{
-		throw GameException("IDXGISwapChain::Present() failed.", hr);
+		THROW_GAME_EXCEPTION("IDXGISwapChain::Present() failed.", hr);
 	}
 }
 
