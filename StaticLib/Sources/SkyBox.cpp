@@ -41,7 +41,6 @@ void SkyBox::CreateRasterState()
 	ZeroMemory(&rasterizerState, sizeof(D3D11_RASTERIZER_DESC));
 	rasterizerState.FillMode = D3D11_FILL_SOLID;
 	rasterizerState.CullMode = D3D11_CULL_NONE;
-	//rasterizerState.FrontCounterClockwise = false;
 	rasterizerState.DepthBias = 0;
 	rasterizerState.DepthBiasClamp = 0;
 	rasterizerState.SlopeScaledDepthBias = 0.0f;
