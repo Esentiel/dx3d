@@ -5,6 +5,8 @@
 
 #include <d3d11.h>
 
+#include "GameTime.h"
+
 using namespace Library;
 
 Camera::Camera(float fov, int width, int height, float nearPlane, float farPlane) :
@@ -15,35 +17,38 @@ Camera::Camera(float fov, int width, int height, float nearPlane, float farPlane
 	m_far(farPlane),
 	m_viewDirty(true),
 	m_viewport(new D3D11_VIEWPORT),
-	m_position(new DirectX::XMVECTOR(DirectX::XMVectorSet(.0f, 30.f, 40.0f, 1.f))),
-	m_look(new DirectX::XMVECTOR(DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 0.f))),
-	m_up(new DirectX::XMVECTOR(DirectX::XMVectorSet(0.0f, -1.0f, 0.0f, 0.f))),
-	m_right(new DirectX::XMVECTOR(DirectX::XMVectorSet(-1.0f, 0.0f, 0.0f, 0.f))),
-	m_view(new DirectX::XMMATRIX)
+	m_position(DirectX::XMFLOAT3(.0f, 30.f, 40.0f)),
+	m_look(DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f)),
+	m_up(DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f)),
+	m_right(DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f)),
+	m_direction(DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f))
 {
-	UpdateViewMatrix();
+	CalculateVeiw();
 	UpdateProjection();
 	UpdateViewport();
+	m_viewDirty = false;
 }
 
 Camera::~Camera()
 {
 }
 
-const DirectX::XMMATRIX* Camera::GetView()
+const DirectX::XMMATRIX Camera::GetView()
 {
-	return m_view.get();
+	return DirectX::XMLoadFloat4x4(&m_view);
 }
 
-const DirectX::XMMATRIX* Camera::GetProjection() const
+const DirectX::XMMATRIX Camera::GetProjection() const
 {
-	return m_projection.get();
+	return DirectX::XMLoadFloat4x4(&m_projection);
 }
 
 void Camera::UpdateProjection()
 {
 	float aspectRatio = (float)m_width / m_height;
-	m_projection.reset(new DirectX::XMMATRIX(DirectX::XMMatrixPerspectiveFovRH(m_fov, aspectRatio, m_near, m_far)));
+
+	DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovRH(m_fov, aspectRatio, m_near, m_far);
+	DirectX::XMStoreFloat4x4(&m_projection, P);
 }
 
 const D3D11_VIEWPORT* Library::Camera::GetViewport() const
@@ -65,40 +70,14 @@ void Library::Camera::UpdateViewport()
 	g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());
 }
 
-DirectX::XMVECTOR* Library::Camera::GetPosition() const
+DirectX::XMVECTOR Library::Camera::GetPosition() const
 {
-	return m_position.get();
+	return DirectX::XMLoadFloat3(&m_position);
 }
 
 void Library::Camera::Move(MoveDir dir)
 {
-	DirectX::XMVECTOR dirN;
-
-	switch (dir)
-	{
-	case MoveDir::Forward:
-		dirN = *m_look;
-		break;
-	case MoveDir::Backward:
-		dirN = DirectX::XMVectorNegate(*m_look);
-		break;
-	case MoveDir::Right:
-		dirN = DirectX::XMVectorNegate(*m_right);
-		break;
-	case MoveDir::Left:
-		dirN = *m_right;
-		break;
-	case MoveDir::Up:
-		dirN = DirectX::XMVectorNegate(*m_up);
-		break;
-	case MoveDir::Down:
-		dirN = *m_up;
-		break;
-	}
-
-	dirN = DirectX::XMVector3Normalize(dirN);
-
-	*m_position = DirectX::XMVectorAdd(*m_position, dirN);
+	m_movedir = dir;
 
 	m_viewDirty = true;
 }
@@ -106,11 +85,13 @@ void Library::Camera::Move(MoveDir dir)
 void Library::Camera::Pitch(float angle)
 {
 	// Rotate up and look vector about the right vector.
+	DirectX::XMVECTOR R = DirectX::XMLoadFloat3(&m_right);
+	DirectX::XMVECTOR U = DirectX::XMLoadFloat3(&m_up);
+	DirectX::XMVECTOR L = DirectX::XMLoadFloat3(&m_look);
 
-	DirectX::XMMATRIX R = DirectX::XMMatrixRotationAxis(*m_right, angle);
-
-	*m_up = DirectX::XMVector3TransformNormal(*m_up, R);
-	*m_look = DirectX::XMVector3TransformNormal(*m_look, R);
+	DirectX::XMMATRIX rotation = DirectX::XMMatrixRotationAxis(R, angle);
+	DirectX::XMStoreFloat3(&m_up, DirectX::XMVector3TransformNormal(U, rotation));
+	DirectX::XMStoreFloat3(&m_look, DirectX::XMVector3TransformNormal(L, rotation));
 
 	m_viewDirty = true;
 }
@@ -118,33 +99,85 @@ void Library::Camera::Pitch(float angle)
 void Library::Camera::RotateY(float angle)
 {
 	// Rotate the basis vectors about the world y-axis.
+	DirectX::XMVECTOR R = DirectX::XMLoadFloat3(&m_right);
+	DirectX::XMVECTOR L = DirectX::XMLoadFloat3(&m_look);
 
-	DirectX::XMMATRIX R = DirectX::XMMatrixRotationY(angle);
+	DirectX::XMMATRIX rotation = DirectX::XMMatrixRotationY(angle);
 
-	*m_right = DirectX::XMVector3TransformNormal(*m_right, R);
-	*m_look =  DirectX::XMVector3TransformNormal(*m_look, R);
+	DirectX::XMStoreFloat3(&m_right, DirectX::XMVector3TransformNormal(R, rotation));
+	DirectX::XMStoreFloat3(&m_look, DirectX::XMVector3TransformNormal(L, rotation));
 
 	m_viewDirty = true;
 }
 
-void Library::Camera::UpdateViewMatrix()
+void Library::Camera::UpdateViewMatrix(const GameTime& gameTime)
 {
 	if (m_viewDirty)
 	{
-		// Keep camera's axes orthogonal to each other and of unit length.
-		*m_look = DirectX::XMVector3Normalize(*m_look);
-		*m_up = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(*m_look, *m_right));
+		DirectX::XMVECTOR P = DirectX::XMLoadFloat3(&m_position);
+		DirectX::XMVECTOR D = DirectX::XMLoadFloat3(&m_direction);
 
-		// U, L already ortho-normal, so no need to normalize cross product.
-		*m_right = DirectX::XMVector3Cross(*m_up, *m_look);
+		double cameraSpeed = gameTime.ElapsedGameTime() * 5000;
+		DirectX::XMVECTOR dir = DirectX::XMVectorScale(D, cameraSpeed);
+		DirectX::XMStoreFloat3(&m_position, DirectX::XMVectorAdd(P, dir));
 
-		// Fill in the view matrix entries.
-		DirectX::XMVector3Dot(*m_position, *m_right);
-		DirectX::XMVector3Dot(*m_position, *m_up);
-		DirectX::XMVector3Dot(*m_position, *m_look);
+		CalculateVeiw();
 
-		*m_view =  DirectX::XMMatrixLookToRH(*m_position, *m_look, *m_up);
-
+		m_direction.x=0; m_direction.y=0; m_direction.z=0;
 		m_viewDirty = false;
 	}
+}
+
+void Library::Camera::CalculateVeiw()
+{
+	DirectX::XMVECTOR R = DirectX::XMLoadFloat3(&m_right);
+	DirectX::XMVECTOR U = DirectX::XMLoadFloat3(&m_up);
+	DirectX::XMVECTOR L = DirectX::XMLoadFloat3(&m_look);
+	DirectX::XMVECTOR P = DirectX::XMLoadFloat3(&m_position);	
+
+	// Keep camera's axes orthogonal to each other and of unit length.
+	L = DirectX::XMVector3Normalize(L);
+	U = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(L, R));
+
+	// U, L already ortho-normal, so no need to normalize cross product.
+	R = DirectX::XMVector3Cross(U, L);
+
+	DirectX::XMVECTOR dirN;
+
+	switch (m_movedir)
+	{
+	case MoveDir::Forward:
+		dirN = DirectX::XMLoadFloat3(&m_look);
+		break;
+	case MoveDir::Backward:
+		dirN = DirectX::XMVectorNegate(DirectX::XMLoadFloat3(&m_look));
+		break;
+	case MoveDir::Right:
+		dirN = DirectX::XMVectorNegate(DirectX::XMLoadFloat3(&m_right));
+		break;
+	case MoveDir::Left:
+		dirN = DirectX::XMLoadFloat3(&m_right);
+		break;
+	case MoveDir::Up:
+		dirN = DirectX::XMVectorNegate(DirectX::XMLoadFloat3(&m_up));
+		break;
+	case MoveDir::Down:
+		dirN = DirectX::XMLoadFloat3(&m_up);
+		break;
+	}
+
+	if (m_movedir != MoveDir::None)
+	{
+		DirectX::XMVECTOR dir = DirectX::XMVectorScale(DirectX::XMVector3Normalize(dirN), 1);
+		P = DirectX::XMVectorAdd(P, dir);
+		m_movedir = MoveDir::None;
+	}
+
+	DirectX::XMMATRIX V = DirectX::XMMatrixLookToRH(P, L, U);
+	DirectX::XMStoreFloat4x4(&m_view, V);
+
+	DirectX::XMStoreFloat3(&m_position, P);
+	DirectX::XMStoreFloat3(&m_up, U);
+	DirectX::XMStoreFloat3(&m_look, L);
+	DirectX::XMStoreFloat3(&m_right, R);
 }

@@ -298,7 +298,7 @@ void D3DApp::Draw(const GameTime &gameTime)
 {
 	SceneCB sceneCb;
 	DirectX::XMFLOAT3 camPos;
-	DirectX::XMStoreFloat3(&camPos, *(m_camera->GetPosition()));
+	DirectX::XMStoreFloat3(&camPos, m_camera->GetPosition());
 	sceneCb.EyePos = DirectX::XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.0f);
 	sceneCb.Light.LightPos = DirectX::XMFLOAT4(-22.5f, 36.8f, 46.8f, 1.0f);
 	sceneCb.Light.LightDir = DirectX::XMFLOAT4(0.41f, -0.39f, -0.83f, 0.0f);
@@ -372,7 +372,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	mProjectedTextureScalingMatrix._44 = 1.0f;
 
 	MeshCB meshCb;
-	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * *(m_camera->GetView()) * *(m_camera->GetProjection()));
+	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * m_camera->GetView() * m_camera->GetProjection());
 	DirectX::XMStoreFloat4x4(&meshCb.World, *(mesh->GetModelTransform()));
 	DirectX::XMStoreFloat4x4(&meshCb.ShadowMapMatrix, *(mesh->GetModelTransform()) * *(m_shadowMap->GetViewMatrix()) * *(m_shadowMap->GetProjection()) * DirectX::XMLoadFloat4x4(&mProjectedTextureScalingMatrix));
 	meshCb.AmbientK = 0.9f;

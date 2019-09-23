@@ -7,11 +7,13 @@ struct D3D11_VIEWPORT;
 
 namespace Library
 {
+	class GameTime;
 	class Camera
 	{
 	public:
 		enum class MoveDir 
 		{ 
+			None,
 			Forward, 
 			Backward, 
 			Right, 
@@ -22,29 +24,33 @@ namespace Library
 		Camera(float fov, int width, int height, float nearPlane, float farPlane);
 		virtual ~Camera();
 
-		virtual const DirectX::XMMATRIX* GetView();
-		virtual const DirectX::XMMATRIX* GetProjection() const;
+		virtual const DirectX::XMMATRIX GetView();
+		virtual const DirectX::XMMATRIX GetProjection() const;
 		virtual const D3D11_VIEWPORT* GetViewport() const;
 		virtual void UpdateViewport();
 
-		DirectX::XMVECTOR* GetPosition() const;
+		DirectX::XMVECTOR GetPosition() const;
 		void Move(MoveDir dir);
 		void Pitch(float angle);
 		void RotateY(float angle);
-		void UpdateViewMatrix();
+		void UpdateViewMatrix(const GameTime& gameTime);
 	protected:
-		virtual void UpdateProjection();		
+		virtual void UpdateProjection();	
+		virtual void CalculateVeiw();
 
-		std::unique_ptr<DirectX::XMMATRIX> m_view;
-		std::unique_ptr<DirectX::XMMATRIX> m_projection;
+		DirectX::XMFLOAT4X4 m_view;
+		DirectX::XMFLOAT4X4 m_projection;
 
 		std::unique_ptr<D3D11_VIEWPORT> m_viewport;
 
-		std::unique_ptr<DirectX::XMVECTOR> m_position;
+		DirectX::XMFLOAT3 m_position;
+		DirectX::XMFLOAT3 m_look;
+		DirectX::XMFLOAT3 m_up;
+		DirectX::XMFLOAT3 m_right;
+		
+		DirectX::XMFLOAT3 m_direction;
 
-		std::unique_ptr<DirectX::XMVECTOR> m_look;
-		std::unique_ptr<DirectX::XMVECTOR> m_up;
-		std::unique_ptr<DirectX::XMVECTOR> m_right;
+		MoveDir m_movedir;
 
 		float m_fov;
 		int m_width;

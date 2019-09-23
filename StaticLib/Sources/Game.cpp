@@ -183,7 +183,7 @@ namespace Library
 
 		// camera
 		if (g_D3D && g_D3D->camera)
-			g_D3D->camera->UpdateViewMatrix();
+			g_D3D->camera->UpdateViewMatrix(gameTime);
 	}
 
 	void Game::Draw(const GameTime& gameTime)
