@@ -139,6 +139,6 @@ float4 main(PS_INPUT input) : SV_TARGET
 			color.rgb *= shadow;
 		}       
     }
-
+    color.a = 1;
     return color;
 }

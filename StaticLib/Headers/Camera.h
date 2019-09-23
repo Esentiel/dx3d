@@ -11,16 +11,6 @@ namespace Library
 	class Camera
 	{
 	public:
-		enum class MoveDir 
-		{ 
-			None,
-			Forward, 
-			Backward, 
-			Right, 
-			Left, 
-			Up, 
-			Down 
-		};
 		Camera(float fov, int width, int height, float nearPlane, float farPlane);
 		virtual ~Camera();
 
@@ -30,10 +20,11 @@ namespace Library
 		virtual void UpdateViewport();
 
 		DirectX::XMVECTOR GetPosition() const;
-		void Move(MoveDir dir);
+		void Strafe(float d);
+		void Walk(float d);
 		void Pitch(float angle);
 		void RotateY(float angle);
-		void UpdateViewMatrix(const GameTime& gameTime);
+		void UpdateViewMatrix();
 	protected:
 		virtual void UpdateProjection();	
 		virtual void CalculateVeiw();
@@ -49,8 +40,6 @@ namespace Library
 		DirectX::XMFLOAT3 m_right;
 		
 		DirectX::XMFLOAT3 m_direction;
-
-		MoveDir m_movedir;
 
 		float m_fov;
 		int m_width;

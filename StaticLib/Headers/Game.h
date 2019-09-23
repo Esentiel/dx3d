@@ -34,6 +34,7 @@ namespace Library
 
 		void OnMouseButtonDown(int x, int y);
 		void OnMouseMoved(WPARAM btnState, int x, int y);
+		void OnKeyboardInput(const GameTime& gtgameTime);
 	protected:
 		virtual void InitializeWindow();
 		virtual void Shutdown();

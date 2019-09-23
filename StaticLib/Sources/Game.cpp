@@ -175,15 +175,13 @@ namespace Library
 
 	void Game::Update(const GameTime& gameTime)
 	{
+		OnKeyboardInput(gameTime);
+
 		auto delta = gameTime.ElapsedGameTime();
 		std::string deltaText = std::to_string(1.0f/delta);
 		std::string title("FPS: ");
 		title.insert(title.cend(), deltaText.cbegin(), deltaText.cend());
 		SetWindowTextA(mWindowHandle, title.c_str());
-
-		// camera
-		if (g_D3D && g_D3D->camera)
-			g_D3D->camera->UpdateViewMatrix(gameTime);
 	}
 
 	void Game::Draw(const GameTime& gameTime)
@@ -256,32 +254,9 @@ namespace Library
 			return 0;
 		case WM_KEYDOWN:
 		{
-			//bool alt = (::GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
-
 			switch (wParam)
 			{
-			case 'A':
-			case VK_LEFT:
-				g_D3D->camera->Move(Camera::MoveDir::Left);
-				break;
-			case 'D':
-			case VK_RIGHT:
-				g_D3D->camera->Move(Camera::MoveDir::Right);
-				break;
-			case 'W':
-			case VK_UP:
-				g_D3D->camera->Move(Camera::MoveDir::Forward);
-				break;
-			case 'S':
-			case VK_DOWN:
-				g_D3D->camera->Move(Camera::MoveDir::Backward);
-				break;
-			case 'Q':
-				g_D3D->camera->Move(Camera::MoveDir::Down);
-				break;
-			case 'E':
-				g_D3D->camera->Move(Camera::MoveDir::Up);
-				break;
+
 			}
 			break;
 		}
@@ -307,4 +282,24 @@ namespace Library
 
 		return center;
 	}
+
+	void Game::OnKeyboardInput(const GameTime& gt)
+	{
+		const float dt = gt.ElapsedGameTime();
+
+		if (GetAsyncKeyState('W') & 0x8000)
+			g_D3D->camera->Walk(10.0f*dt);
+
+		if (GetAsyncKeyState('S') & 0x8000)
+			g_D3D->camera->Walk(-10.0f*dt);
+
+		if (GetAsyncKeyState('A') & 0x8000)
+			g_D3D->camera->Strafe(10.0f*dt);
+
+		if (GetAsyncKeyState('D') & 0x8000)
+			g_D3D->camera->Strafe(-10.0f*dt);
+
+		g_D3D->camera->UpdateViewMatrix();
+	}
 }
+
