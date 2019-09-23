@@ -127,7 +127,7 @@ void Camera::Strafe(float d)
 
 void Camera::Walk(float d)
 {
-	d *= 50;
+	d *= 20;
 	// mPosition += d*mLook
 	DirectX::XMVECTOR s = DirectX::XMVectorReplicate(d);
 	DirectX::XMVECTOR l = DirectX::XMLoadFloat3(&m_look);
