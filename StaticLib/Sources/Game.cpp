@@ -252,14 +252,6 @@ namespace Library
 		case WM_DESTROY:
 			PostQuitMessage(0);
 			return 0;
-		case WM_KEYDOWN:
-		{
-			switch (wParam)
-			{
-
-			}
-			break;
-		}
 		case WM_RBUTTONDOWN:
 			Game::GetGame()->OnMouseButtonDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 			break;
@@ -285,7 +277,7 @@ namespace Library
 
 	void Game::OnKeyboardInput(const GameTime& gt)
 	{
-		const float dt = gt.ElapsedGameTime();
+		const float dt = (float)gt.ElapsedGameTime();
 
 		if (GetAsyncKeyState('W') & 0x8000)
 			g_D3D->camera->Walk(10.0f*dt);

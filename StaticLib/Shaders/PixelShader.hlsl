@@ -78,8 +78,8 @@ float4 main(PS_INPUT input) : SV_TARGET
         bumpNormal = normalize(input.normalW);
     }
     
-    float4 spec;
-    float4 specIntensity;
+    float4 spec = float4(0.f, 0.f, 0.f, 0.f);
+    float4 specIntensity  = float4(0.f, 0.f, 0.f, 0.f);
     float diffuseLight = saturate(dot(normalize(-(lightS.lightDir)), bumpNormal));
     if (diffuseLight > 0)
     {

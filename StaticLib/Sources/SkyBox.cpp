@@ -87,7 +87,7 @@ void Library::SkyBox::Draw(RenderScene * renderScene) // TODO: rewrite to use Me
 	g_D3D->deviceCtx->OMSetDepthStencilState(m_dsv.Get(), 0);
 
 	// draw call
-	g_D3D->deviceCtx->DrawIndexed(m_indices.size(), 0, 0);
+	g_D3D->deviceCtx->DrawIndexed((UINT)m_indices.size(), 0, 0);
 
 	g_D3D->deviceCtx->OMSetDepthStencilState(0, 0);
 }
@@ -287,7 +287,7 @@ void SkyBox::CreateVertexBuffer()
 	m_vertexBuffer.Reset();
 
 	CD3D11_BUFFER_DESC vDesc(
-		sizeof(DirectX::XMFLOAT3) * m_vertices.size(),
+		(UINT)(sizeof(DirectX::XMFLOAT3) * m_vertices.size()),
 		D3D11_BIND_VERTEX_BUFFER
 	);
 
@@ -309,7 +309,7 @@ void SkyBox::CreateIndexBuffer()
 	m_indexBuffer.Reset();
 
 	CD3D11_BUFFER_DESC iDesc(
-		sizeof(UINT) * m_indices.size(),
+		(UINT)(sizeof(UINT) * m_indices.size()),
 		D3D11_BIND_INDEX_BUFFER
 	);
 
