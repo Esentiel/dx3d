@@ -294,7 +294,7 @@ void D3DApp::Initialize()
 }
 
 
-void D3DApp::Draw(const GameTime &gameTime) 
+void D3DApp::Draw(const GameTime&) 
 {
 	SceneCB sceneCb;
 	DirectX::XMFLOAT3 camPos;
