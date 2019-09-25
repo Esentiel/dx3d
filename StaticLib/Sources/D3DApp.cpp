@@ -310,6 +310,15 @@ void D3DApp::Draw(const GameTime&)
 	sceneCb.Lights[0].QuadraticAttenuation = 0.0f;
 	sceneCb.Lights[0].SpotAngle = DirectX::XMConvertToRadians(30.0f);
 
+	sceneCb.Lights[1].Type = 1;
+	sceneCb.Lights[1].LightPos = DirectX::XMFLOAT4(-20.5f, 36.8f, 16.8f, 1.0f);
+	sceneCb.Lights[1].LightDir = DirectX::XMFLOAT4(-0.41f, -0.39f, -0.83f, 0.0f);
+	sceneCb.Lights[1].LightPower = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	sceneCb.Lights[1].ConstantAttenuation = 1.0f;
+	sceneCb.Lights[1].LinearAttenuation = 0.01f;
+	sceneCb.Lights[1].QuadraticAttenuation = 0.0f;
+	sceneCb.Lights[1].SpotAngle = DirectX::XMConvertToRadians(30.0f);
+
 	// Generate shadow map
 	m_shadowMap->Initialize(m_width, m_height);
 	m_shadowMap->SetLightSource(&(sceneCb.Lights[0]));
