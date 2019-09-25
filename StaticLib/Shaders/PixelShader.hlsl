@@ -14,15 +14,7 @@ cbuffer MVPbuffer : register(b0)
     float4x4 world; // 16x4
 	float4x4 viewProj; // 16x4
     float4x4 shadowMapMatrix; // 16x4
-	float4 Emissive; // 16
-	float4 Ambient; // 16
-    float4 Diffuse; // 16
-	float4 Specular; // 16
-	//
-    float specularPower;
-    int calcLight;
-    int hasNormalMap;
-    int hasSpecularMap; // 4 + 4 + 4 + 4
+	Material material; // 80
 }
 
 cbuffer PerScene : register(b1)
@@ -46,7 +38,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 {
 	// normals
 	float3 normal;
-    if (hasNormalMap)
+    if (material.hasNormalMap)
     {
         float4 bumpMap;
         // normal
@@ -67,20 +59,20 @@ float4 main(PS_INPUT input) : SV_TARGET
     }
 
 
-	ResultingLight result = CalculateLight(lightS, eyePos.xyz, input.posW, normal, specularPower);
+	ResultingLight result = CalculateLight(lightS, eyePos.xyz, input.posW, normal, material.specularPower);
 	
-	float4 emissive = Emissive;
-    float4 ambient = Ambient * GlobalAmbient;
-    float4 diffuse = Diffuse * result.diffuse;
+	float4 emissive = material.emissive;
+    float4 ambient = material.ambient * GlobalAmbient;
+    float4 diffuse = material.diffuse * result.diffuse;
 	float4 specular = result.specular;
-	if (hasSpecularMap)
+	if (material.hasSpecularMap)
     {
         float4 specIntensity = specularMap.Sample(magLinearWrapSampler, input.textCoord);
         specular *= specIntensity;
     }
     else
     {
-        specular *= Specular;
+        specular *= material.specular;
     }
 
 	float4 textureColor = diffuseTexture.Sample(magLinearWrapSampler, input.textCoord);

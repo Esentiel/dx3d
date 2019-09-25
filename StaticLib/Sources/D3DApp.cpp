@@ -390,14 +390,14 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * m_camera->GetView() * m_camera->GetProjection());
 	DirectX::XMStoreFloat4x4(&meshCb.World, *(mesh->GetModelTransform()));
 	DirectX::XMStoreFloat4x4(&meshCb.ShadowMapMatrix, *(mesh->GetModelTransform()) * *(m_shadowMap->GetViewMatrix()) * *(m_shadowMap->GetProjection()) * DirectX::XMLoadFloat4x4(&mProjectedTextureScalingMatrix));
-	meshCb.Emissive = DirectX::XMFLOAT4(0.f, 0.f, 0.f, 0.f);
-	meshCb.Ambient = DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.f);
-	meshCb.Diffuse = DirectX::XMFLOAT4(1.f, 1.f, 1.f, 1.f);
-	meshCb.Specular = DirectX::XMFLOAT4(1.f, 1.f, 1.f, 1.f);
-	meshCb.specularPower = 32;
-	meshCb.CalcLight = mesh->GetFlag(Mesh::MeshFlags::CalcLight);
-	meshCb.HasNormalMap = mesh->GetFlag(Mesh::MeshFlags::UseNormalMap); // todo: remove this, use GetSize() on texture in shader
-	meshCb.HasSpecularMap = mesh->GetFlag(Mesh::MeshFlags::UseSpecularMap); // todo: remove this, use GetSize() on texture in shader
+	meshCb.MaterialInstance.Emissive = DirectX::XMFLOAT4(0.f, 0.f, 0.f, 0.f);
+	meshCb.MaterialInstance.Ambient = DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.f);
+	meshCb.MaterialInstance.Diffuse = DirectX::XMFLOAT4(1.f, 1.f, 1.f, 1.f);
+	meshCb.MaterialInstance.Specular = DirectX::XMFLOAT4(1.f, 1.f, 1.f, 1.f);
+	meshCb.MaterialInstance.SpecularPower = 32;
+	meshCb.MaterialInstance.CalcLight = mesh->GetFlag(Mesh::MeshFlags::CalcLight);
+	meshCb.MaterialInstance.HasNormalMap = mesh->GetFlag(Mesh::MeshFlags::UseNormalMap); // todo: remove this, use GetSize() on texture in shader
+	meshCb.MaterialInstance.HasSpecularMap = mesh->GetFlag(Mesh::MeshFlags::UseSpecularMap); // todo: remove this, use GetSize() on texture in shader
 
 	m_deviceCtx->UpdateSubresource(mesh->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
 
@@ -421,11 +421,11 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	m_deviceCtx->PSSetSamplers(0, 1, s_sampler.GetAddressOf());
 	m_deviceCtx->PSSetSamplers(1, 1, s_sampler2.GetAddressOf());
 	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::DiffuseTexture)));
-	if (meshCb.HasNormalMap)
+	if (meshCb.MaterialInstance.HasNormalMap)
 		m_deviceCtx->PSSetShaderResources(3, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::NormalTexture)));
 	else
 		g_D3D->deviceCtx->PSSetShaderResources(3, 1, pSRV);
-	if (meshCb.HasSpecularMap)
+	if (meshCb.MaterialInstance.HasSpecularMap)
 		m_deviceCtx->PSSetShaderResources(4, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::SpecularTexture)));
 	else
 		g_D3D->deviceCtx->PSSetShaderResources(4, 1, pSRV);

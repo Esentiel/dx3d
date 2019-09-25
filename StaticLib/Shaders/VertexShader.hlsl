@@ -1,18 +1,12 @@
+#include "ShaderDefines.inc"
+
 cbuffer MVPbuffer : register(b0)
 {
     float4x4 mvp; // 64 
     float4x4 world; // 64
 	float4x4 viewProj; // 64
     float4x4 shadowMapMatrix; // 64
-	float4 Emissive; // 16
-	float4 Ambient; // 16
-    float4 Diffuse; // 16
-	float4 Specular; // 16
-	//
-    float specularPower;
-    int calcLight;
-    int hasNormalMap;
-    int hasSpecularMap; //16
+	Material material; // 80
 }
 
 struct VS_IN

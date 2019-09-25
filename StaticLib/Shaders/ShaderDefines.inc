@@ -1,4 +1,15 @@
-
+struct Material
+{
+	float4 emissive; // 16
+	float4 ambient; // 16
+    float4 diffuse; // 16
+	float4 specular; // 16
+	//
+    float specularPower;
+    int calcLight;
+    int hasNormalMap;
+    int hasSpecularMap; // 4 + 4 + 4 + 4
+};
 
 struct LightSource
 {

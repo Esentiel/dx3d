@@ -108,6 +108,7 @@
     <ClInclude Include="Headers\Transformations.h" />
     <ClInclude Include="Headers\LightSource.h" />
     <ClInclude Include="Headers\PostProcessor.h" />
+    <ClInclude Include="Headers\Material.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Headers\ShadowMap.h" />
     <ClInclude Include="Headers\SkyBox.h" />
@@ -116,6 +117,7 @@
     <ClInclude Include="Headers\TextureManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Sources\Material.cpp" />
     <ClCompile Include="Sources\SkyBox.cpp" />
     <ClCompile Include="Sources\ShadowMap.cpp" />
     <ClCompile Include="Sources\PostProcessor.cpp" />
