@@ -202,10 +202,22 @@ ID3D11Buffer** ShadowMap::GetConstMeshLightBufferRef()
 
 void ShadowMap::SetLightSource(LightSource * light)
 {
+	if (!light->Type)
+		return; // fix this scenario! no light attached -> no shadow map generating
+
 	m_lightSource = light;
 
-	auto pos = DirectX::XMLoadFloat4(&(light->LightPos));
-	auto dir = DirectX::XMVector4Normalize((DirectX::XMLoadFloat4(&(light->LightDir))));
+	DirectX::XMVECTOR pos;
+	DirectX::XMVECTOR dir = DirectX::XMVector4Normalize((DirectX::XMLoadFloat4(&(light->LightDir))));
+	if (light->Type == 1)
+	{
+		pos = DirectX::XMVectorScale(DirectX::XMVectorNegate(DirectX::XMLoadFloat4(&(light->LightDir))), 100.f);
+	}
+	else
+	{
+		pos = DirectX::XMLoadFloat4(&(light->LightDir));
+	}
+
 
 	*m_lightView = DirectX::XMMatrixLookToRH(pos, dir, DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
 }

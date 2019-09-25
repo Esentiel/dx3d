@@ -2,11 +2,12 @@
 
 struct LightSource
 {
-	float4 lightPos;
-	float4 lightDir;
-	float4 lightPower;
+	float4 lightPos; // 16
+	float4 lightDir; // 16
+	float4 lightPower; // 16
+	//
 	int type; // 0 - unused; 1 - directional; 2 - point; 3 - spot;
-	float3 padding;
+	float3 padding; // 4 + 12
 };
 
 struct ResultingLight
