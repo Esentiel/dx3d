@@ -10,8 +10,11 @@ namespace Library
 		DirectX::XMFLOAT4 LightDir;
 		DirectX::XMFLOAT4 LightPower;
 		int Type;  // 0 - unused; 1 - directional; 2 - point; 3 - spot;
-		int alignment1, alignment2, alignment3;
-
+		float ConstantAttenuation;
+		float LinearAttenuation;
+		float QuadraticAttenuation;
+		float SpotAngle;
+		DirectX::XMFLOAT3 padding_;
 
 		LightSource();
 		~LightSource();
