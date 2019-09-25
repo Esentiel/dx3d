@@ -9,6 +9,11 @@ cbuffer MVPbuffer : register(b0)
 	Material material; // 80
 }
 
+cbuffer ShadowMapVP : register(b2)
+{
+	float4x4 shadowMapVP[MaxLightOnScene];
+}
+
 struct VS_IN
 {
 	float3 position : POSITION;
@@ -25,7 +30,7 @@ struct VS_OUT
     float3 tangentsW : TANGENTS0;
     float3 bitangentsW : BITANGENTS0;
     float3 posW : POSITION0;
-    float4 SMpos : POSITION1;
+    float4 SMpos[MaxLightOnScene] : POSITION1;
 	float4 projPos : SV_POSITION;
 };
 
@@ -39,7 +44,10 @@ VS_OUT main(VS_IN input)
     output.tangentsW = mul(float4(input.tangents, 0.0), world).xyz;
     output.bitangentsW = mul(float4(input.bitangents, 0.0), world).xyz;
     output.posW = mul(float4(input.position, 1.0), world).xyz;
-    output.SMpos = mul(float4(input.position, 1.0), shadowMapMatrix);
-
+	for (int i = 0; i < MaxLightOnScene; i++)
+	{
+		output.SMpos[i] = mul(float4(input.position, 1.0), shadowMapVP[i]);
+	}
+    
 	return output;
 }

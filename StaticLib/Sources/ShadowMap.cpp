@@ -14,12 +14,12 @@
 using namespace Library;
 
 ShadowMap::ShadowMap() :
-	m_lightView(new DirectX::XMMATRIX),
 	m_vertexShaderName("VertexShaderSM"),
 	m_viewport(new D3D11_VIEWPORT)
 {
 	CreateInputLayout();
 	CreateConstLightMeshBuffer();
+	CreateConstMeshBuffer();
 }
 
 
@@ -31,61 +31,69 @@ void ShadowMap::Initialize(int width, int height)
 {
 	// fix
 	ID3D11ShaderResourceView *const pSRV[1] = { NULL };
-	g_D3D->deviceCtx->PSSetShaderResources(1, 1, pSRV);
+	
+	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
+	{
+		g_D3D->deviceCtx->PSSetShaderResources(4 + i, 1, pSRV); // 4 is offset
+	}
 
 	g_D3D->deviceCtx->RSSetState(m_rasterState.Get());
 
 	if (m_width != width || m_height != height)
 	{
-		HRESULT hr;
-
-		m_width = width;
-		m_height = height;
-
-		// create shaderRes
-		D3D11_TEXTURE2D_DESC textureDesc;
-		ZeroMemory(&textureDesc, sizeof(textureDesc));
-		textureDesc.Width = width;
-		textureDesc.Height = height;
-		textureDesc.MipLevels = 1;
-		textureDesc.ArraySize = 1;
-		textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-		textureDesc.SampleDesc.Count = 1;
-		textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
-
-		Microsoft::WRL::ComPtr<ID3D11Texture2D> fullScreenTexture = nullptr;
-		if (FAILED(hr = g_D3D->device->CreateTexture2D(&textureDesc, nullptr, fullScreenTexture.GetAddressOf())))
+		for (size_t i = 0; i < MAX_LIGHT_SOURCES; i++)
 		{
-			THROW_GAME_EXCEPTION("IDXGIDevice::CreateTexture2D() failed.", hr);
-		}
+			HRESULT hr;
 
-		D3D11_SHADER_RESOURCE_VIEW_DESC resourceViewDesc;
-		ZeroMemory(&resourceViewDesc, sizeof(resourceViewDesc));
-		resourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-		resourceViewDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
-		resourceViewDesc.Texture2D.MipLevels = 1;
+			m_width = width;
+			m_height = height;
 
-		if (FAILED(hr = g_D3D->device->CreateShaderResourceView(fullScreenTexture.Get(), &resourceViewDesc, m_shaderRes.GetAddressOf())))
-		{
-			THROW_GAME_EXCEPTION("IDXGIDevice::CreateShaderResourceView() failed.", hr);
-		}
+			// create shaderRes
+			D3D11_TEXTURE2D_DESC textureDesc;
+			ZeroMemory(&textureDesc, sizeof(textureDesc));
+			textureDesc.Width = width;
+			textureDesc.Height = height;
+			textureDesc.MipLevels = 1;
+			textureDesc.ArraySize = 1;
+			textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+			textureDesc.SampleDesc.Count = 1;
+			textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 
-		// create DSB
-		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
-		ZeroMemory(&depthStencilViewDesc, sizeof
-		(depthStencilViewDesc));
-		depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
-		depthStencilViewDesc.Texture2D.MipSlice = 0;
+			Microsoft::WRL::ComPtr<ID3D11Texture2D> fullScreenTexture = nullptr;
+			if (FAILED(hr = g_D3D->device->CreateTexture2D(&textureDesc, nullptr, fullScreenTexture.GetAddressOf())))
+			{
+				THROW_GAME_EXCEPTION("IDXGIDevice::CreateTexture2D() failed.", hr);
+			}
 
-		if (FAILED(hr = g_D3D->device->CreateDepthStencilView(fullScreenTexture.Get(), &depthStencilViewDesc, m_shadowMap.GetAddressOf())))
-		{
-			THROW_GAME_EXCEPTION("ShadowMap::CreateDepthStencilView() failed.", hr);
+			D3D11_SHADER_RESOURCE_VIEW_DESC resourceViewDesc;
+			ZeroMemory(&resourceViewDesc, sizeof(resourceViewDesc));
+			resourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+			resourceViewDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
+			resourceViewDesc.Texture2D.MipLevels = 1;
+
+			if (FAILED(hr = g_D3D->device->CreateShaderResourceView(fullScreenTexture.Get(), &resourceViewDesc, m_shaderRes[i].GetAddressOf())))
+			{
+				THROW_GAME_EXCEPTION("IDXGIDevice::CreateShaderResourceView() failed.", hr);
+			}
+
+			// create DSB
+			D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+			ZeroMemory(&depthStencilViewDesc, sizeof
+			(depthStencilViewDesc));
+			depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+			depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+			depthStencilViewDesc.Texture2D.MipSlice = 0;
+
+			if (FAILED(hr = g_D3D->device->CreateDepthStencilView(fullScreenTexture.Get(), &depthStencilViewDesc, m_shadowMap[i].GetAddressOf())))
+			{
+				THROW_GAME_EXCEPTION("ShadowMap::CreateDepthStencilView() failed.", hr);
+			}
 		}
 
 		float aspectRatio = (float)m_width / m_height;
-		m_projection.reset(new DirectX::XMMATRIX(DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 0.001f, 1000.0f)));
 
+		DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 0.001f, 1000.0f);
+		DirectX::XMStoreFloat4x4(&m_projection, P);
 
 		m_viewport->Width = (float)m_width;
 		m_viewport->Height = (float)m_height;
@@ -102,49 +110,51 @@ void ShadowMap::Generate(RenderScene * scene)
 {
 	static ID3D11RenderTargetView* nullRenderTargetView = nullptr;
 
-	// set off screen rtv and dsb
-	g_D3D->deviceCtx->OMSetRenderTargets(1, &nullRenderTargetView, m_shadowMap.Get());
-	
-	// clear off screen rt and dsb
-	const DirectX::XMVECTORF32 BackgroundColor = { 0.392f,0.584f, 0.929f, 1.0f };
-	g_D3D->deviceCtx->ClearDepthStencilView(m_shadowMap.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
-	//g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());
-
-	// PER MESH
-	for (auto it = scene->BeginMesh(); it != scene->EndMesh(); ++it)
+	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
-		auto mesh = (*it).get();
+		// set off screen rtv and dsb
+		g_D3D->deviceCtx->OMSetRenderTargets(1, &nullRenderTargetView, m_shadowMap[i].Get());
 
-		if (!mesh->GetFlag(Mesh::MeshFlags::CalcLight))
+		// clear off screen rt and dsb
+		const DirectX::XMVECTORF32 BackgroundColor = { 0.392f,0.584f, 0.929f, 1.0f };
+		g_D3D->deviceCtx->ClearDepthStencilView(m_shadowMap[i].Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+		//g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());
+
+		// PER MESH
+		for (auto it = scene->BeginMesh(); it != scene->EndMesh(); ++it)
 		{
-			continue;
+			auto mesh = (*it).get();
+
+			if (!mesh->GetFlag(Mesh::MeshFlags::CalcLight))
+			{
+				continue;
+			}
+			// update mesh cb
+			MeshLightCB meshCb;
+			DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, *(mesh->GetModelTransform()) * GetViewMatrix(i) * GetProjection());
+
+			g_D3D->deviceCtx->UpdateSubresource(GetConstMeshLightBuffer(i), 0, nullptr, &meshCb, 0, 0);
+
+			// IA
+			UINT stride = sizeof(DirectX::XMFLOAT3);
+			UINT offset = 0;
+			g_D3D->deviceCtx->IASetVertexBuffers(0, 1, mesh->GetVertexLightBufferRef(), &stride, &offset);
+			g_D3D->deviceCtx->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+			g_D3D->deviceCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			g_D3D->deviceCtx->IASetInputLayout(m_inputlayout.Get());
+
+			// VS
+			ID3D11VertexShader* vs = g_D3D->shaderMgr->GetVertexShader(m_vertexShaderName);
+			g_D3D->deviceCtx->VSSetShader(vs, NULL, 0); //todo: mocking: ASSUMPTION: we use same vs for each
+			g_D3D->deviceCtx->VSSetConstantBuffers(2, 1, GetConstMeshLightBufferRef(i));
+
+			// PS
+			g_D3D->deviceCtx->PSSetShader(NULL, NULL, 0);
+
+			// draw call
+			g_D3D->deviceCtx->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 		}
-		// update mesh cb
-		MeshLightCB meshCb;
-		DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, *(mesh->GetModelTransform()) * *(GetViewMatrix()) * *(GetProjection()));
-		//DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, *(mesh->GetModelTransform()) * *(g_D3D->camera->GetView()) * *(g_D3D->camera->GetProjection()));
-
-		g_D3D->deviceCtx->UpdateSubresource(GetConstMeshLightBuffer(), 0, nullptr, &meshCb, 0, 0);
-
-		// IA
-		UINT stride = sizeof(DirectX::XMFLOAT3);
-		UINT offset = 0;
-		g_D3D->deviceCtx->IASetVertexBuffers(0, 1, mesh->GetVertexLightBufferRef(), &stride, &offset);
-		g_D3D->deviceCtx->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-		g_D3D->deviceCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		g_D3D->deviceCtx->IASetInputLayout(m_inputlayout.Get());
-
-		// VS
-		ID3D11VertexShader* vs = g_D3D->shaderMgr->GetVertexShader(m_vertexShaderName);
-		g_D3D->deviceCtx->VSSetShader(vs, NULL, 0); //todo: mocking: ASSUMPTION: we use same vs for each
-		g_D3D->deviceCtx->VSSetConstantBuffers(2, 1, GetConstMeshLightBufferRef());
-
-		// PS
-		g_D3D->deviceCtx->PSSetShader(NULL, NULL, 0);
-
-		// draw call
-		g_D3D->deviceCtx->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
 }
 
@@ -183,58 +193,65 @@ void ShadowMap::CreateConstLightMeshBuffer()
 		D3D11_BIND_CONSTANT_BUFFER
 	);
 
-	HRESULT hr;
-	if (FAILED(hr = g_D3D->device->CreateBuffer(&cbDesc, NULL, &m_constMeshLightBuffer)))
+	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
-		THROW_GAME_EXCEPTION("CreateConstLightMeshBuffer(): CreateBuffer() failed", hr);
+		HRESULT hr;
+		if (FAILED(hr = g_D3D->device->CreateBuffer(&cbDesc, NULL, m_constMeshLightBuffer[i].GetAddressOf())))
+		{
+			THROW_GAME_EXCEPTION("CreateConstLightMeshBuffer(): CreateBuffer() failed", hr);
+		}
 	}
 }
 
-ID3D11Buffer* ShadowMap::GetConstMeshLightBuffer() const
+ID3D11Buffer* ShadowMap::GetConstMeshLightBuffer(unsigned int id) const
 {
-	return m_constMeshLightBuffer.Get();
+	return m_constMeshLightBuffer[id].Get();
 }
 
-ID3D11Buffer** ShadowMap::GetConstMeshLightBufferRef()
+ID3D11Buffer** ShadowMap::GetConstMeshLightBufferRef(unsigned int id)
 {
-	return m_constMeshLightBuffer.GetAddressOf();
+	return m_constMeshLightBuffer[id].GetAddressOf();
 }
 
 void ShadowMap::SetLightSource(LightSource * light)
 {
-	if (!light->Type)
-		return; // fix this scenario! no light attached -> no shadow map generating
-
-	m_lightSource = light;
-
-	DirectX::XMVECTOR pos;
-	DirectX::XMVECTOR dir = DirectX::XMVector4Normalize((DirectX::XMLoadFloat4(&(light->LightDir))));
-	if (light->Type == 1)
+	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
-		pos = DirectX::XMVectorScale(DirectX::XMVectorNegate(DirectX::XMLoadFloat4(&(light->LightDir))), 100.f);
+		if (!light->Type)
+			continue;
+
+		m_lightSource[i] = light;
+
+		DirectX::XMVECTOR pos;
+		DirectX::XMVECTOR dir = DirectX::XMVector4Normalize((DirectX::XMLoadFloat4(&(light->LightDir))));
+		if (light->Type == 1)
+		{
+			pos = DirectX::XMVectorScale(DirectX::XMVectorNegate(DirectX::XMLoadFloat4(&(light->LightDir))), 100.f);
+		}
+		else
+		{
+			pos = DirectX::XMLoadFloat4(&(light->LightPos));
+		}
+
+
+		DirectX::XMMATRIX V = DirectX::XMMatrixLookToRH(pos, dir, DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
+		DirectX::XMStoreFloat4x4(&(m_lightView[i]), V);
 	}
-	else
-	{
-		pos = DirectX::XMLoadFloat4(&(light->LightDir));
-	}
-
-
-	*m_lightView = DirectX::XMMatrixLookToRH(pos, dir, DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
 }
 
-const DirectX::XMMATRIX* ShadowMap::GetViewMatrix()
+const DirectX::XMMATRIX ShadowMap::GetViewMatrix(unsigned int id)
 {
-	return m_lightView.get();
+	return DirectX::XMLoadFloat4x4(&(m_lightView[id]));
 }
 
-const DirectX::XMMATRIX* Library::ShadowMap::GetProjection() const
+const DirectX::XMMATRIX Library::ShadowMap::GetProjection() const
 {
-	return m_projection.get();
+	return DirectX::XMLoadFloat4x4(&m_projection);
 }
 
-ID3D11ShaderResourceView** Library::ShadowMap::GetShadowMapRef()
+ID3D11ShaderResourceView** Library::ShadowMap::GetShadowMapRef(unsigned int id)
 {
-	return m_shaderRes.GetAddressOf();
+	return m_shaderRes[id].GetAddressOf();
 }
 
 void Library::ShadowMap::CreateRasterState()
@@ -252,4 +269,32 @@ void Library::ShadowMap::CreateRasterState()
 	rasterizerState.MultisampleEnable = true;
 	rasterizerState.AntialiasedLineEnable = false;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
+}
+
+void ShadowMap::CreateConstMeshBuffer()
+{
+	SMCB VsConstData;
+
+	auto size = (UINT)std::ceil(sizeof(VsConstData) / 16.f) * 16;
+
+	CD3D11_BUFFER_DESC cbDesc(
+		size,
+		D3D11_BIND_CONSTANT_BUFFER
+	);
+
+	HRESULT hr;
+	if (FAILED(hr = g_D3D->device->CreateBuffer(&cbDesc, NULL, &m_constMeshBuffer)))
+	{
+		THROW_GAME_EXCEPTION("CreateConstMeshBuffer(): CreateBuffer() failed", hr);
+	}
+}
+
+ID3D11Buffer* ShadowMap::GetConstMeshBuffer() const
+{
+	return m_constMeshBuffer.Get();
+}
+
+ID3D11Buffer** ShadowMap::GetConstMeshBufferRef()
+{
+	return m_constMeshBuffer.GetAddressOf();
 }

@@ -302,7 +302,7 @@ void D3DApp::Draw(const GameTime&)
 	sceneCb.EyePos = DirectX::XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.0f);
 	sceneCb.GlobalAmbient = DirectX::XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
 	sceneCb.Lights[0].Type = 3;
-	sceneCb.Lights[0].LightPos = DirectX::XMFLOAT4(-20.5f, 36.8f, 16.8f, 1.0f);
+	sceneCb.Lights[0].LightPos = DirectX::XMFLOAT4(-20.5f, 36.8f, 46.8f, 1.0f);
 	sceneCb.Lights[0].LightDir = DirectX::XMFLOAT4(0.41f, -0.39f, -0.83f, 0.0f);
 	sceneCb.Lights[0].LightPower = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	sceneCb.Lights[0].ConstantAttenuation = 1.0f;
@@ -338,7 +338,11 @@ void D3DApp::Draw(const GameTime&)
 	m_deviceCtx->RSSetState(m_rasterState.Get());
 
 	// meshes
-	m_deviceCtx->PSSetShaderResources(1, 1, m_shadowMap->GetShadowMapRef());
+	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
+	{
+		m_deviceCtx->PSSetShaderResources(4 + i, 1, m_shadowMap->GetShadowMapRef(i));
+	}
+	
 	for (auto it = m_renderScene->BeginMesh(); it != m_renderScene->EndMesh(); ++it)
 	{
 		DrawMesh((*it).get());
@@ -389,7 +393,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	MeshCB meshCb;
 	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * m_camera->GetView() * m_camera->GetProjection());
 	DirectX::XMStoreFloat4x4(&meshCb.World, *(mesh->GetModelTransform()));
-	DirectX::XMStoreFloat4x4(&meshCb.ShadowMapMatrix, *(mesh->GetModelTransform()) * *(m_shadowMap->GetViewMatrix()) * *(m_shadowMap->GetProjection()) * DirectX::XMLoadFloat4x4(&mProjectedTextureScalingMatrix));
+	
 	meshCb.MaterialInstance.Emissive = DirectX::XMFLOAT4(0.f, 0.f, 0.f, 0.f);
 	meshCb.MaterialInstance.Ambient = DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.f);
 	meshCb.MaterialInstance.Diffuse = DirectX::XMFLOAT4(1.f, 1.f, 1.f, 1.f);
@@ -400,6 +404,13 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	meshCb.MaterialInstance.HasSpecularMap = mesh->GetFlag(Mesh::MeshFlags::UseSpecularMap); // todo: remove this, use GetSize() on texture in shader
 
 	m_deviceCtx->UpdateSubresource(mesh->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
+
+	ShadowMap::SMCB meshSM;
+	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
+	{
+		DirectX::XMStoreFloat4x4(&(meshSM.shadowMapVP[i]), *(mesh->GetModelTransform()) * m_shadowMap->GetViewMatrix(i) * m_shadowMap->GetProjection() * DirectX::XMLoadFloat4x4(&mProjectedTextureScalingMatrix));
+	}
+	m_deviceCtx->UpdateSubresource(m_shadowMap->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
 
 	// IA
 	UINT stride = sizeof(Library::Vertex);
@@ -414,6 +425,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	m_deviceCtx->VSSetShader(vs, NULL, 0); //todo: mocking: ASSUMPTION: we use same vs for each
 	m_deviceCtx->VSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
 	m_deviceCtx->VSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());
+	m_deviceCtx->VSSetConstantBuffers(2, 1, m_shadowMap->GetConstMeshBufferRef());
 
 	// PS
 	ID3D11PixelShader* ps = m_shaderManager->GetPixelShader(mesh->GetPixelShader());
@@ -422,13 +434,13 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	m_deviceCtx->PSSetSamplers(1, 1, s_sampler2.GetAddressOf());
 	m_deviceCtx->PSSetShaderResources(0, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::DiffuseTexture)));
 	if (meshCb.MaterialInstance.HasNormalMap)
-		m_deviceCtx->PSSetShaderResources(3, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::NormalTexture)));
+		m_deviceCtx->PSSetShaderResources(2, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::NormalTexture)));
+	else
+		g_D3D->deviceCtx->PSSetShaderResources(2, 1, pSRV);
+	if (meshCb.MaterialInstance.HasSpecularMap)
+		m_deviceCtx->PSSetShaderResources(3, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::SpecularTexture)));
 	else
 		g_D3D->deviceCtx->PSSetShaderResources(3, 1, pSRV);
-	if (meshCb.MaterialInstance.HasSpecularMap)
-		m_deviceCtx->PSSetShaderResources(4, 1, g_D3D->textureMgr->GetTexture(mesh->GetTexturePath(Mesh::TextureType::SpecularTexture)));
-	else
-		g_D3D->deviceCtx->PSSetShaderResources(4, 1, pSRV);
 	m_deviceCtx->PSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
 	m_deviceCtx->PSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());
 

@@ -1,9 +1,15 @@
 #include "ShaderDefines.inc"
 
-Texture2D specularMap : register(t4);
+
 Texture2D diffuseTexture : register(t0);
-Texture2D shadowMap : register(t1);
-Texture2D normalMap : register(t3);
+Texture2D normalMap : register(t2);
+Texture2D specularMap : register(t3);
+Texture2D shadowMap0 : register(t4);
+Texture2D shadowMap1 : register(t5);
+Texture2D shadowMap2 : register(t6);
+Texture2D shadowMap3 : register(t7);
+Texture2D shadowMap4 : register(t8);
+Texture2D shadowMap5 : register(t9);
 
 SamplerState magLinearWrapSampler : register(s0);
 SamplerState DepthMapSampler : register(s1);
@@ -31,7 +37,7 @@ struct PS_INPUT
     float3 tangentsW : TANGENTS0;
     float3 bitangentsW : BITANGENTS0;
     float3 posW : POSITION0;
-    float4 posSM : POSITION1;
+    float4 posSM[MaxLightOnScene] : POSITION1;
 };
 
 float4 main(PS_INPUT input) : SV_TARGET
@@ -80,33 +86,99 @@ float4 main(PS_INPUT input) : SV_TARGET
     float4 finalColor = ( emissive + ambient + diffuse + specular ) * textureColor;
 
 	// shadows
-	if (input.posSM.w >= 0.0f)
-    {
-		float width = 0, height = 0;
-		shadowMap.GetDimensions(width, height);
-		float2 ShadowMapSize = 1 / float2(width, height);
 
-        input.posSM.xyz /= input.posSM.w;
-        float pixelDepth = input.posSM.z;
-		
-        float sampledDepth1 = shadowMap.Sample(DepthMapSampler, float2(input.posSM.x, input.posSM.y)).x + DepthBias;
-		float sampledDepth2 = shadowMap.Sample(DepthMapSampler, float2(input.posSM.x, input.posSM.y) + float2(ShadowMapSize.x, 0)).x + DepthBias;
-		float sampledDepth3 = shadowMap.Sample(DepthMapSampler, float2(input.posSM.x, input.posSM.y) + float2(0, ShadowMapSize.y)).x + DepthBias;
-		float sampledDepth4 = shadowMap.Sample(DepthMapSampler, float2(input.posSM.x, input.posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x + DepthBias;
-
-		int shadowPCFvalue = 0;
-		shadowPCFvalue += (int)(pixelDepth > sampledDepth1);
-		shadowPCFvalue += (int)(pixelDepth > sampledDepth2);
-		shadowPCFvalue += (int)(pixelDepth > sampledDepth3);
-		shadowPCFvalue += (int)(pixelDepth > sampledDepth4);
-
-		float shadowFactorPCF = shadowPCFvalue / 4.0f;
-
-		if (shadowFactorPCF > 0.2)
+	for (int i = 0; i < MaxLightOnScene; i++)
+	{
+		if (input.posSM[i].w >= 0.0f)
 		{
-			float3 shadow = ColorBlack + (1 - shadowFactorPCF);
-			finalColor.rgb *= shadow;
-		}       
+			float4 posSM = input.posSM[i];
+			posSM.xyz /= posSM.w;
+			float pixelDepth = posSM.z;
+
+
+			float width = 0, height = 0;
+			float2 ShadowMapSize = 0;
+			float sampledDepth1 = 0;
+			float sampledDepth2 = 0;
+			float sampledDepth3 = 0;
+			float sampledDepth4 = 0;
+
+			if (i == 0)
+			{
+				shadowMap0.GetDimensions(width, height);
+				ShadowMapSize = 1 / float2(width, height);
+
+				sampledDepth1 = shadowMap0.Sample(DepthMapSampler, float2(posSM.x, posSM.y)).x + DepthBias;
+				sampledDepth2 = shadowMap0.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, 0)).x + DepthBias;
+				sampledDepth3 = shadowMap0.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(0, ShadowMapSize.y)).x + DepthBias;
+				sampledDepth4 = shadowMap0.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x + DepthBias;
+			}
+			else if (i == 1)
+			{
+				shadowMap1.GetDimensions(width, height);
+				ShadowMapSize = 1 / float2(width, height);
+
+				sampledDepth1 = shadowMap1.Sample(DepthMapSampler, float2(posSM.x, posSM.y)).x + DepthBias;
+				sampledDepth2 = shadowMap1.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, 0)).x + DepthBias;
+				sampledDepth3 = shadowMap1.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(0, ShadowMapSize.y)).x + DepthBias;
+				sampledDepth4 = shadowMap1.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x + DepthBias;
+			}
+			else if (i == 2)
+			{
+				shadowMap2.GetDimensions(width, height);
+				ShadowMapSize = 1 / float2(width, height);
+
+				sampledDepth1 = shadowMap2.Sample(DepthMapSampler, float2(posSM.x, posSM.y)).x + DepthBias;
+				sampledDepth2 = shadowMap2.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, 0)).x + DepthBias;
+				sampledDepth3 = shadowMap2.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(0, ShadowMapSize.y)).x + DepthBias;
+				sampledDepth4 = shadowMap2.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x + DepthBias;
+			}
+			else if (i == 3)
+			{
+				shadowMap3.GetDimensions(width, height);
+				ShadowMapSize = 1 / float2(width, height);
+
+				sampledDepth1 = shadowMap3.Sample(DepthMapSampler, float2(posSM.x, posSM.y)).x + DepthBias;
+				sampledDepth2 = shadowMap3.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, 0)).x + DepthBias;
+				sampledDepth3 = shadowMap3.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(0, ShadowMapSize.y)).x + DepthBias;
+				sampledDepth4 = shadowMap3.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x + DepthBias;
+			}
+			else if (i == 4)
+			{
+				shadowMap4.GetDimensions(width, height);
+				ShadowMapSize = 1 / float2(width, height);
+
+				sampledDepth1 = shadowMap4.Sample(DepthMapSampler, float2(posSM.x, posSM.y)).x + DepthBias;
+				sampledDepth2 = shadowMap4.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, 0)).x + DepthBias;
+				sampledDepth3 = shadowMap4.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(0, ShadowMapSize.y)).x + DepthBias;
+				sampledDepth4 = shadowMap4.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x + DepthBias;
+			}
+			else if (i == 5)
+			{
+				shadowMap5.GetDimensions(width, height);
+				ShadowMapSize = 1 / float2(width, height);
+
+				sampledDepth1 = shadowMap5.Sample(DepthMapSampler, float2(posSM.x, posSM.y)).x + DepthBias;
+				sampledDepth2 = shadowMap5.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, 0)).x + DepthBias;
+				sampledDepth3 = shadowMap5.Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(0, ShadowMapSize.y)).x + DepthBias;
+				sampledDepth4 = shadowMap5.Sample(DepthMapSampler, float2(posSM.x, input.posSM[i].y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x + DepthBias;
+			}
+
+			
+			int shadowPCFvalue = 0;
+			shadowPCFvalue += (int)(pixelDepth > sampledDepth1);
+			shadowPCFvalue += (int)(pixelDepth > sampledDepth2);
+			shadowPCFvalue += (int)(pixelDepth > sampledDepth3);
+			shadowPCFvalue += (int)(pixelDepth > sampledDepth4);
+
+			float shadowFactorPCF = shadowPCFvalue / 4.0f;
+
+			if (shadowFactorPCF > 0.2)
+			{
+				float3 shadow = ColorBlack + (1 - shadowFactorPCF);
+				finalColor.rgb *= shadow;
+			}   
+		} 
     }
 
 	finalColor.a = 1;

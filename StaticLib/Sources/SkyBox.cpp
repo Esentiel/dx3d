@@ -82,7 +82,7 @@ void Library::SkyBox::Draw(RenderScene * renderScene) // TODO: rewrite to use Me
 	ID3D11PixelShader* ps = g_D3D->shaderMgr->GetPixelShader(m_PSName);
 	g_D3D->deviceCtx->PSSetShader(ps, NULL, 0);
 	g_D3D->deviceCtx->PSSetSamplers(2, 1, m_cubesTexSamplerState.GetAddressOf());
-	g_D3D->deviceCtx->PSSetShaderResources(2, 1, m_cubesTextureRes.GetAddressOf());
+	g_D3D->deviceCtx->PSSetShaderResources(1, 1, m_cubesTextureRes.GetAddressOf());
 
 	g_D3D->deviceCtx->OMSetDepthStencilState(m_dsv.Get(), 0);
 
