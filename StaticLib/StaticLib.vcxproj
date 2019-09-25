@@ -212,6 +212,9 @@
   <ItemGroup>
     <ResourceCompile Include="StaticLib.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\ShaderDefines.inc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

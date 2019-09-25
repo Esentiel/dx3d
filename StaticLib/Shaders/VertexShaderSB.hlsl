@@ -1,9 +1,4 @@
-struct LightSource
-{
-    float3 lightPos;
-    float3 lightDir;
-    float4 lightPower;
-};
+#include "ShaderDefines.inc"
 
 cbuffer MVPbuffer : register(b0)
 {

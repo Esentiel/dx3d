@@ -18,10 +18,11 @@ namespace Library
 		DirectX::XMFLOAT4X4 World;
 		DirectX::XMFLOAT4X4 ViewProj;
 		DirectX::XMFLOAT4X4 ShadowMapMatrix;
-		float DiffuseIntensity;
-		float EmissiveK;
-		float AmbientK;
-		float Roughness;
+		DirectX::XMFLOAT4 Emissive;
+		DirectX::XMFLOAT4 Ambient;
+		DirectX::XMFLOAT4 Diffuse;
+		DirectX::XMFLOAT4 Specular;
+		float specularPower;
 		int CalcLight;
 		int HasNormalMap;
 		int HasSpecularMap;

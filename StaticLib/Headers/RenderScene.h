@@ -16,7 +16,8 @@ namespace Library
 	struct SceneCB
 	{
 		DirectX::XMFLOAT4 EyePos;
-		LightSource Light;
+		DirectX::XMFLOAT4 GlobalAmbient;
+		LightSource Lights[6];
 	};
 
 	class RenderScene

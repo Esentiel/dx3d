@@ -1,41 +1,37 @@
-struct LightSource
-{
-	float3 lightPos;
-	float3 lightDir;
-	float4 lightPower;
-};
+#include "ShaderDefines.inc"
 
-static const float4 ColorWhite = { 1, 1, 1, 1 };
-static const float3 ColorBlack = { 0, 0, 0 };
-static const float DepthBias = 0.00000005;
-
+Texture2D specularMap : register(t4);
+SamplerState magLinearWrapSampler : register(s0);
 Texture2D diffuseTexture : register(t0);
 Texture2D shadowMap : register(t1);
 Texture2D normalMap : register(t3);
-Texture2D specularMap : register(t4);
-SamplerState simpleSampler : register(s0);
+
+
 
 SamplerState DepthMapSampler : register(s1);
 
 cbuffer MVPbuffer : register(b0)
 {
-    float4x4 mvp;
-    float4x4 world;
-	float4x4 viewProj;
-    float4x4 shadowMapMatrix;
-    float diffuseIntensity;
-    float emissiveK;
-    float ambientK;
-    float roughness;
+    float4x4 mvp; // 64 
+    float4x4 world; // 64
+	float4x4 viewProj; // 64
+    float4x4 shadowMapMatrix; // 64
+	float4 Emissive; // 16
+	float4 Ambient; // 16
+    float4 Diffuse; // 16
+	float4 Specular; // 16
+	//
+    float specularPower;
     int calcLight;
     int hasNormalMap;
-    int hasSpecularMap;
+    int hasSpecularMap; //16
 }
 
 cbuffer PerScene : register(b1)
 {
-	float3 eyePos;
-    LightSource lightS;
+	float4 eyePos;
+	float4 GlobalAmbient;
+    LightSource lightS[MaxLightOnScene];
 }
 
 struct PS_INPUT
@@ -48,21 +44,16 @@ struct PS_INPUT
     float4 posSM : POSITION1;
 };
 
+
 float4 main(PS_INPUT input) : SV_TARGET
 {
-    float4 textureColor = diffuseTexture.Sample(simpleSampler, input.textCoord);
-
-    if (!calcLight)
-    {
-        return textureColor;
-    }
-
-    float3 bumpNormal;
+	// normals
+	float3 bumpNormal;
     if (hasNormalMap)
     {
         float4 bumpMap;
         // normal
-        bumpMap = normalMap.Sample(simpleSampler, input.textCoord);
+        bumpMap = normalMap.Sample(magLinearWrapSampler, input.textCoord);
     
         // Expand the range of the normal value from (0, +1) to (-1, +1).
         bumpMap = (bumpMap * 2.0f) - 1.0f;
@@ -77,39 +68,96 @@ float4 main(PS_INPUT input) : SV_TARGET
     {
         bumpNormal = normalize(input.normalW);
     }
+
+
+	ResultingLight result = CalculateLight(lightS, eyePos.xyz, input.posW, bumpNormal, specularPower);
+	
+	float4 emissive = Emissive;
+    float4 ambient = Ambient * GlobalAmbient;
+    float4 diffuse = Diffuse * result.diffuse;
+	float4 specular = result.specular;
+	if (hasSpecularMap)
+    {
+        float4 specIntensity = specularMap.Sample(magLinearWrapSampler, input.textCoord);
+        specular *= specIntensity;
+    }
+    else
+    {
+        specular *= Specular;
+    }
+
+	float4 textureColor = diffuseTexture.Sample(magLinearWrapSampler, input.textCoord);
+
+    float4 finalColor = ( emissive + ambient + diffuse + specular ) * textureColor;
+	// gloss effect / more specular
+	finalColor += specular;
+	
+	finalColor.a = 1;
+	return finalColor;
+}
+
+float4 main1(PS_INPUT input) : SV_TARGET
+{
+    float4 textureColor = diffuseTexture.Sample(magLinearWrapSampler, input.textCoord);
+
+    if (!calcLight)
+    {
+        return textureColor;
+    }
+
+    float3 bumpNormal;
+    if (hasNormalMap)
+    {
+        float4 bumpMap;
+        // normal
+        bumpMap = normalMap.Sample(magLinearWrapSampler, input.textCoord);
+    
+        // Expand the range of the normal value from (0, +1) to (-1, +1).
+        bumpMap = (bumpMap * 2.0f) - 1.0f;
+
+        // Calculate the normal from the data in the bump map.
+        bumpNormal = (bumpMap.x * input.tangentsW) + (bumpMap.y * input.bitangentsW) + (bumpMap.z * input.normalW);
+
+        // Normalize the resulting bump normal.
+        bumpNormal = normalize(input.normalW);
+
+    }
+    else
+    {
+        bumpNormal = normalize(input.normalW);
+    }
     
     float4 spec = float4(0.f, 0.f, 0.f, 0.f);
-    float4 specIntensity  = float4(0.f, 0.f, 0.f, 0.f);
-    float diffuseLight = saturate(dot(normalize(-(lightS.lightDir)), bumpNormal));
+    float4 specIntensity  = float4(1.f, 1.f, 1.f, 1.f);
+    float diffuseLight = saturate(dot(normalize(-(lightS[0].lightDir.xyz)), bumpNormal));
     if (diffuseLight > 0)
     {
         
 
-        float3 L = normalize(-(lightS.lightDir));
+        float3 L = normalize(-(lightS[0].lightDir.xyz));
         float3 E = normalize(eyePos - input.posW);
         float3 H = normalize(L + E);
         
-        spec = pow(saturate(dot(bumpNormal, H)), 4);
+		float powS = saturate(dot(bumpNormal, H));
+
+        spec = pow(powS, 32);
 
         
         if (hasSpecularMap)
         {
-            specIntensity = specularMap.Sample(simpleSampler, input.textCoord);
+            specIntensity = specularMap.Sample(magLinearWrapSampler, input.textCoord);
             spec *= specIntensity;
         }
         else
         {
-            spec *= (1.0 - roughness);
+            spec *= (1.0 - 0.5);
         }
     }
 
-    float4 color = saturate(lightS.lightPower * diffuseLight);
-    color = saturate(color + textureColor);
+    float4 color = saturate(float4(lightS[0].lightPower.xyz, 1.0f) * diffuseLight);
+    color = color + spec;
 
-    if (diffuseLight > 0)
-    {
-        color = saturate(color + spec);
-    }
+	color = saturate(color* textureColor);
 
     if (input.posSM.w >= 0.0f)
     {

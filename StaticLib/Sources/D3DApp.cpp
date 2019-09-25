@@ -300,13 +300,20 @@ void D3DApp::Draw(const GameTime&)
 	DirectX::XMFLOAT3 camPos;
 	DirectX::XMStoreFloat3(&camPos, m_camera->GetPosition());
 	sceneCb.EyePos = DirectX::XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.0f);
-	sceneCb.Light.LightPos = DirectX::XMFLOAT4(-22.5f, 36.8f, 46.8f, 1.0f);
-	sceneCb.Light.LightDir = DirectX::XMFLOAT4(0.41f, -0.39f, -0.83f, 0.0f);
-	sceneCb.Light.LightPower = DirectX::XMFLOAT4(0.3f, 0.3f, 0.3f, 0.1f);
+	sceneCb.GlobalAmbient = DirectX::XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	sceneCb.Lights[0].Type = 1;
+	//sceneCb.Lights[0].LightPos = DirectX::XMFLOAT4(-22.5f, 36.8f, 46.8f, 1.0f);
+	sceneCb.Lights[0].LightDir = DirectX::XMFLOAT4(0.41f, -0.39f, -0.83f, 0.0f);
+	sceneCb.Lights[0].LightPower = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	//sceneCb.Lights[1].Type = 1;
+	////sceneCb.Lights[0].LightPos = DirectX::XMFLOAT4(-22.5f, 36.8f, 46.8f, 1.0f);
+	//sceneCb.Lights[1].LightDir = DirectX::XMFLOAT4(-0.41f, -0.39f, -0.83f, 0.0f);
+	//sceneCb.Lights[1].LightPower = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	// Generate shadow map
 	m_shadowMap->Initialize(m_width, m_height);
-	m_shadowMap->SetLightSource(&(sceneCb.Light));
+	m_shadowMap->SetLightSource(&(sceneCb.Lights[0]));
 	m_shadowMap->Generate(m_renderScene.get());
 	m_camera->UpdateViewport();
 
@@ -375,10 +382,11 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * m_camera->GetView() * m_camera->GetProjection());
 	DirectX::XMStoreFloat4x4(&meshCb.World, *(mesh->GetModelTransform()));
 	DirectX::XMStoreFloat4x4(&meshCb.ShadowMapMatrix, *(mesh->GetModelTransform()) * *(m_shadowMap->GetViewMatrix()) * *(m_shadowMap->GetProjection()) * DirectX::XMLoadFloat4x4(&mProjectedTextureScalingMatrix));
-	meshCb.AmbientK = 0.9f;
-	meshCb.EmissiveK = 0.5f;
-	meshCb.DiffuseIntensity = 0.95f;
-	meshCb.Roughness = 0.9f;
+	meshCb.Emissive = DirectX::XMFLOAT4(0.f, 0.f, 0.f, 0.f);
+	meshCb.Ambient = DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.f);
+	meshCb.Diffuse = DirectX::XMFLOAT4(1.f, 1.f, 1.f, 1.f);
+	meshCb.Specular = DirectX::XMFLOAT4(1.f, 1.f, 1.f, 1.f);
+	meshCb.specularPower = 32;
 	meshCb.CalcLight = mesh->GetFlag(Mesh::MeshFlags::CalcLight);
 	meshCb.HasNormalMap = mesh->GetFlag(Mesh::MeshFlags::UseNormalMap); // todo: remove this, use GetSize() on texture in shader
 	meshCb.HasSpecularMap = mesh->GetFlag(Mesh::MeshFlags::UseSpecularMap); // todo: remove this, use GetSize() on texture in shader

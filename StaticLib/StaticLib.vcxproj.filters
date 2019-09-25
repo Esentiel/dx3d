@@ -140,4 +140,9 @@
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\ShaderDefines.inc">
+      <Filter>Header Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
