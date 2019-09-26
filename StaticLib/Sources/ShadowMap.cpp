@@ -217,20 +217,20 @@ void ShadowMap::SetLightSource(LightSource * light)
 {
 	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
-		if (!light->Type)
+		if (!light[i].Type)
 			continue;
 
-		m_lightSource[i] = light;
+		m_lightSource[i] = &light[i];
 
 		DirectX::XMVECTOR pos;
-		DirectX::XMVECTOR dir = DirectX::XMVector4Normalize((DirectX::XMLoadFloat4(&(light->LightDir))));
-		if (light->Type == 1)
+		DirectX::XMVECTOR dir = DirectX::XMVector4Normalize((DirectX::XMLoadFloat4(&(m_lightSource[i]->LightDir))));
+		if (m_lightSource[i]->Type == 1)
 		{
-			pos = DirectX::XMVectorScale(DirectX::XMVectorNegate(DirectX::XMLoadFloat4(&(light->LightDir))), 100.f);
+			pos = DirectX::XMVectorScale(DirectX::XMVectorNegate(DirectX::XMLoadFloat4(&(m_lightSource[i]->LightDir))), 100.f);
 		}
 		else
 		{
-			pos = DirectX::XMLoadFloat4(&(light->LightPos));
+			pos = DirectX::XMLoadFloat4(&(m_lightSource[i]->LightPos));
 		}
 
 

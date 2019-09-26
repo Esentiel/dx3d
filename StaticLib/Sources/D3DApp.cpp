@@ -301,27 +301,14 @@ void D3DApp::Draw(const GameTime&)
 	DirectX::XMStoreFloat3(&camPos, m_camera->GetPosition());
 	sceneCb.EyePos = DirectX::XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.0f);
 	sceneCb.GlobalAmbient = DirectX::XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
-	sceneCb.Lights[0].Type = 3;
-	sceneCb.Lights[0].LightPos = DirectX::XMFLOAT4(-20.5f, 36.8f, 46.8f, 1.0f);
-	sceneCb.Lights[0].LightDir = DirectX::XMFLOAT4(0.41f, -0.39f, -0.83f, 0.0f);
-	sceneCb.Lights[0].LightPower = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	sceneCb.Lights[0].ConstantAttenuation = 1.0f;
-	sceneCb.Lights[0].LinearAttenuation = 0.01f;
-	sceneCb.Lights[0].QuadraticAttenuation = 0.0f;
-	sceneCb.Lights[0].SpotAngle = DirectX::XMConvertToRadians(30.0f);
-
-	sceneCb.Lights[1].Type = 1;
-	sceneCb.Lights[1].LightPos = DirectX::XMFLOAT4(-20.5f, 36.8f, 16.8f, 1.0f);
-	sceneCb.Lights[1].LightDir = DirectX::XMFLOAT4(-0.41f, -0.39f, -0.83f, 0.0f);
-	sceneCb.Lights[1].LightPower = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	sceneCb.Lights[1].ConstantAttenuation = 1.0f;
-	sceneCb.Lights[1].LinearAttenuation = 0.01f;
-	sceneCb.Lights[1].QuadraticAttenuation = 0.0f;
-	sceneCb.Lights[1].SpotAngle = DirectX::XMConvertToRadians(30.0f);
+	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
+	{
+		sceneCb.Lights[i] = m_renderScene->GetSceneLights()[i];
+	}
 
 	// Generate shadow map
 	m_shadowMap->Initialize(m_width, m_height);
-	m_shadowMap->SetLightSource(&(sceneCb.Lights[0]));
+	m_shadowMap->SetLightSource(sceneCb.Lights);
 	m_shadowMap->Generate(m_renderScene.get());
 	m_camera->UpdateViewport();
 

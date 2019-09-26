@@ -35,6 +35,8 @@ namespace Library
 		ID3D11Buffer** GetConstSceneBufferRef();
 		void DrawSkyBox();
 
+		const LightSource* GetSceneLights() const;
+
 	private:
 		void CreateConstSceneBuffer();
 		
@@ -43,5 +45,7 @@ namespace Library
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_constSceneBuffer;
 
 		std::unique_ptr<SkyBox> m_skyBox;
+
+		std::unique_ptr<LightSource[]> m_lights;
 	};
 }
