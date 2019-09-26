@@ -35,7 +35,7 @@ struct ResultingLight
 static const float4 ColorWhite = { 1, 1, 1, 1 };
 static const float3 ColorBlack = { 0, 0, 0 };
 static const float DepthBias = 0.00000005;
-static const int MaxLightOnScene = 1;
+static const int MaxLightOnScene = 2;
 
 // Phong model
 float4 CalculateDiffuseLight(LightSource light, float3 L, float3 normal)

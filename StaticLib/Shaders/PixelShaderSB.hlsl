@@ -1,5 +1,5 @@
 SamplerState ObjSamplerState : register(s2);
-TextureCube SkyMap : register(t2);
+TextureCube SkyMap : register(t1);
 
 struct PS_INPUT
 {

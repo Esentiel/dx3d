@@ -410,7 +410,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	{
 		DirectX::XMStoreFloat4x4(&(meshSM.shadowMapVP[i]), *(mesh->GetModelTransform()) * m_shadowMap->GetViewMatrix(i) * m_shadowMap->GetProjection() * DirectX::XMLoadFloat4x4(&mProjectedTextureScalingMatrix));
 	}
-	m_deviceCtx->UpdateSubresource(m_shadowMap->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
+	m_deviceCtx->UpdateSubresource(m_shadowMap->GetConstMeshBuffer(), 0, nullptr, &meshSM, 0, 0);
 
 	// IA
 	UINT stride = sizeof(Library::Vertex);
