@@ -165,8 +165,7 @@ namespace Library
 			{
 				mesh->Initialize();
 				mesh->Scale(DirectX::XMFLOAT3(1.f, 1.f, 1.f));
-				mesh->Move(DirectX::XMFLOAT3(-22.5f, 36.8f, 46.8f));
-				mesh->UnsetFlag((unsigned int)~Mesh::MeshFlags::CalcLight);
+				mesh->Move(DirectX::XMFLOAT3(-12.5f, 16.8f, -16.8f));
 				g_D3D->renderScene->AddMesh(std::move(mesh));
 			}
 			meshID++;

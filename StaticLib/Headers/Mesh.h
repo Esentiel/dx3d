@@ -54,11 +54,8 @@ namespace Library
 		};
 		enum MeshFlags
 		{
-			CalcLight = 0x1,
-			UseNormalMap = 0x2,
-			UseSpecularMap = 0x4,
-
-			LastFlag = UseSpecularMap
+			UseNormalMap = 0x1,
+			UseSpecularMap = 0x2,
 		};
 	public:
 		Mesh();

@@ -6,9 +6,9 @@ struct Material
 	float4 specular; // 16
 	//
     float specularPower;
-    int calcLight;
     int hasNormalMap;
-    int hasSpecularMap; // 4 + 4 + 4 + 4
+    int hasSpecularMap; 
+	int padding_; // 4 + 4 + 4 + 4
 };
 
 struct LightSource

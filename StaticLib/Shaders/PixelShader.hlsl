@@ -87,21 +87,23 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	// shadows
 
+	float width = 0, height = 0;
+	float2 ShadowMapSize = 0;
+	float sampledDepth1 = 0;
+	float sampledDepth2 = 0;
+	float sampledDepth3 = 0;
+	float sampledDepth4 = 0;
+	float shadowFactorPCF = 0;
+
 	for (int i = 0; i < MaxLightOnScene; i++)
 	{
+		
+
 		if (input.posSM[i].w >= 0.0f)
 		{
 			float4 posSM = input.posSM[i];
 			posSM.xyz /= posSM.w;
 			float pixelDepth = posSM.z;
-
-
-			float width = 0, height = 0;
-			float2 ShadowMapSize = 0;
-			float sampledDepth1 = 0;
-			float sampledDepth2 = 0;
-			float sampledDepth3 = 0;
-			float sampledDepth4 = 0;
 
 			if (i == 0)
 			{
@@ -164,22 +166,21 @@ float4 main(PS_INPUT input) : SV_TARGET
 				sampledDepth4 = shadowMap5.Sample(DepthMapSampler, float2(posSM.x, input.posSM[i].y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x + DepthBias;
 			}
 
-			
 			int shadowPCFvalue = 0;
 			shadowPCFvalue += (int)(pixelDepth > sampledDepth1);
 			shadowPCFvalue += (int)(pixelDepth > sampledDepth2);
 			shadowPCFvalue += (int)(pixelDepth > sampledDepth3);
 			shadowPCFvalue += (int)(pixelDepth > sampledDepth4);
 
-			float shadowFactorPCF = shadowPCFvalue / 4.0f;
-
-			if (shadowFactorPCF > 0.2)
-			{
-				float3 shadow = ColorBlack + (1 - shadowFactorPCF);
-				finalColor.rgb *= shadow;
-			}   
-		} 
+			shadowFactorPCF += shadowPCFvalue / 4.0f;
+		}  
     }
+
+	if (shadowFactorPCF > 0.2)
+	{
+		float3 shadow = shadowFactorPCF/MaxLightOnScene;
+		finalColor.rgb -= shadow;
+	} 
 
 	finalColor.a = 1;
 	return finalColor;

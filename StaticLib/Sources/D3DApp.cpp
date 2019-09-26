@@ -386,7 +386,6 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	meshCb.MaterialInstance.Diffuse = DirectX::XMFLOAT4(1.f, 1.f, 1.f, 1.f);
 	meshCb.MaterialInstance.Specular = DirectX::XMFLOAT4(1.f, 1.f, 1.f, 1.f);
 	meshCb.MaterialInstance.SpecularPower = 32;
-	meshCb.MaterialInstance.CalcLight = mesh->GetFlag(Mesh::MeshFlags::CalcLight);
 	meshCb.MaterialInstance.HasNormalMap = mesh->GetFlag(Mesh::MeshFlags::UseNormalMap); // todo: remove this, use GetSize() on texture in shader
 	meshCb.MaterialInstance.HasSpecularMap = mesh->GetFlag(Mesh::MeshFlags::UseSpecularMap); // todo: remove this, use GetSize() on texture in shader
 

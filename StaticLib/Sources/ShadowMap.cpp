@@ -126,10 +126,6 @@ void ShadowMap::Generate(RenderScene * scene)
 		{
 			auto mesh = (*it).get();
 
-			if (!mesh->GetFlag(Mesh::MeshFlags::CalcLight))
-			{
-				continue;
-			}
 			// update mesh cb
 			MeshLightCB meshCb;
 			DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, *(mesh->GetModelTransform()) * GetViewMatrix(i) * GetProjection());

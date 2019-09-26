@@ -18,7 +18,7 @@ RenderScene::RenderScene()
 	
 	// todo: hard-coded lights to test
 	m_lights.get()[0].Type = 3;
-	m_lights.get()[0].LightPos = DirectX::XMFLOAT4(-20.5f, 36.8f, 46.8f, 1.0f);
+	m_lights.get()[0].LightPos = DirectX::XMFLOAT4(-20.5f, 46.8f, 46.8f, 1.0f);
 	m_lights.get()[0].LightDir = DirectX::XMFLOAT4(0.41f, -0.39f, -0.83f, 0.0f);
 	m_lights.get()[0].LightPower = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	m_lights.get()[0].ConstantAttenuation = 1.0f;
@@ -28,7 +28,7 @@ RenderScene::RenderScene()
 
 	m_lights.get()[1].Type = 1;
 	m_lights.get()[1].LightPos = DirectX::XMFLOAT4(-20.5f, 36.8f, 16.8f, 1.0f);
-	m_lights.get()[1].LightDir = DirectX::XMFLOAT4(-0.41f, -0.39f, -0.83f, 0.0f);
+	m_lights.get()[1].LightDir = DirectX::XMFLOAT4(-0.41f, -0.69f, -0.43f, 0.0f);
 	m_lights.get()[1].LightPower = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	m_lights.get()[1].ConstantAttenuation = 1.0f;
 	m_lights.get()[1].LinearAttenuation = 0.01f;

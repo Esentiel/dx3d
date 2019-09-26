@@ -17,9 +17,9 @@ namespace Library
 		DirectX::XMFLOAT4 Specular; // 16
 		//
 		float SpecularPower;
-		int CalcLight;
 		int HasNormalMap;
-		int HasSpecularMap; // 4 + 4 + 4 + 4
+		int HasSpecularMap;
+		int padding_;// 4 + 4 + 4 + 4
 	};
 }
 

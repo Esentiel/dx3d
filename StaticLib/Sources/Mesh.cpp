@@ -41,7 +41,7 @@ void Mesh::CreateInputLayout()
 Mesh::Mesh() :
 	m_transformations(std::make_unique<Transformations>()),
 	m_dirtyVertex(true),
-	m_flags(1) // by default only CalcLight is enabled
+	m_flags(0)
 {
 	m_textures.resize(TextureType::Count);
 }
