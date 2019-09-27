@@ -40,10 +40,11 @@ struct PS_INPUT
 float4 main(PS_INPUT input) : SV_TARGET
 {
 	// normals
+	float4 bumpMap;
 	float3 normal;
     if (material.hasNormalMap)
     {
-        float4 bumpMap;
+        
         // normal
         bumpMap = normalMap.Sample(magLinearWrapSampler, input.textCoord);
     
@@ -124,7 +125,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 		finalColor.rgb -= shadow;
 	} 
 
-	const float shininess = (1.0f - material.roughness);
+	float shininess = (1.0f - material.roughness);
+	if (material.hasNormalMap)
+    {
+		shininess *= bumpMap.a;
+	}
 	float3 toEyeW = normalize(eyePos - input.posW);
 	float3 r = reflect(-toEyeW, normal);
 	float4 reflectionColor = SkyMap.Sample(ObjSamplerState, r);
