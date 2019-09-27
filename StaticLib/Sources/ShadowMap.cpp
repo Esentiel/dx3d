@@ -20,6 +20,7 @@ ShadowMap::ShadowMap() :
 	CreateInputLayout();
 	CreateConstLightMeshBuffer();
 	CreateConstMeshBuffer();
+	CreateRasterState();
 }
 
 
@@ -96,10 +97,8 @@ void ShadowMap::Initialize(int width, int height)
 		m_viewport->Height = (float)m_height;
 		m_viewport->TopLeftX = 0.f;
 		m_viewport->TopLeftY = 0.f;
-		m_viewport->MinDepth = 0.f;
+		m_viewport->MinDepth = 0.0f;
 		m_viewport->MaxDepth = 1.f;
-
-
 	}
 }
 
@@ -116,7 +115,7 @@ void ShadowMap::Generate(RenderScene * scene)
 		const DirectX::XMVECTORF32 BackgroundColor = { 0.392f,0.584f, 0.929f, 1.0f };
 		g_D3D->deviceCtx->ClearDepthStencilView(m_shadowMap[i].Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-		//g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());
+		g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());
 
 		// PER MESH
 		for (auto it = scene->BeginMesh(); it != scene->EndMesh(); ++it)
@@ -251,12 +250,12 @@ void Library::ShadowMap::CreateRasterState()
 {
 	// rasterizer
 	D3D11_RASTERIZER_DESC rasterizerState;
-	ZeroMemory(&rasterizerState, sizeof(rasterizerState));
+	//ZeroMemory(&rasterizerState, sizeof(rasterizerState));
 	rasterizerState.FillMode = D3D11_FILL_SOLID;
 	rasterizerState.CullMode = D3D11_CULL_FRONT;
-	rasterizerState.DepthBias = 100000;
-	rasterizerState.DepthBiasClamp = 0.0f;
-	rasterizerState.SlopeScaledDepthBias = 1.0f;
+	rasterizerState.DepthBias = 1;
+	rasterizerState.DepthBiasClamp = 0.f;
+	rasterizerState.SlopeScaledDepthBias = 1.f;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
 

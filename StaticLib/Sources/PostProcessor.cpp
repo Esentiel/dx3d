@@ -256,5 +256,6 @@ void Library::PostProcessor::CreateRasterState()
 	rasterizerState.ScissorEnable = true;
 	rasterizerState.MultisampleEnable = true;
 	rasterizerState.AntialiasedLineEnable = false;
+
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
