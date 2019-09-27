@@ -325,10 +325,7 @@ void D3DApp::Draw(const GameTime&)
 	m_deviceCtx->RSSetState(m_rasterState.Get());
 
 	// meshes
-	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
-	{
-		m_deviceCtx->PSSetShaderResources(4 + i, 1, m_shadowMap->GetShadowMapRef(i));
-	}
+	m_deviceCtx->PSSetShaderResources(4, MAX_LIGHT_SOURCES, m_shadowMap->GetShadowMapRef());
 	
 	for (auto it = m_renderScene->BeginMesh(); it != m_renderScene->EndMesh(); ++it)
 	{

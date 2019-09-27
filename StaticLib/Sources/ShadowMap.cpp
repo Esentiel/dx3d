@@ -245,9 +245,9 @@ const DirectX::XMMATRIX Library::ShadowMap::GetProjection() const
 	return DirectX::XMLoadFloat4x4(&m_projection);
 }
 
-ID3D11ShaderResourceView** Library::ShadowMap::GetShadowMapRef(unsigned int id)
+ID3D11ShaderResourceView** Library::ShadowMap::GetShadowMapRef()
 {
-	return m_shaderRes[id].GetAddressOf();
+	return m_shaderRes[0].GetAddressOf();
 }
 
 void Library::ShadowMap::CreateRasterState()

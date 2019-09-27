@@ -37,7 +37,7 @@ namespace Library
 		ID3D11Buffer** GetConstMeshLightBufferRef(unsigned int id);
 		const DirectX::XMMATRIX GetViewMatrix(unsigned int id);
 		virtual const DirectX::XMMATRIX GetProjection() const;
-		ID3D11ShaderResourceView** GetShadowMapRef(unsigned int id);
+		ID3D11ShaderResourceView** GetShadowMapRef();
 
 		ID3D11Buffer* GetConstMeshBuffer() const;
 		ID3D11Buffer** GetConstMeshBufferRef();
