@@ -30,12 +30,9 @@ ShadowMap::~ShadowMap()
 void ShadowMap::Initialize(int width, int height)
 {
 	// fix
-	ID3D11ShaderResourceView *const pSRV[1] = { NULL };
+	ID3D11ShaderResourceView *const pSRV[MAX_LIGHT_SOURCES] = { NULL };
 	
-	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
-	{
-		g_D3D->deviceCtx->PSSetShaderResources(4 + i, 1, pSRV); // 4 is offset
-	}
+	g_D3D->deviceCtx->PSSetShaderResources(4, MAX_LIGHT_SOURCES, pSRV);
 
 	g_D3D->deviceCtx->RSSetState(m_rasterState.Get());
 
@@ -254,16 +251,12 @@ void Library::ShadowMap::CreateRasterState()
 {
 	// rasterizer
 	D3D11_RASTERIZER_DESC rasterizerState;
+	ZeroMemory(&rasterizerState, sizeof(rasterizerState));
 	rasterizerState.FillMode = D3D11_FILL_SOLID;
 	rasterizerState.CullMode = D3D11_CULL_FRONT;
-	//rasterizerState.FrontCounterClockwise = false;
 	rasterizerState.DepthBias = 100000;
-	rasterizerState.DepthBiasClamp = 0;
+	rasterizerState.DepthBiasClamp = 0.0f;
 	rasterizerState.SlopeScaledDepthBias = 1.0f;
-	rasterizerState.DepthClipEnable = true;
-	rasterizerState.ScissorEnable = true;
-	rasterizerState.MultisampleEnable = true;
-	rasterizerState.AntialiasedLineEnable = false;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
 

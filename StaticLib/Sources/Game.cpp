@@ -147,6 +147,7 @@ namespace Library
 				mesh->Initialize();
 				mesh->Scale(DirectX::XMFLOAT3(20.f, 20.f, 20.f));
 				mesh->Move(DirectX::XMFLOAT3(1.f, -12.f, 1.f));
+				mesh->SetFlag(Mesh::MeshFlags::UseSpecularReflection);
 				g_D3D->renderScene->AddMesh(std::move(mesh));
 			}
 			meshID++;
@@ -166,6 +167,7 @@ namespace Library
 				mesh->Initialize();
 				mesh->Scale(DirectX::XMFLOAT3(1.f, 1.f, 1.f));
 				mesh->Move(DirectX::XMFLOAT3(-12.5f, 16.8f, -16.8f));
+				mesh->SetFlag(Mesh::MeshFlags::UseSpecularReflection);
 				g_D3D->renderScene->AddMesh(std::move(mesh));
 			}
 			meshID++;

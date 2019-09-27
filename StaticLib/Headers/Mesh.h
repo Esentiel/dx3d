@@ -56,6 +56,7 @@ namespace Library
 		{
 			UseNormalMap = 0x1,
 			UseSpecularMap = 0x2,
+			UseSpecularReflection = 0x4
 		};
 	public:
 		Mesh();

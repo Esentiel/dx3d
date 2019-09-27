@@ -19,7 +19,7 @@ namespace Library
 		float SpecularPower;
 		int HasNormalMap;
 		int HasSpecularMap;
-		int padding_;// 4 + 4 + 4 + 4
+		float roughness;// 4 + 4 + 4 + 4
 	};
 }
 

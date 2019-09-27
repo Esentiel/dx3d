@@ -2,13 +2,14 @@
 
 
 Texture2D diffuseTexture : register(t0);
+TextureCube SkyMap : register(t1);
 Texture2D normalMap : register(t2);
 Texture2D specularMap : register(t3);
 Texture2D shadowMap[6] : register(t4);
 
-
 SamplerState magLinearWrapSampler : register(s0);
 SamplerState DepthMapSampler : register(s1);
+SamplerState ObjSamplerState : register(s2);
 
 cbuffer MVPbuffer : register(b0)
 {
@@ -102,10 +103,10 @@ float4 main(PS_INPUT input) : SV_TARGET
 			shadowMap[i].GetDimensions(width, height);
 			ShadowMapSize = 1 / float2(width, height);
 
-			sampledDepth1 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y)).x + DepthBias;
-			sampledDepth2 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, 0)).x + DepthBias;
-			sampledDepth3 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(0, ShadowMapSize.y)).x + DepthBias;
-			sampledDepth4 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x + DepthBias;
+			sampledDepth1 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y)).x;
+			sampledDepth2 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, 0)).x;
+			sampledDepth3 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(0, ShadowMapSize.y)).x;
+			sampledDepth4 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x;
 
 			int shadowPCFvalue = 0;
 			shadowPCFvalue += (int)(pixelDepth > sampledDepth1);
@@ -122,6 +123,15 @@ float4 main(PS_INPUT input) : SV_TARGET
 		float3 shadow = shadowFactorPCF/MaxLightOnScene;
 		finalColor.rgb -= shadow;
 	} 
+
+	const float shininess = (1.0f - material.roughness);
+	float3 toEyeW = normalize(eyePos - input.posW);
+	float3 r = reflect(-toEyeW, normal);
+	float4 reflectionColor = SkyMap.Sample(ObjSamplerState, r);
+	float3 fresnelR0 = { 0.01f, 0.01f, 0.01f };
+	float3 fresnelFactor = SchlickFresnel(fresnelR0, normal, r);
+
+	finalColor.rgb += (shininess * fresnelFactor * reflectionColor.rgb);
 
 	finalColor.a = 1;
 	return finalColor;

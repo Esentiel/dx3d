@@ -385,6 +385,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	meshCb.MaterialInstance.SpecularPower = 32;
 	meshCb.MaterialInstance.HasNormalMap = mesh->GetFlag(Mesh::MeshFlags::UseNormalMap); // todo: remove this, use GetSize() on texture in shader
 	meshCb.MaterialInstance.HasSpecularMap = mesh->GetFlag(Mesh::MeshFlags::UseSpecularMap); // todo: remove this, use GetSize() on texture in shader
+	meshCb.MaterialInstance.roughness = mesh->GetFlag(Mesh::MeshFlags::UseSpecularReflection) ? 0.3f : 1.0f;
 
 	m_deviceCtx->UpdateSubresource(mesh->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
 

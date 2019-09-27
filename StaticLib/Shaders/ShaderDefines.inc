@@ -8,7 +8,7 @@ struct Material
     float specularPower;
     int hasNormalMap;
     int hasSpecularMap; 
-	int padding_; // 4 + 4 + 4 + 4
+	float roughness; // 4 + 4 + 4 + 4
 };
 
 struct LightSource
@@ -34,10 +34,21 @@ struct ResultingLight
 
 static const float4 ColorWhite = { 1, 1, 1, 1 };
 static const float3 ColorBlack = { 0, 0, 0 };
-static const float DepthBias = 0.00000005;
 static const int MaxLightOnScene = 2;
 
 // Phong model
+
+float3 SchlickFresnel(float3 R0, float3 normal, float3 lightVec)
+{
+    float cosIncidentAngle = saturate(dot(normal, lightVec));
+
+    float f0 = 1.0f - cosIncidentAngle;
+    float3 reflectPercent = R0 + (1.0f - R0)*(f0*f0*f0*f0*f0);
+
+    return reflectPercent;
+}
+
+
 float4 CalculateDiffuseLight(LightSource light, float3 L, float3 normal)
 {
 	float NdotL = saturate(dot(L, normal));
