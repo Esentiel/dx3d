@@ -253,9 +253,9 @@ void Library::ShadowMap::CreateRasterState()
 	//ZeroMemory(&rasterizerState, sizeof(rasterizerState));
 	rasterizerState.FillMode = D3D11_FILL_SOLID;
 	rasterizerState.CullMode = D3D11_CULL_FRONT;
-	rasterizerState.DepthBias = 1;
+	rasterizerState.DepthBias = 0;
 	rasterizerState.DepthBiasClamp = 0.f;
-	rasterizerState.SlopeScaledDepthBias = 1.f;
+	rasterizerState.SlopeScaledDepthBias = 0.f;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
 
