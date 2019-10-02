@@ -49,8 +49,8 @@ void ShadowMap::Initialize(int width, int height)
 			// create shaderRes
 			D3D11_TEXTURE2D_DESC textureDesc;
 			ZeroMemory(&textureDesc, sizeof(textureDesc));
-			textureDesc.Width = width;
-			textureDesc.Height = height;
+			textureDesc.Width = m_width;
+			textureDesc.Height = m_height;
 			textureDesc.MipLevels = 1;
 			textureDesc.ArraySize = 1;
 			textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
@@ -90,7 +90,7 @@ void ShadowMap::Initialize(int width, int height)
 
 		float aspectRatio = (float)m_width / m_height;
 
-		DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 0.001f, 1000.0f);
+		DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 50.0f, 250.0f);
 		DirectX::XMStoreFloat4x4(&m_projection, P);
 
 		m_viewport->Width = (float)m_width;
@@ -253,9 +253,9 @@ void Library::ShadowMap::CreateRasterState()
 	//ZeroMemory(&rasterizerState, sizeof(rasterizerState));
 	rasterizerState.FillMode = D3D11_FILL_SOLID;
 	rasterizerState.CullMode = D3D11_CULL_FRONT;
-	rasterizerState.DepthBias = 0;
+	rasterizerState.DepthBias = 100000;
 	rasterizerState.DepthBiasClamp = 0.f;
-	rasterizerState.SlopeScaledDepthBias = 0.f;
+	rasterizerState.SlopeScaledDepthBias = 1.f;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
 

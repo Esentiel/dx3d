@@ -15,6 +15,7 @@ struct ID3D11RenderTargetView;
 struct ID3D11DepthStencilView;
 struct ID3D11RasterizerState;
 struct ID3D11Texture2D;
+struct ID3D11BlendState;
 
 namespace Library
 {
@@ -52,6 +53,7 @@ namespace Library
 		Microsoft::WRL::ComPtr<IDXGISwapChain1> m_swapChain;
 		std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> m_rtvs;
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_dsbView;
+		Microsoft::WRL::ComPtr<ID3D11BlendState> m_blendStateNoBlend;
 		
 		std::vector<Microsoft::WRL::ComPtr<ID3D11Texture2D>> m_backBuffers;
 

@@ -257,6 +257,15 @@ void D3DApp::Initialize()
 	rasterizerState.AntialiasedLineEnable = false;
 	m_device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 
+	// blend
+	
+
+	D3D11_BLEND_DESC BlendState;
+	ZeroMemory(&BlendState, sizeof(D3D11_BLEND_DESC));
+	BlendState.RenderTarget[0].BlendEnable = FALSE;
+	BlendState.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	m_device->CreateBlendState(&BlendState, m_blendStateNoBlend.GetAddressOf());
+
 	// device
 	g_D3D->device = m_device.Get();
 	g_D3D->deviceCtx = m_deviceCtx.Get();
@@ -324,6 +333,11 @@ void D3DApp::Draw(const GameTime&)
 	// raster state
 	m_deviceCtx->RSSetState(m_rasterState.Get());
 
+	// blend
+	float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	UINT sampleMask = 0xffffffff;
+
+	m_deviceCtx->OMSetBlendState(m_blendStateNoBlend.Get(), blendFactor, sampleMask);
 	// meshes
 	m_deviceCtx->PSSetShaderResources(4, MAX_LIGHT_SOURCES, m_shadowMap->GetShadowMapRef());
 	

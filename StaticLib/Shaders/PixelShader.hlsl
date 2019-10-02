@@ -101,7 +101,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 			posSM.xyz /= posSM.w;
 			float pixelDepth = posSM.z;
 
-			shadowMap[i].GetDimensions(width, height);
+            shadowMap[i].GetDimensions(width, height);
 			ShadowMapSize = 1 / float2(width, height);
 
 			sampledDepth1 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y)).x;
@@ -110,10 +110,10 @@ float4 main(PS_INPUT input) : SV_TARGET
 			sampledDepth4 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x;
 
 			int shadowPCFvalue = 0;
-			shadowPCFvalue += (int)(pixelDepth > sampledDepth1);
-			shadowPCFvalue += (int)(pixelDepth > sampledDepth2);
-			shadowPCFvalue += (int)(pixelDepth > sampledDepth3);
-			shadowPCFvalue += (int)(pixelDepth > sampledDepth4);
+			shadowPCFvalue += (int)(pixelDepth < 1.0f && pixelDepth > sampledDepth1);
+            shadowPCFvalue += (int) (pixelDepth < 1.0f && pixelDepth > sampledDepth2);
+            shadowPCFvalue += (int) (pixelDepth < 1.0f && pixelDepth > sampledDepth3);
+            shadowPCFvalue += (int) (pixelDepth < 1.0f && pixelDepth > sampledDepth4);
 
 			shadowFactorPCF += shadowPCFvalue / 4.0f;
 		}  
@@ -130,7 +130,7 @@ float4 main(PS_INPUT input) : SV_TARGET
     {
 		shininess *= bumpMap.a;
 	}
-	float3 toEyeW = normalize(eyePos - input.posW);
+	float3 toEyeW = normalize(eyePos.xyz - input.posW);
 	float3 r = reflect(-toEyeW, normal);
 	float4 reflectionColor = SkyMap.Sample(ObjSamplerState, r);
 	float3 fresnelR0 = { 0.01f, 0.01f, 0.01f };
