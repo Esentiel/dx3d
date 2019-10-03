@@ -26,14 +26,14 @@ RenderScene::RenderScene()
 	m_lights.get()[0].QuadraticAttenuation = 0.0f;
 	m_lights.get()[0].SpotAngle = DirectX::XMConvertToRadians(30.0f);
 
-	m_lights.get()[1].Type = 3;
+	/*m_lights.get()[1].Type = 3;
 	m_lights.get()[1].LightPos = DirectX::XMFLOAT4(-20.5f, 66.8f, 76.8f, 1.0f);
 	m_lights.get()[1].LightDir = DirectX::XMFLOAT4(0.21f, -0.69f, -0.83f, 0.0f);
 	m_lights.get()[1].LightPower = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	m_lights.get()[1].ConstantAttenuation = 1.0f;
 	m_lights.get()[1].LinearAttenuation = 0.01f;
 	m_lights.get()[1].QuadraticAttenuation = 0.0f;
-	m_lights.get()[1].SpotAngle = DirectX::XMConvertToRadians(30.0f);
+	m_lights.get()[1].SpotAngle = DirectX::XMConvertToRadians(30.0f);*/
 }
 
 
@@ -74,6 +74,23 @@ void Library::RenderScene::DrawSkyBox()
 const Library::LightSource* Library::RenderScene::GetSceneLights() const
 {
 	return m_lights.get();
+}
+
+void Library::RenderScene::Update(double d)
+{
+	for (int i = 0; i < MAX_LIGHT_SOURCES; i++)
+	{
+		if (m_lights[i].Type == 1)
+		{
+			m_lights[i].LightDir.x += d*0.01;
+			m_lights[i].LightDir.z -= d*0.01;
+		}
+		else if(m_lights[i].Type == 3)
+		{
+			m_lights[i].LightPos.x *= std::cos(10);
+			m_lights[i].LightPos.y *= std::cos(5);
+		}
+	}
 }
 
 void Library::RenderScene::CreateConstSceneBuffer()

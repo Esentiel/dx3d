@@ -116,7 +116,7 @@ void Library::Camera::UpdateViewMatrix()
 void Camera::Strafe(float d)
 {
 	// mPosition += d*mRight
-	d *= 5;
+	d *= 2;
 	DirectX::XMVECTOR s = DirectX::XMVectorReplicate(d);
 	DirectX::XMVECTOR r = DirectX::XMLoadFloat3(&m_right);
 	DirectX::XMVECTOR p = DirectX::XMLoadFloat3(&m_position);
@@ -127,7 +127,7 @@ void Camera::Strafe(float d)
 
 void Camera::Walk(float d)
 {
-	d *= 10;
+	d *= 5;
 	// mPosition += d*mLook
 	DirectX::XMVECTOR s = DirectX::XMVectorReplicate(d);
 	DirectX::XMVECTOR l = DirectX::XMLoadFloat3(&m_look);

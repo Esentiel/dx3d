@@ -37,6 +37,8 @@ namespace Library
 
 		const LightSource* GetSceneLights() const;
 
+		void Update(double d);
+
 	private:
 		void CreateConstSceneBuffer();
 		

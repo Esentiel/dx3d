@@ -34,6 +34,8 @@ struct ResultingLight
 
 static const float4 ColorWhite = { 1, 1, 1, 1 };
 static const float3 ColorBlack = { 0, 0, 0 };
+static const float3 ColorShadow = { 0.2, 0.2, 0.2 };
+static const float ShadowFactor = 0.9f;
 static const int MaxLightOnScene = 2;
 
 // Phong model

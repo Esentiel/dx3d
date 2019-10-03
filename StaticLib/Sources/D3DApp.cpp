@@ -285,7 +285,7 @@ void D3DApp::Initialize()
 
 	// camera
 	float fov = DirectX::XMConvertToRadians(45.f);
-	m_camera.reset(new Camera(fov, m_width, m_height, 0.01f, 1000.0f));
+	m_camera.reset(new Camera(fov, m_width, m_height, 0.01f, 300.0f));
 	g_D3D->camera = m_camera.get();
 
 	// scene
@@ -303,8 +303,10 @@ void D3DApp::Initialize()
 }
 
 
-void D3DApp::Draw(const GameTime&) 
+void D3DApp::Draw(const GameTime& g) 
 {
+	//m_renderScene->Update(g.ElapsedGameTime());
+
 	SceneCB sceneCb;
 	DirectX::XMFLOAT3 camPos;
 	DirectX::XMStoreFloat3(&camPos, m_camera->GetPosition());
@@ -393,7 +395,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	DirectX::XMStoreFloat4x4(&meshCb.World, *(mesh->GetModelTransform()));
 	
 	meshCb.MaterialInstance.Emissive = DirectX::XMFLOAT4(0.f, 0.f, 0.f, 0.f);
-	meshCb.MaterialInstance.Ambient = DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.f);
+	meshCb.MaterialInstance.Ambient = DirectX::XMFLOAT4(0.8f, 0.8f, 0.8f, 1.f);
 	meshCb.MaterialInstance.Diffuse = DirectX::XMFLOAT4(1.f, 1.f, 1.f, 1.f);
 	meshCb.MaterialInstance.Specular = DirectX::XMFLOAT4(1.f, 1.f, 1.f, 1.f);
 	meshCb.MaterialInstance.SpecularPower = 32;

@@ -90,7 +90,7 @@ void ShadowMap::Initialize(int width, int height)
 
 		float aspectRatio = (float)m_width / m_height;
 
-		DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 50.0f, 250.0f);
+		DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 50.0f, 150.0f);
 		DirectX::XMStoreFloat4x4(&m_projection, P);
 
 		m_viewport->Width = (float)m_width;
@@ -252,8 +252,8 @@ void Library::ShadowMap::CreateRasterState()
 	D3D11_RASTERIZER_DESC rasterizerState;
 	//ZeroMemory(&rasterizerState, sizeof(rasterizerState));
 	rasterizerState.FillMode = D3D11_FILL_SOLID;
-	rasterizerState.CullMode = D3D11_CULL_FRONT;
-	rasterizerState.DepthBias = 100000;
+	rasterizerState.CullMode = D3D11_CULL_BACK;
+	rasterizerState.DepthBias = 10000;
 	rasterizerState.DepthBiasClamp = 0.f;
 	rasterizerState.SlopeScaledDepthBias = 1.f;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);

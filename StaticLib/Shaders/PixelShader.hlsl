@@ -43,6 +43,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	float4 bumpMap;
 	float3 normal;
     if (material.hasNormalMap)
+
     {
         
         // normal
@@ -105,25 +106,28 @@ float4 main(PS_INPUT input) : SV_TARGET
 			ShadowMapSize = 1 / float2(width, height);
 
 			sampledDepth1 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y)).x;
-			sampledDepth2 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, 0)).x;
-			sampledDepth3 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(0, ShadowMapSize.y)).x;
-			sampledDepth4 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x;
+			//sampledDepth2 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, 0)).x;
+			//sampledDepth3 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(0, ShadowMapSize.y)).x;
+			//sampledDepth4 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x;
 
 			int shadowPCFvalue = 0;
 			shadowPCFvalue += (int)(pixelDepth < 1.0f && pixelDepth > sampledDepth1);
-            shadowPCFvalue += (int) (pixelDepth < 1.0f && pixelDepth > sampledDepth2);
-            shadowPCFvalue += (int) (pixelDepth < 1.0f && pixelDepth > sampledDepth3);
-            shadowPCFvalue += (int) (pixelDepth < 1.0f && pixelDepth > sampledDepth4);
+            //shadowPCFvalue += (int) (pixelDepth < 1.0f && pixelDepth > sampledDepth2);
+            //shadowPCFvalue += (int) (pixelDepth < 1.0f && pixelDepth > sampledDepth3);
+            //shadowPCFvalue += (int) (pixelDepth < 1.0f && pixelDepth > sampledDepth4);
 
-			shadowFactorPCF += shadowPCFvalue / 4.0f;
-		}  
+			shadowFactorPCF += shadowPCFvalue / 1.0f;
+
+			if (shadowFactorPCF > 0.2)
+			{
+				float3 shadow = ColorShadow * ShadowFactor * shadowFactorPCF;
+				finalColor.rgb *= shadow;
+
+				shadowFactorPCF= 0;
+			} 
+
+		}
     }
-
-	if (shadowFactorPCF > 0.2)
-	{
-		float3 shadow = shadowFactorPCF/MaxLightOnScene;
-		finalColor.rgb -= shadow;
-	} 
 
 	float shininess = (1.0f - material.roughness);
 	if (material.hasNormalMap)
