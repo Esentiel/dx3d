@@ -5,7 +5,7 @@ Texture2D diffuseTexture : register(t0);
 TextureCube SkyMap : register(t1);
 Texture2D normalMap : register(t2);
 Texture2D specularMap : register(t3);
-Texture2D shadowMap[6] : register(t4);
+Texture2D shadowMap : register(t4);
 
 SamplerState magLinearWrapSampler : register(s0);
 SamplerState DepthMapSampler : register(s1);
@@ -86,14 +86,16 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	// shadows
 
-	float width = 0, height = 0;
+	int width = 0, height = 0;
 	float2 ShadowMapSize = 0;
 	float sampledDepth1 = 0;
 	float sampledDepth2 = 0;
 	float sampledDepth3 = 0;
 	float sampledDepth4 = 0;
 	float shadowFactorPCF = 0;
-
+	shadowMap.GetDimensions(width, height);
+	ShadowMapSize = 1 / float2(width, height);
+	int singleWidth = 1 / MaxLightOnScene;
 	for (int i = 0; i < MaxLightOnScene; i++)
 	{
 		if (input.posSM[i].w >= 0.0f)
@@ -102,10 +104,10 @@ float4 main(PS_INPUT input) : SV_TARGET
 			posSM.xyz /= posSM.w;
 			float pixelDepth = posSM.z;
 
-            shadowMap[i].GetDimensions(width, height);
-			ShadowMapSize = 1 / float2(width, height);
+            if (lightS[i].type == 0)
+				continue;
 
-			sampledDepth1 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y)).x;
+			sampledDepth1 = shadowMap.Sample(DepthMapSampler, float2((posSM.x +i)/MaxLightOnScene, posSM.y)).x;
 			//sampledDepth2 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, 0)).x;
 			//sampledDepth3 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(0, ShadowMapSize.y)).x;
 			//sampledDepth4 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x;

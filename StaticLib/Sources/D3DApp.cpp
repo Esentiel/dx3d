@@ -341,7 +341,7 @@ void D3DApp::Draw(const GameTime& g)
 
 	m_deviceCtx->OMSetBlendState(m_blendStateNoBlend.Get(), blendFactor, sampleMask);
 	// meshes
-	m_deviceCtx->PSSetShaderResources(4, MAX_LIGHT_SOURCES, m_shadowMap->GetShadowMapRef());
+	m_deviceCtx->PSSetShaderResources(4, 1, m_shadowMap->GetShadowMapRef());
 	
 	for (auto it = m_renderScene->BeginMesh(); it != m_renderScene->EndMesh(); ++it)
 	{
