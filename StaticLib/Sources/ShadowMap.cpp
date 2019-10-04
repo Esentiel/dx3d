@@ -69,7 +69,7 @@ void ShadowMap::Initialize(int width, int height)
 			resourceViewDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
 			resourceViewDesc.Texture2D.MipLevels = 1;
 
-			if (FAILED(hr = g_D3D->device->CreateShaderResourceView(fullScreenTexture.Get(), &resourceViewDesc, m_shaderRes[0].GetAddressOf())))
+			if (FAILED(hr = g_D3D->device->CreateShaderResourceView(fullScreenTexture.Get(), &resourceViewDesc, m_shaderRes.GetAddressOf())))
 			{
 				THROW_GAME_EXCEPTION("IDXGIDevice::CreateShaderResourceView() failed.", hr);
 			}
@@ -82,7 +82,7 @@ void ShadowMap::Initialize(int width, int height)
 			depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
 			depthStencilViewDesc.Texture2D.MipSlice = 0;
 
-			if (FAILED(hr = g_D3D->device->CreateDepthStencilView(fullScreenTexture.Get(), &depthStencilViewDesc, m_shadowMap[0].GetAddressOf())))
+			if (FAILED(hr = g_D3D->device->CreateDepthStencilView(fullScreenTexture.Get(), &depthStencilViewDesc, m_shadowMap.GetAddressOf())))
 			{
 				THROW_GAME_EXCEPTION("ShadowMap::CreateDepthStencilView() failed.", hr);
 			}
@@ -90,7 +90,7 @@ void ShadowMap::Initialize(int width, int height)
 
 		float aspectRatio = (float)m_width / m_height;
 
-		DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 50.0f, 150.0f);
+		DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 50.0f, 200.0f);
 		DirectX::XMStoreFloat4x4(&m_projection, P);
 
 		m_viewport->Width = (float)m_width;
@@ -107,22 +107,31 @@ void ShadowMap::Generate(RenderScene * scene)
 	static ID3D11RenderTargetView* nullRenderTargetView = nullptr;
 	
 	// set off screen rtv and dsb
-	g_D3D->deviceCtx->OMSetRenderTargets(1, &nullRenderTargetView, m_shadowMap[0].Get());
+	g_D3D->deviceCtx->OMSetRenderTargets(1, &nullRenderTargetView, m_shadowMap.Get());
 
 	// clear off screen rt and dsb
 	const DirectX::XMVECTORF32 BackgroundColor = { 0.392f,0.584f, 0.929f, 1.0f };
-	g_D3D->deviceCtx->ClearDepthStencilView(m_shadowMap[0].Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	g_D3D->deviceCtx->ClearDepthStencilView(m_shadowMap.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
 		m_viewport->Width = (float)m_width;
 		m_viewport->Height = (float)m_height;
-		m_viewport->TopLeftX = 0 + i * (float)m_width;
+		m_viewport->TopLeftX = i * (float)m_width;
 		m_viewport->TopLeftY = 0.f;
 		m_viewport->MinDepth = 0.0f;
 		m_viewport->MaxDepth = 1.f;
 
 		g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());
+
+		// scissors test
+		D3D11_RECT rects[1];
+		rects[0].left = i * (float)m_width;
+		rects[0].right = m_width * (i+1);
+		rects[0].top = 0;
+		rects[0].bottom = m_height;
+
+		g_D3D->deviceCtx->RSSetScissorRects(1, rects);
 
 		// PER MESH
 		for (auto it = scene->BeginMesh(); it != scene->EndMesh(); ++it)
@@ -250,7 +259,7 @@ const DirectX::XMMATRIX Library::ShadowMap::GetProjection() const
 
 ID3D11ShaderResourceView** Library::ShadowMap::GetShadowMapRef()
 {
-	return m_shaderRes[0].GetAddressOf();
+	return m_shaderRes.GetAddressOf();
 }
 
 void Library::ShadowMap::CreateRasterState()
@@ -263,7 +272,8 @@ void Library::ShadowMap::CreateRasterState()
 	rasterizerState.DepthBias = 10000;
 	rasterizerState.DepthBiasClamp = 0.f;
 	rasterizerState.SlopeScaledDepthBias = 1.f;
-	rasterizerState.ScissorEnable = false;
+	rasterizerState.ScissorEnable = true;
+	rasterizerState.DepthClipEnable = true;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
 

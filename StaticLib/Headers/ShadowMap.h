@@ -49,8 +49,8 @@ namespace Library
 
 		std::string m_vertexShaderName;
 		std::array<LightSource*, MAX_LIGHT_SOURCES> m_lightSource;
-		std::array<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>, MAX_LIGHT_SOURCES> m_shaderRes;
-		std::array<Microsoft::WRL::ComPtr<ID3D11DepthStencilView>, MAX_LIGHT_SOURCES> m_shadowMap;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderRes;
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_shadowMap;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputlayout;
 		std::array<Microsoft::WRL::ComPtr<ID3D11Buffer>, MAX_LIGHT_SOURCES> m_constMeshLightBuffer;
 		Microsoft::WRL::ComPtr <ID3D11RasterizerState> m_rasterState;

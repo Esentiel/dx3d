@@ -85,49 +85,29 @@ float4 main(PS_INPUT input) : SV_TARGET
     float4 finalColor = ( emissive + ambient + diffuse + specular ) * textureColor;
 
 	// shadows
-
-	int width = 0, height = 0;
-	float2 ShadowMapSize = 0;
-	float sampledDepth1 = 0;
-	float sampledDepth2 = 0;
-	float sampledDepth3 = 0;
-	float sampledDepth4 = 0;
-	float shadowFactorPCF = 0;
-	shadowMap.GetDimensions(width, height);
-	ShadowMapSize = 1 / float2(width, height);
-	int singleWidth = 1 / MaxLightOnScene;
 	for (int i = 0; i < MaxLightOnScene; i++)
 	{
 		if (input.posSM[i].w >= 0.0f)
 		{
-			float4 posSM = input.posSM[i];
-			posSM.xyz /= posSM.w;
-			float pixelDepth = posSM.z;
-
-            if (lightS[i].type == 0)
+			if (lightS[i].type == 0)
 				continue;
 
-			sampledDepth1 = shadowMap.Sample(DepthMapSampler, float2((posSM.x +i)/MaxLightOnScene, posSM.y)).x;
-			//sampledDepth2 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, 0)).x;
-			//sampledDepth3 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(0, ShadowMapSize.y)).x;
-			//sampledDepth4 = shadowMap[i].Sample(DepthMapSampler, float2(posSM.x, posSM.y) + float2(ShadowMapSize.x, ShadowMapSize.y)).x;
+			float4 posSM = input.posSM[i];
+			posSM.xyz /= posSM.w;
 
-			int shadowPCFvalue = 0;
-			shadowPCFvalue += (int)(pixelDepth < 1.0f && pixelDepth > sampledDepth1);
-            //shadowPCFvalue += (int) (pixelDepth < 1.0f && pixelDepth > sampledDepth2);
-            //shadowPCFvalue += (int) (pixelDepth < 1.0f && pixelDepth > sampledDepth3);
-            //shadowPCFvalue += (int) (pixelDepth < 1.0f && pixelDepth > sampledDepth4);
-
-			shadowFactorPCF += shadowPCFvalue / 1.0f;
-
-			if (shadowFactorPCF > 0.2)
+			if (posSM.x > 0.f && posSM.x < 1.0f && posSM.y > 0.f && posSM.y < 1.0f && posSM.z > 0.f && posSM.z < 1.0f)
 			{
-				float3 shadow = ColorShadow * ShadowFactor * shadowFactorPCF;
-				finalColor.rgb *= shadow;
+				float pixelDepth = posSM.z;
 
-				shadowFactorPCF= 0;
-			} 
+				float sampledDepth = shadowMap.Sample(DepthMapSampler, float2((posSM.x / MaxLightOnScene + (float)i / MaxLightOnScene), posSM.y)).x;
+				bool isShadowed = pixelDepth < 1.0f && pixelDepth > sampledDepth;
 
+				if (isShadowed)
+				{
+					float3 shadow = ColorShadow * ShadowFactor;
+					finalColor.rgb *= shadow;
+				} 
+			}
 		}
     }
 

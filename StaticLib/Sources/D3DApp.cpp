@@ -322,6 +322,15 @@ void D3DApp::Draw(const GameTime& g)
 	m_shadowMap->SetLightSource(sceneCb.Lights);
 	m_shadowMap->Generate(m_renderScene.get());
 	m_camera->UpdateViewport();
+	
+	// scissors test
+	D3D11_RECT rects[1];
+	rects[0].left = 0;
+	rects[0].right = m_width;
+	rects[0].top = 0;
+	rects[0].bottom = m_height;
+
+	m_deviceCtx->RSSetScissorRects(1, rects);
 
 	// begin Post processing
 	m_postProcessor->Begin();
