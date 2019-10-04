@@ -95,11 +95,13 @@ float4 main(PS_INPUT input) : SV_TARGET
 			float4 posSM = input.posSM[i];
 			posSM.xyz /= posSM.w;
 
-			if (posSM.x > 0.f && posSM.x < 1.0f && posSM.y > 0.f && posSM.y < 1.0f && posSM.z > 0.f && posSM.z < 1.0f)
+			if (posSM.x > 0.001f && posSM.x < 0.999f)
 			{
 				float pixelDepth = posSM.z;
 
-				float sampledDepth = shadowMap.Sample(DepthMapSampler, float2((posSM.x / MaxLightOnScene + (float)i / MaxLightOnScene), posSM.y)).x;
+                float x = posSM.x / MaxLightOnScene + (float) i / MaxLightOnScene;
+
+                float sampledDepth = shadowMap.Sample(DepthMapSampler, float2(x, posSM.y)).x;
 				bool isShadowed = pixelDepth < 1.0f && pixelDepth > sampledDepth;
 
 				if (isShadowed)
