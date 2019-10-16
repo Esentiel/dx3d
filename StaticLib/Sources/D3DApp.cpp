@@ -400,8 +400,8 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	mProjectedTextureScalingMatrix._44 = 1.0f;
 
 	MeshCB meshCb;
-	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, *(mesh->GetModelTransform()) * m_camera->GetView() * m_camera->GetProjection());
-	DirectX::XMStoreFloat4x4(&meshCb.World, *(mesh->GetModelTransform()));
+	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, mesh->GetModelTransform() * m_camera->GetView() * m_camera->GetProjection());
+	DirectX::XMStoreFloat4x4(&meshCb.World, mesh->GetModelTransform());
 	
 	meshCb.MaterialInstance.Emissive = DirectX::XMFLOAT4(0.f, 0.f, 0.f, 0.f);
 	meshCb.MaterialInstance.Ambient = DirectX::XMFLOAT4(0.8f, 0.8f, 0.8f, 1.f);
@@ -417,7 +417,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	ShadowMap::SMCB meshSM;
 	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
-		DirectX::XMStoreFloat4x4(&(meshSM.shadowMapVP[i]), *(mesh->GetModelTransform()) * m_shadowMap->GetViewMatrix(i) * m_shadowMap->GetProjection() * DirectX::XMLoadFloat4x4(&mProjectedTextureScalingMatrix));
+		DirectX::XMStoreFloat4x4(&(meshSM.shadowMapVP[i]), mesh->GetModelTransform() * m_shadowMap->GetViewMatrix(i) * m_shadowMap->GetProjection() * DirectX::XMLoadFloat4x4(&mProjectedTextureScalingMatrix));
 	}
 	m_deviceCtx->UpdateSubresource(m_shadowMap->GetConstMeshBuffer(), 0, nullptr, &meshSM, 0, 0);
 

@@ -80,7 +80,7 @@ ID3D11InputLayout* Mesh::GetInputLayout() const
 	return m_inputlayout.Get();
 }
 
-const DirectX::XMMATRIX* Mesh::GetModelTransform() const
+const DirectX::XMMATRIX Mesh::GetModelTransform() const
 {
 	return m_transformations->GetModel();
 }

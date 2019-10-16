@@ -73,7 +73,7 @@ namespace Library
 		void Move(const DirectX::XMFLOAT3 &direction);
 		void Rotate(const DirectX::XMFLOAT3 &rotation);
 		void Scale(const DirectX::XMFLOAT3 &scale);
-		const DirectX::XMMATRIX* GetModelTransform() const;
+		const DirectX::XMMATRIX GetModelTransform() const;
 
 		const int GetIndexCount() const;
 		const std::string& GetTexturePath(TextureType type) const;

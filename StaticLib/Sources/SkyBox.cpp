@@ -60,7 +60,7 @@ void Library::SkyBox::Draw(RenderScene * renderScene) // TODO: rewrite to use Me
 	// update mesh cb
 	MeshCB meshCb;
 	DirectX::XMStoreFloat4x4(&meshCb.ViewProj, g_D3D->camera->GetView() * g_D3D->camera->GetProjection());
-	DirectX::XMStoreFloat4x4(&meshCb.World, *(m_transformations->GetModel()));
+	DirectX::XMStoreFloat4x4(&meshCb.World, m_transformations->GetModel());
 
 	g_D3D->deviceCtx->UpdateSubresource(m_constMeshBuffer.Get(), 0, nullptr, &meshCb, 0, 0);
 

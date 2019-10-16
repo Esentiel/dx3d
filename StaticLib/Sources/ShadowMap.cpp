@@ -126,7 +126,7 @@ void ShadowMap::Generate(RenderScene * scene)
 
 		// scissors test
 		D3D11_RECT rects[1];
-		rects[0].left = i * (float)m_width;
+		rects[0].left = i * (long)m_width;
 		rects[0].right = m_width * (i+1);
 		rects[0].top = 0;
 		rects[0].bottom = m_height;
@@ -140,7 +140,7 @@ void ShadowMap::Generate(RenderScene * scene)
 
 			// update mesh cb
 			MeshLightCB meshCb;
-			DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, *(mesh->GetModelTransform()) * GetViewMatrix(i) * GetProjection());
+			DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, mesh->GetModelTransform() * GetViewMatrix(i) * GetProjection());
 
 			g_D3D->deviceCtx->UpdateSubresource(GetConstMeshLightBuffer(i), 0, nullptr, &meshCb, 0, 0);
 
