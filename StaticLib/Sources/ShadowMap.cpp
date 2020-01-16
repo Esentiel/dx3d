@@ -50,7 +50,7 @@ void ShadowMap::Initialize(int width, int height)
 			D3D11_TEXTURE2D_DESC textureDesc;
 			ZeroMemory(&textureDesc, sizeof(textureDesc));
 			textureDesc.Width = m_width * MAX_LIGHT_SOURCES;
-			textureDesc.Height = m_height;
+			textureDesc.Height = m_height * NUM_CASCADES;
 			textureDesc.MipLevels = 1;
 			textureDesc.ArraySize = 1;
 			textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
@@ -88,10 +88,17 @@ void ShadowMap::Initialize(int width, int height)
 			}
 		}
 
+		// calc cascades
+		auto cascades = CalcCascades();
+
 		float aspectRatio = (float)m_width / m_height;
 
-		DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 50.0f, 200.0f);
-		DirectX::XMStoreFloat4x4(&m_projection, P);
+		DirectX::XMMATRIX P0 = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 50.0f, 100.0f);
+		DirectX::XMMATRIX P1 = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 100.0f, 150.0f);
+		DirectX::XMMATRIX P2 = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 150.0f, 200.0f);
+		DirectX::XMStoreFloat4x4(&m_projection[0], P0);
+		DirectX::XMStoreFloat4x4(&m_projection[1], P1);
+		DirectX::XMStoreFloat4x4(&m_projection[2], P2);
 
 		m_viewport->Width = (float)m_width;
 		m_viewport->Height = (float)m_height;
@@ -115,53 +122,56 @@ void ShadowMap::Generate(RenderScene * scene)
 
 	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
-		m_viewport->Width = (float)m_width;
-		m_viewport->Height = (float)m_height;
-		m_viewport->TopLeftX = i * (float)m_width;
-		m_viewport->TopLeftY = 0.f;
-		m_viewport->MinDepth = 0.0f;
-		m_viewport->MaxDepth = 1.f;
-
-		g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());
-
-		// scissors test
-		D3D11_RECT rects[1];
-		rects[0].left = i * (long)m_width;
-		rects[0].right = m_width * (i+1);
-		rects[0].top = 0;
-		rects[0].bottom = m_height;
-
-		g_D3D->deviceCtx->RSSetScissorRects(1, rects);
-
-		// PER MESH
-		for (auto it = scene->BeginMesh(); it != scene->EndMesh(); ++it)
+		for (unsigned int j = 0; j < NUM_CASCADES; j++)
 		{
-			auto mesh = (*it).get();
+			m_viewport->Width = (float)m_width;
+			m_viewport->Height = (float)m_height;
+			m_viewport->TopLeftX = i * (float)m_width;
+			m_viewport->TopLeftY = j * (float)m_height;
+			m_viewport->MinDepth = 0.0f;
+			m_viewport->MaxDepth = 1.f;
 
-			// update mesh cb
-			MeshLightCB meshCb;
-			DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, mesh->GetModelTransform() * GetViewMatrix(i) * GetProjection());
+			g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());
 
-			g_D3D->deviceCtx->UpdateSubresource(GetConstMeshLightBuffer(i), 0, nullptr, &meshCb, 0, 0);
+			// scissors test
+			D3D11_RECT rects[1];
+			rects[0].left = i * (long)m_width;
+			rects[0].right = m_width * (i + 1);
+			rects[0].top = j * (float)m_height;
+			rects[0].bottom = m_height * (j + 1);
 
-			// IA
-			UINT stride = sizeof(DirectX::XMFLOAT3);
-			UINT offset = 0;
-			g_D3D->deviceCtx->IASetVertexBuffers(0, 1, mesh->GetVertexLightBufferRef(), &stride, &offset);
-			g_D3D->deviceCtx->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-			g_D3D->deviceCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			g_D3D->deviceCtx->IASetInputLayout(m_inputlayout.Get());
+			g_D3D->deviceCtx->RSSetScissorRects(1, rects);
 
-			// VS
-			ID3D11VertexShader* vs = g_D3D->shaderMgr->GetVertexShader(m_vertexShaderName);
-			g_D3D->deviceCtx->VSSetShader(vs, NULL, 0); //todo: mocking: ASSUMPTION: we use same vs for each
-			g_D3D->deviceCtx->VSSetConstantBuffers(2, 1, GetConstMeshLightBufferRef(i));
+			// PER MESH
+			for (auto it = scene->BeginMesh(); it != scene->EndMesh(); ++it)
+			{
+				auto mesh = (*it).get();
 
-			// PS
-			g_D3D->deviceCtx->PSSetShader(NULL, NULL, 0);
+				// update mesh cb
+				MeshLightCB meshCb;
+				DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, mesh->GetModelTransform() * GetViewMatrix(i) * GetProjection(j));
 
-			// draw call
-			g_D3D->deviceCtx->DrawIndexed(mesh->GetIndexCount(), 0, 0);
+				g_D3D->deviceCtx->UpdateSubresource(GetConstMeshLightBuffer(i, j), 0, nullptr, &meshCb, 0, 0);
+
+				// IA
+				UINT stride = sizeof(DirectX::XMFLOAT3);
+				UINT offset = 0;
+				g_D3D->deviceCtx->IASetVertexBuffers(0, 1, mesh->GetVertexLightBufferRef(), &stride, &offset);
+				g_D3D->deviceCtx->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+				g_D3D->deviceCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+				g_D3D->deviceCtx->IASetInputLayout(m_inputlayout.Get());
+
+				// VS
+				ID3D11VertexShader* vs = g_D3D->shaderMgr->GetVertexShader(m_vertexShaderName);
+				g_D3D->deviceCtx->VSSetShader(vs, NULL, 0); //todo: mocking: ASSUMPTION: we use same vs for each
+				g_D3D->deviceCtx->VSSetConstantBuffers(2, 1, GetConstMeshLightBufferRef(i, j));
+
+				// PS
+				g_D3D->deviceCtx->PSSetShader(NULL, NULL, 0);
+
+				// draw call
+				g_D3D->deviceCtx->DrawIndexed(mesh->GetIndexCount(), 0, 0);
+			}
 		}
 	}
 }
@@ -203,22 +213,25 @@ void ShadowMap::CreateConstLightMeshBuffer()
 
 	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
-		HRESULT hr;
-		if (FAILED(hr = g_D3D->device->CreateBuffer(&cbDesc, NULL, m_constMeshLightBuffer[i].GetAddressOf())))
+		for (unsigned int j = 0; j < NUM_CASCADES; j++)
 		{
-			THROW_GAME_EXCEPTION("CreateConstLightMeshBuffer(): CreateBuffer() failed", hr);
+			HRESULT hr;
+			if (FAILED(hr = g_D3D->device->CreateBuffer(&cbDesc, NULL, m_constMeshLightBuffer[i][j].GetAddressOf())))
+			{
+				THROW_GAME_EXCEPTION("CreateConstLightMeshBuffer(): CreateBuffer() failed", hr);
+			}
 		}
 	}
 }
 
-ID3D11Buffer* ShadowMap::GetConstMeshLightBuffer(unsigned int id) const
+ID3D11Buffer* ShadowMap::GetConstMeshLightBuffer(unsigned int id, unsigned int id2) const
 {
-	return m_constMeshLightBuffer[id].Get();
+	return m_constMeshLightBuffer[id][id2].Get();
 }
 
-ID3D11Buffer** ShadowMap::GetConstMeshLightBufferRef(unsigned int id)
+ID3D11Buffer** ShadowMap::GetConstMeshLightBufferRef(unsigned int id, unsigned int id2)
 {
-	return m_constMeshLightBuffer[id].GetAddressOf();
+	return m_constMeshLightBuffer[id][id2].GetAddressOf();
 }
 
 void ShadowMap::SetLightSource(LightSource * light)
@@ -252,9 +265,10 @@ const DirectX::XMMATRIX ShadowMap::GetViewMatrix(unsigned int id)
 	return DirectX::XMLoadFloat4x4(&(m_lightView[id]));
 }
 
-const DirectX::XMMATRIX Library::ShadowMap::GetProjection() const
+const DirectX::XMMATRIX Library::ShadowMap::GetProjection(unsigned int id) const
 {
-	return DirectX::XMLoadFloat4x4(&m_projection);
+	assert(id < NUM_CASCADES);
+	return DirectX::XMLoadFloat4x4(&m_projection[id]);
 }
 
 ID3D11ShaderResourceView** Library::ShadowMap::GetShadowMapRef()
@@ -277,10 +291,21 @@ void Library::ShadowMap::CreateRasterState()
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
 
+std::vector<Library::ShadowMap::Cascade> Library::ShadowMap::CalcCascades()
+{
+	// calc points in View Space
+	// say we want to have 3 cascades: 30% - 40% - 30%
+
+	const float vertFov = g_D3D->camera->GetFov();
+	const float horFov = 2 * atan(tan(vertFov / 2) * m_width / m_height);
+
+
+}
+
 void ShadowMap::CreateConstMeshBuffer()
 {
 	SMCB VsConstData;
-
+	auto szx = sizeof(DirectX::XMFLOAT4X4);
 	auto size = (UINT)std::ceil(sizeof(VsConstData) / 16.f) * 16;
 
 	CD3D11_BUFFER_DESC cbDesc(

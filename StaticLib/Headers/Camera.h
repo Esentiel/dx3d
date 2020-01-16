@@ -18,6 +18,7 @@ namespace Library
 		virtual const DirectX::XMMATRIX GetProjection() const;
 		virtual const D3D11_VIEWPORT* GetViewport() const;
 		virtual void UpdateViewport();
+		virtual float GetFov() const;
 
 		DirectX::XMVECTOR GetPosition() const;
 		void Strafe(float d);

@@ -417,7 +417,10 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	ShadowMap::SMCB meshSM;
 	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
-		DirectX::XMStoreFloat4x4(&(meshSM.shadowMapVP[i]), mesh->GetModelTransform() * m_shadowMap->GetViewMatrix(i) * m_shadowMap->GetProjection() * DirectX::XMLoadFloat4x4(&mProjectedTextureScalingMatrix));
+		for (unsigned int j = 0; j < NUM_CASCADES; j++)
+		{
+			DirectX::XMStoreFloat4x4(&(meshSM.shadowMapVP[i][j]), mesh->GetModelTransform() * m_shadowMap->GetViewMatrix(i) * m_shadowMap->GetProjection(j) * DirectX::XMLoadFloat4x4(&mProjectedTextureScalingMatrix));
+		}
 	}
 	m_deviceCtx->UpdateSubresource(m_shadowMap->GetConstMeshBuffer(), 0, nullptr, &meshSM, 0, 0);
 

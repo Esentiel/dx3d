@@ -70,6 +70,11 @@ void Library::Camera::UpdateViewport()
 	g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());
 }
 
+float Library::Camera::GetFov() const
+{
+	return m_fov;
+}
+
 DirectX::XMVECTOR Library::Camera::GetPosition() const
 {
 	return DirectX::XMLoadFloat3(&m_position);

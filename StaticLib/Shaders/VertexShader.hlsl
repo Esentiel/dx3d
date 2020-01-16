@@ -11,7 +11,7 @@ cbuffer MVPbuffer : register(b0)
 
 cbuffer ShadowMapVP : register(b2)
 {
-	float4x4 shadowMapVP[MaxLightOnScene];
+    float4x4 shadowMapVP[MaxLightOnScene][NumCascades]; // NumCascades
 }
 
 struct VS_IN
@@ -30,7 +30,7 @@ struct VS_OUT
     float3 tangentsW : TANGENTS0;
     float3 bitangentsW : BITANGENTS0;
     float3 posW : POSITION0;
-    float4 SMpos[MaxLightOnScene] : POSITION1;
+    float4 SMpos[MaxLightOnScene][NumCascades] : POSITION1; // NumCascades
 	float4 projPos : SV_POSITION;
 };
 
@@ -46,7 +46,10 @@ VS_OUT main(VS_IN input)
     output.posW = mul(float4(input.position, 1.0), world).xyz;
 	for (int i = 0; i < MaxLightOnScene; i++)
 	{
-		output.SMpos[i] = mul(float4(input.position, 1.0), shadowMapVP[i]);
+        for (int j = 0; j < NumCascades; j++) // NumCascades
+        {
+            output.SMpos[i][j] = mul(float4(input.position, 1.0), shadowMapVP[i][j]);
+        }
 	}
     
 	return output;

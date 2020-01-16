@@ -23,7 +23,7 @@ namespace Library
 	public:
 		struct SMCB
 		{
-			DirectX::XMFLOAT4X4 shadowMapVP[MAX_LIGHT_SOURCES];
+			DirectX::XMFLOAT4X4 shadowMapVP[MAX_LIGHT_SOURCES][NUM_CASCADES];
 		};
 	public:
 		ShadowMap();
@@ -33,30 +33,35 @@ namespace Library
 		void Generate(RenderScene * scene);
 		void SetLightSource(LightSource * light);
 		
-		ID3D11Buffer* GetConstMeshLightBuffer(unsigned int id) const;
-		ID3D11Buffer** GetConstMeshLightBufferRef(unsigned int id);
+		ID3D11Buffer* GetConstMeshLightBuffer(unsigned int id, unsigned int id2) const;
+		ID3D11Buffer** GetConstMeshLightBufferRef(unsigned int id, unsigned int id2);
 		const DirectX::XMMATRIX GetViewMatrix(unsigned int id);
-		virtual const DirectX::XMMATRIX GetProjection() const;
+		virtual const DirectX::XMMATRIX GetProjection(unsigned int id) const;
 		ID3D11ShaderResourceView** GetShadowMapRef();
 
 		ID3D11Buffer* GetConstMeshBuffer() const;
 		ID3D11Buffer** GetConstMeshBufferRef();
 	private:
+		struct Cascade
+		{
+			DirectX::XMFLOAT3 p1, p2, p3, p4;
+		};
 		void CreateInputLayout();
 		void CreateConstLightMeshBuffer();
 		void CreateConstMeshBuffer();
 		void CreateRasterState();
+		std::vector<Cascade> CalcCascades();
 
 		std::string m_vertexShaderName;
 		std::array<LightSource*, MAX_LIGHT_SOURCES> m_lightSource;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderRes;
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_shadowMap;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputlayout;
-		std::array<Microsoft::WRL::ComPtr<ID3D11Buffer>, MAX_LIGHT_SOURCES> m_constMeshLightBuffer;
+		std::array<std::array<Microsoft::WRL::ComPtr<ID3D11Buffer>, NUM_CASCADES>, MAX_LIGHT_SOURCES> m_constMeshLightBuffer;
 		Microsoft::WRL::ComPtr <ID3D11RasterizerState> m_rasterState;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_constMeshBuffer;
 		std::array<DirectX::XMFLOAT4X4, MAX_LIGHT_SOURCES> m_lightView;
-		DirectX::XMFLOAT4X4 m_projection;
+		DirectX::XMFLOAT4X4 m_projection[NUM_CASCADES];
 		std::unique_ptr<D3D11_VIEWPORT> m_viewport;
 
 		int m_width;

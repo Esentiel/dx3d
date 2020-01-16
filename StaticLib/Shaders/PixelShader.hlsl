@@ -34,7 +34,7 @@ struct PS_INPUT
     float3 tangentsW : TANGENTS0;
     float3 bitangentsW : BITANGENTS0;
     float3 posW : POSITION0;
-    float4 posSM[MaxLightOnScene] : POSITION1;
+    float4 posSM[MaxLightOnScene][NumCascades] : POSITION1; // NumCascades
 };
 
 float4 main(PS_INPUT input) : SV_TARGET
@@ -43,7 +43,6 @@ float4 main(PS_INPUT input) : SV_TARGET
 	float4 bumpMap;
 	float3 normal;
     if (material.hasNormalMap)
-
     {
         
         // normal
@@ -87,12 +86,15 @@ float4 main(PS_INPUT input) : SV_TARGET
 	// shadows
 	for (int i = 0; i < MaxLightOnScene; i++)
 	{
-		if (input.posSM[i].w >= 0.0f)
+        // select correct cascade
+        //
+        
+		if (input.posSM[i][0].w >= 0.0f)
 		{
 			if (lightS[i].type == 0)
 				continue;
 
-			float4 posSM = input.posSM[i];
+            float4 posSM = input.posSM[i][0];
 			posSM.xyz /= posSM.w;
 
 			if (posSM.x > 0.001f && posSM.x < 0.999f)
@@ -100,8 +102,9 @@ float4 main(PS_INPUT input) : SV_TARGET
 				float pixelDepth = posSM.z;
 
                 float x = posSM.x / MaxLightOnScene + (float) i / MaxLightOnScene;
+                float y = posSM.y / NumCascades + (float) 0 / NumCascades;
 
-                float sampledDepth = shadowMap.Sample(DepthMapSampler, float2(x, posSM.y)).x;
+                float sampledDepth = shadowMap.Sample(DepthMapSampler, float2(x, y)).x;
 				bool isShadowed = pixelDepth < 1.0f && pixelDepth > sampledDepth;
 
 				if (isShadowed)

@@ -37,6 +37,7 @@ static const float3 ColorBlack = { 0, 0, 0 };
 static const float3 ColorShadow = { 0.2, 0.2, 0.2 };
 static const float ShadowFactor = 0.9f;
 static const int MaxLightOnScene = 2;
+static const int NumCascades = 3;
 
 // Phong model
 

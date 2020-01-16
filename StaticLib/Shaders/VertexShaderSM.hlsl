@@ -1,3 +1,5 @@
+#include "ShaderDefines.inc"
+
 cbuffer MVLPbuffer : register(b2)
 {
     float4x4 mvlp;
