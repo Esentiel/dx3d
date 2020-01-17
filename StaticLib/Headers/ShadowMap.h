@@ -4,6 +4,7 @@
 #include <string>
 #include <array>
 #include <DirectXMath.h>
+#include <vector>
 
 struct ID3D11ShaderResourceView;
 struct ID3D11DepthStencilView;
@@ -42,9 +43,14 @@ namespace Library
 		ID3D11Buffer* GetConstMeshBuffer() const;
 		ID3D11Buffer** GetConstMeshBufferRef();
 	private:
+		struct Plane
+		{
+			DirectX::XMFLOAT3 p1, p2, p3, p4; // p1 = right-top, p2 = left-top, p3=bottom-left, p4=bottom-right
+		};
 		struct Cascade
 		{
-			DirectX::XMFLOAT3 p1, p2, p3, p4;
+			Plane nearPlane;
+			Plane farPlane;
 		};
 		void CreateInputLayout();
 		void CreateConstLightMeshBuffer();

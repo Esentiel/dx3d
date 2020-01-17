@@ -75,6 +75,16 @@ float Library::Camera::GetFov() const
 	return m_fov;
 }
 
+float Library::Camera::GetNear() const
+{
+	return m_near;
+}
+
+float Library::Camera::GetFar() const
+{
+	return m_far;
+}
+
 DirectX::XMVECTOR Library::Camera::GetPosition() const
 {
 	return DirectX::XMLoadFloat3(&m_position);

@@ -91,6 +91,9 @@ void ShadowMap::Initialize(int width, int height)
 		// calc cascades
 		auto cascades = CalcCascades();
 
+
+		//
+
 		float aspectRatio = (float)m_width / m_height;
 
 		DirectX::XMMATRIX P0 = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 50.0f, 100.0f);
@@ -293,19 +296,72 @@ void Library::ShadowMap::CreateRasterState()
 
 std::vector<Library::ShadowMap::Cascade> Library::ShadowMap::CalcCascades()
 {
+	std::vector<Library::ShadowMap::Cascade> result;
+
 	// calc points in View Space
 	// say we want to have 3 cascades: 30% - 40% - 30%
 
 	const float vertFov = g_D3D->camera->GetFov();
 	const float horFov = 2 * atan(tan(vertFov / 2) * m_width / m_height);
+	const float nearZ = g_D3D->camera->GetNear();
+	const float farZ = g_D3D->camera->GetFar();
 
+	const float nearX = nearZ * tan(horFov);
+	const float farX = farZ * tan(horFov);
 
+	const float nearY = nearZ * tan(vertFov);
+	const float farY = farZ * tan(vertFov);
+
+	Cascade cascade1;
+	cascade1.nearPlane.p1 = DirectX::XMFLOAT3(nearX, nearY, nearZ);
+	cascade1.nearPlane.p2 = DirectX::XMFLOAT3(-nearX, nearY, nearZ);
+	cascade1.nearPlane.p3 = DirectX::XMFLOAT3(-nearX, -nearY, nearZ);
+	cascade1.nearPlane.p4 = DirectX::XMFLOAT3(nearX, -nearY, nearZ);
+
+	cascade1.farPlane.p1 = DirectX::XMFLOAT3(farX, farY, farZ);
+	cascade1.farPlane.p2 = DirectX::XMFLOAT3(-farX, farY, farZ);
+	cascade1.farPlane.p3 = DirectX::XMFLOAT3(-farX, -farY, farZ);
+	cascade1.farPlane.p4 = DirectX::XMFLOAT3(farX, -farY, farZ);
+
+	// transform into world
+	auto viewMx = g_D3D->camera->GetView();
+	auto invertedViewMx = DirectX::XMMatrixInverse(NULL, viewMx);
+
+	DirectX::XMVECTOR nearP1Vec = DirectX::XMLoadFloat3(&(cascade1.nearPlane.p1));
+	DirectX::XMVECTOR nearP2Vec = DirectX::XMLoadFloat3(&(cascade1.nearPlane.p2));
+	DirectX::XMVECTOR nearP3Vec = DirectX::XMLoadFloat3(&(cascade1.nearPlane.p3));
+	DirectX::XMVECTOR nearP4Vec = DirectX::XMLoadFloat3(&(cascade1.nearPlane.p4));
+	DirectX::XMVECTOR farP1Vec = DirectX::XMLoadFloat3(&(cascade1.farPlane.p1));
+	DirectX::XMVECTOR farP2Vec = DirectX::XMLoadFloat3(&(cascade1.farPlane.p2));
+	DirectX::XMVECTOR farP3Vec = DirectX::XMLoadFloat3(&(cascade1.farPlane.p3));
+	DirectX::XMVECTOR farP4Vec = DirectX::XMLoadFloat3(&(cascade1.farPlane.p4));
+
+	nearP1Vec = DirectX::XMVector3Transform(nearP1Vec, invertedViewMx);
+	nearP2Vec = DirectX::XMVector3Transform(nearP2Vec, invertedViewMx);
+	nearP3Vec = DirectX::XMVector3Transform(nearP3Vec, invertedViewMx);
+	nearP4Vec = DirectX::XMVector3Transform(nearP4Vec, invertedViewMx);
+	farP1Vec = DirectX::XMVector3Transform(farP1Vec, invertedViewMx);
+	farP2Vec = DirectX::XMVector3Transform(farP2Vec, invertedViewMx);
+	farP3Vec = DirectX::XMVector3Transform(farP3Vec, invertedViewMx);
+	farP4Vec = DirectX::XMVector3Transform(farP4Vec, invertedViewMx);
+
+	DirectX::XMStoreFloat3(&(cascade1.nearPlane.p1), nearP1Vec);
+	DirectX::XMStoreFloat3(&(cascade1.nearPlane.p2), nearP2Vec);
+	DirectX::XMStoreFloat3(&(cascade1.nearPlane.p3), nearP3Vec);
+	DirectX::XMStoreFloat3(&(cascade1.nearPlane.p4), nearP4Vec);
+	DirectX::XMStoreFloat3(&(cascade1.farPlane.p1), farP1Vec);
+	DirectX::XMStoreFloat3(&(cascade1.farPlane.p2), farP2Vec);
+	DirectX::XMStoreFloat3(&(cascade1.farPlane.p3), farP3Vec);
+	DirectX::XMStoreFloat3(&(cascade1.farPlane.p4), farP4Vec);
+
+	result.push_back(cascade1);
+
+	return result;
 }
 
 void ShadowMap::CreateConstMeshBuffer()
 {
 	SMCB VsConstData;
-	auto szx = sizeof(DirectX::XMFLOAT4X4);
 	auto size = (UINT)std::ceil(sizeof(VsConstData) / 16.f) * 16;
 
 	CD3D11_BUFFER_DESC cbDesc(

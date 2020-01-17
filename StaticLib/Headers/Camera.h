@@ -19,6 +19,8 @@ namespace Library
 		virtual const D3D11_VIEWPORT* GetViewport() const;
 		virtual void UpdateViewport();
 		virtual float GetFov() const;
+		virtual float GetNear() const;
+		virtual float GetFar() const;
 
 		DirectX::XMVECTOR GetPosition() const;
 		void Strafe(float d);
