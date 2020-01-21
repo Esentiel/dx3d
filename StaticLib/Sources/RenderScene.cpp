@@ -26,14 +26,14 @@ RenderScene::RenderScene()
 	m_lights.get()[0].QuadraticAttenuation = 0.0f;
 	m_lights.get()[0].SpotAngle = DirectX::XMConvertToRadians(30.0f);
 
-	m_lights.get()[1].Type = 0;
-	m_lights.get()[1].LightPos = DirectX::XMFLOAT4(-20.5f, 66.8f, 76.8f, 1.0f);
-	m_lights.get()[1].LightDir = DirectX::XMFLOAT4(0.21f, -0.69f, -0.83f, 0.0f);
-	m_lights.get()[1].LightPower = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	m_lights.get()[1].ConstantAttenuation = 1.0f;
-	m_lights.get()[1].LinearAttenuation = 0.01f;
-	m_lights.get()[1].QuadraticAttenuation = 0.0f;
-	m_lights.get()[1].SpotAngle = DirectX::XMConvertToRadians(30.0f);
+	//m_lights.get()[1].Type = 0;
+	//m_lights.get()[1].LightPos = DirectX::XMFLOAT4(-20.5f, 66.8f, 76.8f, 1.0f);
+	//m_lights.get()[1].LightDir = DirectX::XMFLOAT4(0.21f, -0.69f, -0.83f, 0.0f);
+	//m_lights.get()[1].LightPower = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	//m_lights.get()[1].ConstantAttenuation = 1.0f;
+	//m_lights.get()[1].LinearAttenuation = 0.01f;
+	//m_lights.get()[1].QuadraticAttenuation = 0.0f;
+	//m_lights.get()[1].SpotAngle = DirectX::XMConvertToRadians(30.0f);
 }
 
 

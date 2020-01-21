@@ -88,21 +88,6 @@ void ShadowMap::Initialize(int width, int height)
 			}
 		}
 
-		// calc cascades
-		auto cascades = CalcCascades();
-
-
-		//
-
-		float aspectRatio = (float)m_width / m_height;
-
-		DirectX::XMMATRIX P0 = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 50.0f, 100.0f);
-		DirectX::XMMATRIX P1 = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 100.0f, 150.0f);
-		DirectX::XMMATRIX P2 = DirectX::XMMatrixPerspectiveFovRH(DirectX::XM_PIDIV4, aspectRatio, 150.0f, 200.0f);
-		DirectX::XMStoreFloat4x4(&m_projection[0], P0);
-		DirectX::XMStoreFloat4x4(&m_projection[1], P1);
-		DirectX::XMStoreFloat4x4(&m_projection[2], P2);
-
 		m_viewport->Width = (float)m_width;
 		m_viewport->Height = (float)m_height;
 		m_viewport->TopLeftX = 0.f;
@@ -260,6 +245,48 @@ void ShadowMap::SetLightSource(LightSource * light)
 
 		DirectX::XMMATRIX V = DirectX::XMMatrixLookToRH(pos, dir, DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
 		DirectX::XMStoreFloat4x4(&(m_lightView[i]), V);
+
+		// calc cascades
+		auto cascades = CalcCascades();
+		float minX = 0.f, minY = 0.f, maxX = 0.f, maxY = 0.f;
+		for (int i = 0; i < cascades.size(); i++)
+		{
+			const Cascade cascade = cascades[i];
+			minX = min(cascade.nearPlane.p1.x, cascade.nearPlane.p2.x);
+			minX = min(minX, cascade.nearPlane.p3.x);
+			minX = min(minX, cascade.nearPlane.p4.x);
+			minX = min(minX, cascade.farPlane.p1.x);
+			minX = min(minX, cascade.farPlane.p2.x);
+			minX = min(minX, cascade.farPlane.p3.x);
+			minX = min(minX, cascade.farPlane.p4.x);
+
+			minY = min(cascade.nearPlane.p1.y, cascade.nearPlane.p2.y);
+			minY = min(minY, cascade.nearPlane.p3.y);
+			minY = min(minY, cascade.nearPlane.p4.y);
+			minY = min(minY, cascade.farPlane.p1.y);
+			minY = min(minY, cascade.farPlane.p2.y);
+			minY = min(minY, cascade.farPlane.p3.y);
+			minY = min(minY, cascade.farPlane.p4.y);
+
+			maxX = max(cascade.nearPlane.p1.x, cascade.nearPlane.p2.x);
+			maxX = max(maxX, cascade.nearPlane.p3.x);
+			maxX = max(maxX, cascade.nearPlane.p4.x);
+			maxX = max(maxX, cascade.farPlane.p1.x);
+			maxX = max(maxX, cascade.farPlane.p2.x);
+			maxX = max(maxX, cascade.farPlane.p3.x);
+			maxX = max(maxX, cascade.farPlane.p4.x);
+
+			maxY = max(cascade.nearPlane.p1.y, cascade.nearPlane.p2.y);
+			maxY = max(maxY, cascade.nearPlane.p3.y);
+			maxY = max(maxY, cascade.nearPlane.p4.y);
+			maxY = max(maxY, cascade.farPlane.p1.y);
+			maxY = max(maxY, cascade.farPlane.p2.y);
+			maxY = max(maxY, cascade.farPlane.p3.y);
+			maxY = max(maxY, cascade.farPlane.p4.y);
+
+			DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterRH(minX, maxX, minY, maxY, 50.f, 200.f);
+			DirectX::XMStoreFloat4x4(&m_projection[i], P);
+		}
 	}
 }
 
@@ -294,9 +321,9 @@ void Library::ShadowMap::CreateRasterState()
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
 
-std::vector<Library::ShadowMap::Cascade> Library::ShadowMap::CalcCascades()
+std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCascades()
 {
-	std::vector<Library::ShadowMap::Cascade> result;
+	std::array<Library::ShadowMap::Cascade, NUM_CASCADES> result;
 
 	// calc points in View Space
 	// say we want to have 3 cascades: 30% - 40% - 30%
@@ -345,6 +372,18 @@ std::vector<Library::ShadowMap::Cascade> Library::ShadowMap::CalcCascades()
 	farP3Vec = DirectX::XMVector3Transform(farP3Vec, invertedViewMx);
 	farP4Vec = DirectX::XMVector3Transform(farP4Vec, invertedViewMx);
 
+	// transfrom into light view space
+	DirectX::XMMATRIX lightViewMx = GetViewMatrix(0);
+
+	nearP1Vec = DirectX::XMVector3Transform(nearP1Vec, lightViewMx);
+	nearP2Vec = DirectX::XMVector3Transform(nearP2Vec, lightViewMx);
+	nearP3Vec = DirectX::XMVector3Transform(nearP3Vec, lightViewMx);
+	nearP4Vec = DirectX::XMVector3Transform(nearP4Vec, lightViewMx);
+	farP1Vec = DirectX::XMVector3Transform(farP1Vec, lightViewMx);
+	farP2Vec = DirectX::XMVector3Transform(farP2Vec, lightViewMx);
+	farP3Vec = DirectX::XMVector3Transform(farP3Vec, lightViewMx);
+	farP4Vec = DirectX::XMVector3Transform(farP4Vec, lightViewMx);
+
 	DirectX::XMStoreFloat3(&(cascade1.nearPlane.p1), nearP1Vec);
 	DirectX::XMStoreFloat3(&(cascade1.nearPlane.p2), nearP2Vec);
 	DirectX::XMStoreFloat3(&(cascade1.nearPlane.p3), nearP3Vec);
@@ -354,7 +393,7 @@ std::vector<Library::ShadowMap::Cascade> Library::ShadowMap::CalcCascades()
 	DirectX::XMStoreFloat3(&(cascade1.farPlane.p3), farP3Vec);
 	DirectX::XMStoreFloat3(&(cascade1.farPlane.p4), farP4Vec);
 
-	result.push_back(cascade1);
+	result[0] = cascade1;
 
 	return result;
 }

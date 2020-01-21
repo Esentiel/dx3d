@@ -56,7 +56,7 @@ namespace Library
 		void CreateConstLightMeshBuffer();
 		void CreateConstMeshBuffer();
 		void CreateRasterState();
-		std::vector<Cascade> CalcCascades();
+		std::array<Library::ShadowMap::Cascade, NUM_CASCADES> CalcCascades();
 
 		std::string m_vertexShaderName;
 		std::array<LightSource*, MAX_LIGHT_SOURCES> m_lightSource;
