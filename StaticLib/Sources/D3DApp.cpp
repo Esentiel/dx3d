@@ -284,7 +284,7 @@ void D3DApp::Initialize()
 	g_D3D->fileMgr = m_fileManager.get();
 
 	// camera
-	float fov = DirectX::XMConvertToRadians(45.f);
+	float fov = DirectX::XMConvertToRadians(60.f);
 	m_camera.reset(new Camera(fov, m_width, m_height, 0.01f, 300.0f));
 	g_D3D->camera = m_camera.get();
 

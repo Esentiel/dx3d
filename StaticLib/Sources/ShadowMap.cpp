@@ -301,8 +301,8 @@ void ShadowMap::SetLightSource(LightSource * light)
 			maxZ = max(maxZ, cascade.farPlane.p3.z);
 			maxZ = max(maxZ, cascade.farPlane.p4.z);
 
-			//DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterRH(minX, maxX, minY, maxY, minZ, maxZ);
-			DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicRH(100.f, 100.f, 0.1f, 300.f);
+			DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterRH(minX, maxX, minY, maxY, minZ, maxZ);
+			//DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicRH(100.f, 100.f, 0.1f, 300.f);
 			DirectX::XMStoreFloat4x4(&m_projection[j], P);
 		}
 	}
@@ -345,8 +345,15 @@ std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCa
 
 	// calc points in View Space
 
-	const float vertFov = g_D3D->camera->GetFov();
-	const float horFov = 2 * atan(tan(vertFov / 2) * m_width / m_height);
+	const float vertFovTan = tanf(g_D3D->camera->GetFov() / 2.0f);
+
+	auto fov = g_D3D->camera->GetFov();
+	auto ar = (float)m_width / m_height;
+	const float horFovTan = tanf((fov * ar) / 2.0f);
+
+	auto vert = atanf(vertFovTan) * 180.f / 3.14f;
+	auto hor = atanf(horFovTan) * 180.f / 3.14f;
+
 	const float nearZ = g_D3D->camera->GetNear();
 	const float farZ = g_D3D->camera->GetFar();
 
@@ -357,17 +364,17 @@ std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCa
 	const float cascase23Z = distZ * (0.15f + 0.35f);
 
 	// calc x and y
-	const float nearX = nearZ * tan(horFov);
-	const float nearY = nearZ * tan(vertFov);
+	const float nearX = nearZ * horFovTan;
+	const float nearY = nearZ * vertFovTan;
 
-	const float cascase12X = cascase12Z * tan(horFov);
-	const float cascase12Y = cascase12Z * tan(vertFov);
+	const float cascase12X = cascase12Z * horFovTan;
+	const float cascase12Y = cascase12Z * vertFovTan;
 
-	const float cascase23X = cascase23Z * tan(horFov);
-	const float cascase23Y = cascase23Z * tan(vertFov);
+	const float cascase23X = cascase23Z * horFovTan;
+	const float cascase23Y = cascase23Z * vertFovTan;
 
-	const float farX = farZ * tan(horFov);
-	const float farY = farZ * tan(vertFov);
+	const float farX = farZ * horFovTan;
+	const float farY = farZ * vertFovTan;
 
 	// cascades
 	Cascade cascade1;
@@ -404,8 +411,10 @@ std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCa
 	cascade3.farPlane.p4 = DirectX::XMFLOAT3(farX, -farY, farZ);
 
 	result[0] = cascade1;
-	//result[1] = cascade2;
-	//result[2] = cascade3;
+	if (NUM_CASCADES > 1)
+		result[1] = cascade2;
+	if (NUM_CASCADES > 2)
+		result[2] = cascade3;
 
 	// transform into world
 	for (int i = 0; i < NUM_CASCADES; i++)
