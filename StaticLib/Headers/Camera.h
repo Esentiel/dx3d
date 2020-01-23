@@ -41,8 +41,6 @@ namespace Library
 		DirectX::XMFLOAT3 m_look;
 		DirectX::XMFLOAT3 m_up;
 		DirectX::XMFLOAT3 m_right;
-		
-		DirectX::XMFLOAT3 m_direction;
 
 		float m_fov;
 		int m_width;

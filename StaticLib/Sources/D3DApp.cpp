@@ -285,7 +285,7 @@ void D3DApp::Initialize()
 
 	// camera
 	float fov = DirectX::XMConvertToRadians(60.f);
-	m_camera.reset(new Camera(fov, m_width, m_height, 0.01f, 300.0f));
+	m_camera.reset(new Camera(fov, m_width, m_height, 1.f, 250.0f));
 	g_D3D->camera = m_camera.get();
 
 	// scene
@@ -300,6 +300,7 @@ void D3DApp::Initialize()
 
 	// ShadowMap
 	m_shadowMap.reset(new ShadowMap);	
+	m_shadowMap->SetLightSource(m_renderScene->GetSceneLights());
 }
 
 
@@ -319,7 +320,7 @@ void D3DApp::Draw(const GameTime& g)
 
 	// Generate shadow map
 	m_shadowMap->Initialize(m_width, m_height);
-	m_shadowMap->SetLightSource(sceneCb.Lights);
+	
 	m_shadowMap->Generate(m_renderScene.get());
 	m_camera->UpdateViewport();
 	

@@ -3,6 +3,7 @@
 
 #include <d3d11.h>
 #include <DirectXMath.h>
+#include <cmath>
 
 #include "Mesh.h"
 #include "GameException.h"
@@ -99,6 +100,8 @@ void ShadowMap::Initialize(int width, int height)
 
 void ShadowMap::Generate(RenderScene * scene)
 {
+	CalcProjections();
+
 	static ID3D11RenderTargetView* nullRenderTargetView = nullptr;
 	
 	// set off screen rtv and dsb
@@ -125,7 +128,7 @@ void ShadowMap::Generate(RenderScene * scene)
 			D3D11_RECT rects[1];
 			rects[0].left = i * (long)m_width;
 			rects[0].right = m_width * (i + 1);
-			rects[0].top = j * (float)m_height;
+			rects[0].top = j * (long)m_height;
 			rects[0].bottom = m_height * (j + 1);
 
 			g_D3D->deviceCtx->RSSetScissorRects(1, rects);
@@ -222,95 +225,60 @@ ID3D11Buffer** ShadowMap::GetConstMeshLightBufferRef(unsigned int id, unsigned i
 	return m_constMeshLightBuffer[id][id2].GetAddressOf();
 }
 
-void ShadowMap::SetLightSource(LightSource * light)
+void ShadowMap::SetLightSource(const LightSource * light)
 {
 	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
 		if (!light[i].Type)
 			continue;
 
-		m_lightSource[i] = &light[i];
+		m_lightSource[i] = light[i];
 
 		DirectX::XMVECTOR pos;
-		DirectX::XMVECTOR dir = DirectX::XMVector4Normalize((DirectX::XMLoadFloat4(&(m_lightSource[i]->LightDir))));
-		if (m_lightSource[i]->Type == 1)
+		DirectX::XMVECTOR dir = DirectX::XMVector4Normalize((DirectX::XMLoadFloat4(&(m_lightSource[i].LightDir))));
+		if (m_lightSource[i].Type == 1)
 		{
-			pos = DirectX::XMVectorScale(DirectX::XMVectorNegate(DirectX::XMLoadFloat4(&(m_lightSource[i]->LightDir))), 100.f);
+			pos = DirectX::XMVectorScale(DirectX::XMVectorNegate(DirectX::XMLoadFloat4(&(m_lightSource[i].LightDir))), 100.f);
 		}
 		else
 		{
-			pos = DirectX::XMLoadFloat4(&(m_lightSource[i]->LightPos));
+			pos = DirectX::XMLoadFloat4(&(m_lightSource[i].LightPos));
 		}
 
 
 		DirectX::XMMATRIX V = DirectX::XMMatrixLookToRH(pos, dir, DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
 		DirectX::XMStoreFloat4x4(&(m_lightView[i]), V);
-
-		// calc cascades
-		auto cascades = CalcCascades();
-		
-		for (int j = 0; j < NUM_CASCADES; j++)
-		{
-			float minX = 0.f, minY = 0.f, maxX = 0.f, maxY = 0.f, minZ = 0.f, maxZ = 0.f;
-			const Cascade cascade = cascades[j];
-			minX = min(cascade.nearPlane.p1.x, cascade.nearPlane.p2.x);
-			minX = min(minX, cascade.nearPlane.p3.x);
-			minX = min(minX, cascade.nearPlane.p4.x);
-			minX = min(minX, cascade.farPlane.p1.x);
-			minX = min(minX, cascade.farPlane.p2.x);
-			minX = min(minX, cascade.farPlane.p3.x);
-			minX = min(minX, cascade.farPlane.p4.x);
-
-			minY = min(cascade.nearPlane.p1.y, cascade.nearPlane.p2.y);
-			minY = min(minY, cascade.nearPlane.p3.y);
-			minY = min(minY, cascade.nearPlane.p4.y);
-			minY = min(minY, cascade.farPlane.p1.y);
-			minY = min(minY, cascade.farPlane.p2.y);
-			minY = min(minY, cascade.farPlane.p3.y);
-			minY = min(minY, cascade.farPlane.p4.y);
-
-			minZ = min(cascade.nearPlane.p1.z, cascade.nearPlane.p2.z);
-			minZ = min(minZ, cascade.nearPlane.p3.z);
-			minZ = min(minZ, cascade.nearPlane.p4.z);
-			minZ = min(minZ, cascade.farPlane.p1.z);
-			minZ = min(minZ, cascade.farPlane.p2.z);
-			minZ = min(minZ, cascade.farPlane.p3.z);
-			minZ = min(minZ, cascade.farPlane.p4.z);
-
-			maxX = max(cascade.nearPlane.p1.x, cascade.nearPlane.p2.x);
-			maxX = max(maxX, cascade.nearPlane.p3.x);
-			maxX = max(maxX, cascade.nearPlane.p4.x);
-			maxX = max(maxX, cascade.farPlane.p1.x);
-			maxX = max(maxX, cascade.farPlane.p2.x);
-			maxX = max(maxX, cascade.farPlane.p3.x);
-			maxX = max(maxX, cascade.farPlane.p4.x);
-
-			maxY = max(cascade.nearPlane.p1.y, cascade.nearPlane.p2.y);
-			maxY = max(maxY, cascade.nearPlane.p3.y);
-			maxY = max(maxY, cascade.nearPlane.p4.y);
-			maxY = max(maxY, cascade.farPlane.p1.y);
-			maxY = max(maxY, cascade.farPlane.p2.y);
-			maxY = max(maxY, cascade.farPlane.p3.y);
-			maxY = max(maxY, cascade.farPlane.p4.y);
-
-			maxZ = max(cascade.nearPlane.p1.z, cascade.nearPlane.p2.z);
-			maxZ = max(maxZ, cascade.nearPlane.p3.z);
-			maxZ = max(maxZ, cascade.nearPlane.p4.z);
-			maxZ = max(maxZ, cascade.farPlane.p1.z);
-			maxZ = max(maxZ, cascade.farPlane.p2.z);
-			maxZ = max(maxZ, cascade.farPlane.p3.z);
-			maxZ = max(maxZ, cascade.farPlane.p4.z);
-
-			DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterRH(minX, maxX, minY, maxY, minZ, maxZ);
-			//DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicRH(100.f, 100.f, 0.1f, 300.f);
-			DirectX::XMStoreFloat4x4(&m_projection[j], P);
-		}
 	}
 }
 
 const DirectX::XMMATRIX ShadowMap::GetViewMatrix(unsigned int id)
 {
 	return DirectX::XMLoadFloat4x4(&(m_lightView[id]));
+}
+
+void Library::ShadowMap::CalcProjections()
+{
+	// calc cascades
+	auto cascades = CalcCascades();
+
+	for (int j = 0; j < NUM_CASCADES; j++)
+	{
+		const Cascade cascade = cascades[j];
+		float minX = cascade.points[0].x, minY = cascade.points[0].y, maxX = cascade.points[0].x, maxY = cascade.points[0].y, minZ = cascade.points[0].z, maxZ = cascade.points[0].z;
+
+		for (int i = 0; i < 8; i++)
+		{
+			minX = min(minX, cascade.points[i].x);
+			minY = min(minY, cascade.points[i].y);
+			minZ = min(minZ, cascade.points[i].z);
+			maxX = max(maxX, cascade.points[i].x);
+			maxY = max(maxY, cascade.points[i].y);
+			maxZ = max(maxZ, cascade.points[i].z);
+		}
+
+		DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterRH(minX, maxX, minY, maxY, minZ, maxZ);
+		DirectX::XMStoreFloat4x4(&m_projection[j], P);
+	}
 }
 
 const DirectX::XMMATRIX Library::ShadowMap::GetProjection(unsigned int id) const
@@ -343,78 +311,32 @@ std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCa
 {
 	std::array<Library::ShadowMap::Cascade, NUM_CASCADES> result;
 
-	// calc points in View Space
-
-	const float vertFovTan = tanf(g_D3D->camera->GetFov() / 2.0f);
-
-	auto fov = g_D3D->camera->GetFov();
-	auto ar = (float)m_width / m_height;
-	const float horFovTan = tanf((fov * ar) / 2.0f);
-
-	auto vert = atanf(vertFovTan) * 180.f / 3.14f;
-	auto hor = atanf(horFovTan) * 180.f / 3.14f;
-
 	const float nearZ = g_D3D->camera->GetNear();
 	const float farZ = g_D3D->camera->GetFar();
 
-	// say we want to have 3 cascades: 15% - 35% - 50%
-	const float distZ = farZ - nearZ;
-	const float cascase12Z = farZ;
-	//const float cascase12Z = distZ * 0.15f;
-	const float cascase23Z = distZ * (0.15f + 0.35f);
+	const float vertFovTan = tanf(g_D3D->camera->GetFov() / 2.0f);
+	const float ar = (float)m_width / m_height;
+	const float horFovTan = vertFovTan * ar;
 
 	// calc x and y
 	const float nearX = nearZ * horFovTan;
 	const float nearY = nearZ * vertFovTan;
-
-	const float cascase12X = cascase12Z * horFovTan;
-	const float cascase12Y = cascase12Z * vertFovTan;
-
-	const float cascase23X = cascase23Z * horFovTan;
-	const float cascase23Y = cascase23Z * vertFovTan;
-
 	const float farX = farZ * horFovTan;
 	const float farY = farZ * vertFovTan;
 
 	// cascades
 	Cascade cascade1;
-	cascade1.nearPlane.p1 = DirectX::XMFLOAT3(nearX, nearY, nearZ);
-	cascade1.nearPlane.p2 = DirectX::XMFLOAT3(-nearX, nearY, nearZ);
-	cascade1.nearPlane.p3 = DirectX::XMFLOAT3(-nearX, -nearY, nearZ);
-	cascade1.nearPlane.p4 = DirectX::XMFLOAT3(nearX, -nearY, nearZ);
+	cascade1.points[0] = DirectX::XMFLOAT3(nearX, nearY, nearZ);
+	cascade1.points[1] = DirectX::XMFLOAT3(-nearX, nearY, nearZ);
+	cascade1.points[2] = DirectX::XMFLOAT3(-nearX, -nearY, nearZ);
+	cascade1.points[3] = DirectX::XMFLOAT3(nearX, -nearY, nearZ);
 
-	cascade1.farPlane.p1 = DirectX::XMFLOAT3(cascase12X, cascase12Y, cascase12Z);
-	cascade1.farPlane.p2 = DirectX::XMFLOAT3(-cascase12X, cascase12Y, cascase12Z);
-	cascade1.farPlane.p3 = DirectX::XMFLOAT3(-cascase12X, -cascase12Y, cascase12Z);
-	cascade1.farPlane.p4 = DirectX::XMFLOAT3(cascase12X, -cascase12Y, cascase12Z);
-
-	Cascade cascade2;
-	cascade2.nearPlane.p1 = DirectX::XMFLOAT3(cascase12X, cascase12Y, cascase12Z);
-	cascade2.nearPlane.p2 = DirectX::XMFLOAT3(-cascase12X, cascase12Y, cascase12Z);
-	cascade2.nearPlane.p3 = DirectX::XMFLOAT3(-cascase12X, -cascase12Y, cascase12Z);
-	cascade2.nearPlane.p4 = DirectX::XMFLOAT3(cascase12X, -cascase12Y, cascase12Z);
-
-	cascade2.farPlane.p1 = DirectX::XMFLOAT3(cascase23X, cascase23Y, cascase23Z);
-	cascade2.farPlane.p2 = DirectX::XMFLOAT3(-cascase23X, cascase23Y, cascase23Z);
-	cascade2.farPlane.p3 = DirectX::XMFLOAT3(-cascase23X, -cascase23Y, cascase23Z);
-	cascade2.farPlane.p4 = DirectX::XMFLOAT3(cascase23X, -cascase23Y, cascase23Z);
-
-	Cascade cascade3;
-	cascade3.nearPlane.p1 = DirectX::XMFLOAT3(cascase23X, cascase23Y, cascase23Z);
-	cascade3.nearPlane.p2 = DirectX::XMFLOAT3(-cascase23X, cascase23Y, cascase23Z);
-	cascade3.nearPlane.p3 = DirectX::XMFLOAT3(-cascase23X, -cascase23Y, cascase23Z);
-	cascade3.nearPlane.p4 = DirectX::XMFLOAT3(cascase23X, -cascase23Y, cascase23Z);
-
-	cascade3.farPlane.p1 = DirectX::XMFLOAT3(farX, farY, farZ);
-	cascade3.farPlane.p2 = DirectX::XMFLOAT3(-farX, farY, farZ);
-	cascade3.farPlane.p3 = DirectX::XMFLOAT3(-farX, -farY, farZ);
-	cascade3.farPlane.p4 = DirectX::XMFLOAT3(farX, -farY, farZ);
+	cascade1.points[4] = DirectX::XMFLOAT3(farX, farY, farZ);
+	cascade1.points[5] = DirectX::XMFLOAT3(-farX, farY, farZ);
+	cascade1.points[6] = DirectX::XMFLOAT3(-farX, -farY, farZ);
+	cascade1.points[7] = DirectX::XMFLOAT3(farX, -farY, farZ);
 
 	result[0] = cascade1;
-	if (NUM_CASCADES > 1)
-		result[1] = cascade2;
-	if (NUM_CASCADES > 2)
-		result[2] = cascade3;
 
 	// transform into world
 	for (int i = 0; i < NUM_CASCADES; i++)
@@ -423,54 +345,20 @@ std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCa
 
 		auto viewMx = g_D3D->camera->GetView();
 		auto invertedViewMx = DirectX::XMMatrixInverse(NULL, viewMx);
-
-		DirectX::XMFLOAT4 nearP1F4 = DirectX::XMFLOAT4(cascade.nearPlane.p1.x, cascade.nearPlane.p1.y, cascade.nearPlane.p1.z, 1.f);
-		DirectX::XMFLOAT4 nearP2F4 = DirectX::XMFLOAT4(cascade.nearPlane.p2.x, cascade.nearPlane.p2.y, cascade.nearPlane.p2.z, 1.f);
-		DirectX::XMFLOAT4 nearP3F4 = DirectX::XMFLOAT4(cascade.nearPlane.p3.x, cascade.nearPlane.p3.y, cascade.nearPlane.p3.z, 1.f);
-		DirectX::XMFLOAT4 nearP4F4 = DirectX::XMFLOAT4(cascade.nearPlane.p4.x, cascade.nearPlane.p4.y, cascade.nearPlane.p4.z, 1.f);
-		DirectX::XMFLOAT4 farP1F4 = DirectX::XMFLOAT4(cascade.farPlane.p1.x, cascade.nearPlane.p1.y, cascade.nearPlane.p1.z, 1.f);
-		DirectX::XMFLOAT4 farP2F4 = DirectX::XMFLOAT4(cascade.farPlane.p2.x, cascade.nearPlane.p2.y, cascade.nearPlane.p2.z, 1.f);
-		DirectX::XMFLOAT4 farP3F4 = DirectX::XMFLOAT4(cascade.farPlane.p3.x, cascade.nearPlane.p3.y, cascade.nearPlane.p3.z, 1.f);
-		DirectX::XMFLOAT4 farP4F4 = DirectX::XMFLOAT4(cascade.farPlane.p4.x, cascade.nearPlane.p4.y, cascade.nearPlane.p4.z, 1.f);
-
-		DirectX::XMVECTOR nearP1Vec = DirectX::XMLoadFloat4(&nearP1F4);
-		DirectX::XMVECTOR nearP2Vec = DirectX::XMLoadFloat4(&nearP2F4);
-		DirectX::XMVECTOR nearP3Vec = DirectX::XMLoadFloat4(&nearP3F4);
-		DirectX::XMVECTOR nearP4Vec = DirectX::XMLoadFloat4(&nearP4F4);
-		DirectX::XMVECTOR farP1Vec = DirectX::XMLoadFloat4(&farP1F4);
-		DirectX::XMVECTOR farP2Vec = DirectX::XMLoadFloat4(&farP2F4);
-		DirectX::XMVECTOR farP3Vec = DirectX::XMLoadFloat4(&farP3F4);
-		DirectX::XMVECTOR farP4Vec = DirectX::XMLoadFloat4(&farP4F4);
-
-		nearP1Vec = DirectX::XMVector3Transform(nearP1Vec, invertedViewMx);
-		nearP2Vec = DirectX::XMVector3Transform(nearP2Vec, invertedViewMx);
-		nearP3Vec = DirectX::XMVector3Transform(nearP3Vec, invertedViewMx);
-		nearP4Vec = DirectX::XMVector3Transform(nearP4Vec, invertedViewMx);
-		farP1Vec = DirectX::XMVector3Transform(farP1Vec, invertedViewMx);
-		farP2Vec = DirectX::XMVector3Transform(farP2Vec, invertedViewMx);
-		farP3Vec = DirectX::XMVector3Transform(farP3Vec, invertedViewMx);
-		farP4Vec = DirectX::XMVector3Transform(farP4Vec, invertedViewMx);
-
-		// transfrom into light view space
 		DirectX::XMMATRIX lightViewMx = GetViewMatrix(0);
 
-		nearP1Vec = DirectX::XMVector3Transform(nearP1Vec, lightViewMx);
-		nearP2Vec = DirectX::XMVector3Transform(nearP2Vec, lightViewMx);
-		nearP3Vec = DirectX::XMVector3Transform(nearP3Vec, lightViewMx);
-		nearP4Vec = DirectX::XMVector3Transform(nearP4Vec, lightViewMx);
-		farP1Vec = DirectX::XMVector3Transform(farP1Vec, lightViewMx);
-		farP2Vec = DirectX::XMVector3Transform(farP2Vec, lightViewMx);
-		farP3Vec = DirectX::XMVector3Transform(farP3Vec, lightViewMx);
-		farP4Vec = DirectX::XMVector3Transform(farP4Vec, lightViewMx);
+		DirectX::XMVECTOR vectorPoints[8];
 
-		DirectX::XMStoreFloat3(&(cascade.nearPlane.p1), nearP1Vec);
-		DirectX::XMStoreFloat3(&(cascade.nearPlane.p2), nearP2Vec);
-		DirectX::XMStoreFloat3(&(cascade.nearPlane.p3), nearP3Vec);
-		DirectX::XMStoreFloat3(&(cascade.nearPlane.p4), nearP4Vec);
-		DirectX::XMStoreFloat3(&(cascade.farPlane.p1), farP1Vec);
-		DirectX::XMStoreFloat3(&(cascade.farPlane.p2), farP2Vec);
-		DirectX::XMStoreFloat3(&(cascade.farPlane.p3), farP3Vec);
-		DirectX::XMStoreFloat3(&(cascade.farPlane.p4), farP4Vec);
+		for (int j = 0; j < 8; j++)
+		{
+			vectorPoints[j] = DirectX::XMLoadFloat3(&cascade.points[j]);
+			// transform into world
+			vectorPoints[j] = DirectX::XMVector3Transform(vectorPoints[j], invertedViewMx);
+			// transfrom into light view space
+			vectorPoints[j] = DirectX::XMVector4Transform(vectorPoints[j], lightViewMx);
+
+			DirectX::XMStoreFloat3(&(cascade.points[j]), vectorPoints[j]);
+		}
 	}
 
 	return result;

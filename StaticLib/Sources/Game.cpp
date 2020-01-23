@@ -11,7 +11,7 @@
 namespace Library
 {
 	const UINT Game::DefaultScreenWidth = 1280;
-	const UINT Game::DefaultScreenHeight = 960;
+	const UINT Game::DefaultScreenHeight = 720;
 
 	Game::Game(HINSTANCE instance, const std::wstring& windowClass, const std::wstring& windowTitle, int showCommand)
 		: mInstance(instance), 

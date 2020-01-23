@@ -17,7 +17,7 @@ namespace Library
 	{
 		DirectX::XMFLOAT4 EyePos;
 		DirectX::XMFLOAT4 GlobalAmbient;
-		LightSource Lights[6];
+		LightSource Lights[MAX_LIGHT_SOURCES];
 	};
 
 	class RenderScene

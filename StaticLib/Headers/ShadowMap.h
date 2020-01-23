@@ -6,6 +6,8 @@
 #include <DirectXMath.h>
 #include <vector>
 
+#include "LightSource.h"
+
 struct ID3D11ShaderResourceView;
 struct ID3D11DepthStencilView;
 struct ID3D11InputLayout;
@@ -32,7 +34,8 @@ namespace Library
 
 		void Initialize(int width, int height);
 		void Generate(RenderScene * scene);
-		void SetLightSource(LightSource * light);
+		void SetLightSource(const LightSource * light);
+		void CalcProjections();
 		
 		ID3D11Buffer* GetConstMeshLightBuffer(unsigned int id, unsigned int id2) const;
 		ID3D11Buffer** GetConstMeshLightBufferRef(unsigned int id, unsigned int id2);
@@ -49,8 +52,7 @@ namespace Library
 		};
 		struct Cascade
 		{
-			Plane nearPlane;
-			Plane farPlane;
+			DirectX::XMFLOAT3 points[8];
 		};
 		void CreateInputLayout();
 		void CreateConstLightMeshBuffer();
@@ -59,7 +61,7 @@ namespace Library
 		std::array<Library::ShadowMap::Cascade, NUM_CASCADES> CalcCascades();
 
 		std::string m_vertexShaderName;
-		std::array<LightSource*, MAX_LIGHT_SOURCES> m_lightSource;
+		std::array<LightSource, MAX_LIGHT_SOURCES> m_lightSource;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderRes;
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_shadowMap;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputlayout;
