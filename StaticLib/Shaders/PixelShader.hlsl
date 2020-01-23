@@ -97,28 +97,37 @@ float4 main(PS_INPUT input) : SV_TARGET
             float4 posSM = input.posSM[i][0];
 			posSM.xyz /= posSM.w;
 
-			if (posSM.z < 1.0f && posSM.z > 0.0f)
-			{
-				finalColor.rgb = float3(1.0f,1.0f,1.0f);
-			}
+			//if (posSM.z < 1.0f && posSM.z > 0.0f)
+			//{
+			//	finalColor.rgb = float3(1.0f,1.0f,1.0f);
+			//}
+            
+            if (posSM.x < 0.001f || posSM.x > 0.999f ||
 
-			if (posSM.x > 0.001f && posSM.x < 0.999f)
-			{
-				float pixelDepth = posSM.z;
+                posSM.y < 0.001f || posSM.y > 0.999f ||
 
-                float x = posSM.x / MaxLightOnScene + (float) i / MaxLightOnScene;
-                float y = posSM.y / NumCascades + (float) 0 / NumCascades;
+                posSM.z < 0.001f || posSM.z > 0.999f)
+            {
+                finalColor.rgb = float3(1.0f, 0.0f, 1.0f);
+            }
 
-                float sampledDepth = shadowMap.Sample(DepthMapSampler, float2(x, y)).x;
-				bool isShadowed = pixelDepth < 1.0f && pixelDepth > sampledDepth;
+                if (posSM.x > 0.001f && posSM.x < 0.999f)
+                {
+                    float pixelDepth = posSM.z;
 
-				if (isShadowed)
-				{
-					float3 shadow = ColorShadow * ShadowFactor;
-					finalColor.rgb *= shadow;
-				} 
-			}
-		}
+                    float x = posSM.x / MaxLightOnScene + (float) i / MaxLightOnScene;
+                    float y = posSM.y / NumCascades + (float) 0 / NumCascades;
+
+                    float sampledDepth = shadowMap.Sample(DepthMapSampler, float2(x, y)).x;
+                    bool isShadowed = pixelDepth < 1.0f && pixelDepth > sampledDepth;
+
+                    if (isShadowed)
+                    {
+                        float3 shadow = ColorShadow * ShadowFactor;
+                        finalColor.rgb *= shadow;
+                    }
+                }
+        }
     }
 
 	float shininess = (1.0f - material.roughness);

@@ -277,6 +277,7 @@ void Library::ShadowMap::CalcProjections()
 		}
 
 		DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterRH(minX, maxX, minY, maxY, minZ, maxZ);
+		//DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterRH(-15, 15, -15, 75, 75, 150);
 		DirectX::XMStoreFloat4x4(&m_projection[j], P);
 	}
 }
@@ -312,7 +313,7 @@ std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCa
 	std::array<Library::ShadowMap::Cascade, NUM_CASCADES> result;
 
 	const float nearZ = g_D3D->camera->GetNear();
-	const float farZ = g_D3D->camera->GetFar();
+	const float farZ = 175.f;
 
 	const float vertFovTan = tanf(g_D3D->camera->GetFov() / 2.0f);
 	const float ar = (float)m_width / m_height;
@@ -355,7 +356,7 @@ std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCa
 			// transform into world
 			vectorPoints[j] = DirectX::XMVector3Transform(vectorPoints[j], invertedViewMx);
 			// transfrom into light view space
-			vectorPoints[j] = DirectX::XMVector4Transform(vectorPoints[j], lightViewMx);
+			vectorPoints[j] = DirectX::XMVector3Transform(vectorPoints[j], lightViewMx);
 
 			DirectX::XMStoreFloat3(&(cascade.points[j]), vectorPoints[j]);
 		}
