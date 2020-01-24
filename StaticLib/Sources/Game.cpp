@@ -166,7 +166,7 @@ namespace Library
 			{
 				mesh->Initialize();
 				mesh->Scale(DirectX::XMFLOAT3(1.f, 1.f, 1.f));
-				mesh->Move(DirectX::XMFLOAT3(-20.5f, 66.8f, 76.8f));
+				mesh->Move(DirectX::XMFLOAT3(-20.0f, 66.0f, 76.0f));
 				mesh->SetFlag(Mesh::MeshFlags::UseSpecularReflection);
 				g_D3D->renderScene->AddMesh(std::move(mesh));
 			}

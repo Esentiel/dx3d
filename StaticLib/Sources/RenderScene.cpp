@@ -27,7 +27,7 @@ RenderScene::RenderScene()
 	//m_lights.get()[0].SpotAngle = DirectX::XMConvertToRadians(30.0f);
 
 	m_lights.get()[0].Type = 3;
-	m_lights.get()[0].LightPos = DirectX::XMFLOAT4(-20.5f, 66.8f, 76.8f, 1.0f);
+	m_lights.get()[0].LightPos = DirectX::XMFLOAT4(-20.0f, 66.0f, 76.0f, 1.0f);
 	m_lights.get()[0].LightDir = DirectX::XMFLOAT4(0.21f, -0.69f, -0.83f, 0.0f);
 	m_lights.get()[0].LightPower = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	m_lights.get()[0].ConstantAttenuation = 1.0f;
@@ -78,19 +78,19 @@ const Library::LightSource* Library::RenderScene::GetSceneLights() const
 
 void Library::RenderScene::Update(double d)
 {
-	for (int i = 0; i < MAX_LIGHT_SOURCES; i++)
-	{
-		if (m_lights[i].Type == 1)
-		{
-			m_lights[i].LightDir.x += d*0.01;
-			m_lights[i].LightDir.z -= d*0.01;
-		}
-		else if(m_lights[i].Type == 3)
-		{
-			m_lights[i].LightPos.x *= std::cos(10);
-			m_lights[i].LightPos.y *= std::cos(5);
-		}
-	}
+	//for (int i = 0; i < MAX_LIGHT_SOURCES; i++)
+	//{
+	//	if (m_lights[i].Type == 1)
+	//	{
+	//		m_lights[i].LightDir.x += d*0.01;
+	//		m_lights[i].LightDir.z -= d*0.01;
+	//	}
+	//	else if(m_lights[i].Type == 3)
+	//	{
+	//		m_lights[i].LightPos.x *= std::cos(10);
+	//		m_lights[i].LightPos.y *= std::cos(5);
+	//	}
+	//}
 }
 
 void Library::RenderScene::CreateConstSceneBuffer()

@@ -17,7 +17,7 @@ Camera::Camera(float fov, int width, int height, float nearPlane, float farPlane
 	m_far(farPlane),
 	m_viewDirty(true),
 	m_viewport(new D3D11_VIEWPORT),
-	m_position(DirectX::XMFLOAT3(.0f, 30.f, 40.0f)),
+	m_position(DirectX::XMFLOAT3(-20.0f, 66.0f, 76.0f)),
 	m_look(DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f)),
 	m_up(DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)),
 	m_right(DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f))

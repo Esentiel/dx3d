@@ -236,15 +236,11 @@ void ShadowMap::SetLightSource(const LightSource * light)
 
 		DirectX::XMVECTOR pos;
 		DirectX::XMVECTOR dir = DirectX::XMVector4Normalize((DirectX::XMLoadFloat4(&(m_lightSource[i].LightDir))));
-		if (m_lightSource[i].Type == 1)
-		{
-			pos = DirectX::XMVectorScale(DirectX::XMVectorNegate(DirectX::XMLoadFloat4(&(m_lightSource[i].LightDir))), 100.f);
-		}
-		else
-		{
-			pos = DirectX::XMLoadFloat4(&(m_lightSource[i].LightPos));
-		}
 
+		pos = DirectX::XMLoadFloat4(&(m_lightSource[i].LightPos));
+
+
+		//DirectX::XMVECTOR dirr =  DirectX::XMVectorAdd(pos, dir);
 
 		DirectX::XMMATRIX V = DirectX::XMMatrixLookToRH(pos, dir, DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
 		DirectX::XMStoreFloat4x4(&(m_lightView[i]), V);
@@ -277,7 +273,7 @@ void Library::ShadowMap::CalcProjections()
 		}
 
 		DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterRH(minX, maxX, minY, maxY, minZ, maxZ);
-		//DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterRH(-15, 15, -15, 75, 75, 150);
+		//DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterRH(-55, 55, -55, 55, -55, 55);
 		DirectX::XMStoreFloat4x4(&m_projection[j], P);
 	}
 }
