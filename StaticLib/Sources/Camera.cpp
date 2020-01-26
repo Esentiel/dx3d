@@ -17,10 +17,10 @@ Camera::Camera(float fov, int width, int height, float nearPlane, float farPlane
 	m_far(farPlane),
 	m_viewDirty(true),
 	m_viewport(new D3D11_VIEWPORT),
-	m_position(DirectX::XMFLOAT3(-20.0f, 66.0f, 76.0f)),
+	m_position(DirectX::XMFLOAT3(-20.0f, 60.0f, 70.0f)),
 	m_look(DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f)),
 	m_up(DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)),
-	m_right(DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f))
+	m_right(DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f))
 {
 	CalculateVeiw();
 	UpdateProjection();
@@ -46,7 +46,7 @@ void Camera::UpdateProjection()
 {
 	float aspectRatio = (float)m_width / m_height;
 
-	DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovRH(m_fov, aspectRatio, m_near, m_far);
+	DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovLH(m_fov, aspectRatio, m_near, m_far);
 	DirectX::XMStoreFloat4x4(&m_projection, P);
 }
 
@@ -160,12 +160,12 @@ void Library::Camera::CalculateVeiw()
 
 	// Keep camera's axes orthogonal to each other and of unit length.
 	L = DirectX::XMVector3Normalize(L);
-	U = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(L, R));
+	U = DirectX::XMVectorNegate(DirectX::XMVector3Normalize(DirectX::XMVector3Cross(L, R)));
 
 	// U, L already ortho-normal, so no need to normalize cross product.
-	R = DirectX::XMVector3Cross(U, L);
+	R = DirectX::XMVectorNegate(DirectX::XMVector3Cross(U, L));
 
-	DirectX::XMMATRIX V = DirectX::XMMatrixLookToRH(P, L, U);
+	DirectX::XMMATRIX V = DirectX::XMMatrixLookToLH(P, L, U);
 	DirectX::XMStoreFloat4x4(&m_view, V);
 
 	DirectX::XMStoreFloat3(&m_position, P);

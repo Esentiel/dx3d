@@ -11,6 +11,7 @@
 #include "RenderScene.h"
 #include "Camera.h"
 #include "ShaderManager.h"
+#include "Transformations.h"
 
 using namespace Library;
 
@@ -237,12 +238,20 @@ void ShadowMap::SetLightSource(const LightSource * light)
 		DirectX::XMVECTOR pos;
 		DirectX::XMVECTOR dir = DirectX::XMVector4Normalize((DirectX::XMLoadFloat4(&(m_lightSource[i].LightDir))));
 
-		pos = DirectX::XMLoadFloat4(&(m_lightSource[i].LightPos));
+		if (light[i].Type == 1)
+		{
+			DirectX::XMFLOAT3 posF(0.f, 0.f, 0.f);
+			pos = DirectX::XMLoadFloat3(&posF);
+		}
+		else
+		{
+			pos = DirectX::XMLoadFloat4(&(m_lightSource[i].LightPos));
+		}
 
 
 		//DirectX::XMVECTOR dirr =  DirectX::XMVectorAdd(pos, dir);
 
-		DirectX::XMMATRIX V = DirectX::XMMatrixLookToRH(pos, dir, DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
+		DirectX::XMMATRIX V = DirectX::XMMatrixLookToLH(pos, dir, DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
 		DirectX::XMStoreFloat4x4(&(m_lightView[i]), V);
 	}
 }
@@ -272,7 +281,7 @@ void Library::ShadowMap::CalcProjections()
 			maxZ = max(maxZ, cascade.points[i].z);
 		}
 
-		DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterRH(minX, maxX, minY, maxY, minZ, maxZ);
+		DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterLH(minX, maxX, minY, maxY, minZ, maxZ);
 		//DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterRH(-55, 55, -55, 55, -55, 55);
 		DirectX::XMStoreFloat4x4(&m_projection[j], P);
 	}
@@ -309,7 +318,7 @@ std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCa
 	std::array<Library::ShadowMap::Cascade, NUM_CASCADES> result;
 
 	const float nearZ = g_D3D->camera->GetNear();
-	const float farZ = 175.f;
+	const float farZ = g_D3D->camera->GetFar();
 
 	const float vertFovTan = tanf(g_D3D->camera->GetFov() / 2.0f);
 	const float ar = (float)m_width / m_height;
@@ -341,8 +350,24 @@ std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCa
 		auto &cascade = result[i];
 
 		auto viewMx = g_D3D->camera->GetView();
+
 		auto invertedViewMx = DirectX::XMMatrixInverse(NULL, viewMx);
 		DirectX::XMMATRIX lightViewMx = GetViewMatrix(0);
+
+		if (true)
+		{
+			auto t_position(DirectX::XMFLOAT3(-20.0f, 60.0f, 70.0f));
+			auto t_look(DirectX::XMFLOAT3(0.21f, -0.69f, -0.83f));
+			auto t_up(DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f));
+
+			DirectX::XMVECTOR U = DirectX::XMLoadFloat3(&t_up);
+			DirectX::XMVECTOR L = DirectX::XMLoadFloat3(&t_look);
+			DirectX::XMVECTOR P = DirectX::XMLoadFloat3(&t_position);
+
+			DirectX::XMMATRIX V = DirectX::XMMatrixLookToLH(P, L, U);
+
+			//lightViewMx = V;
+		}
 
 		DirectX::XMVECTOR vectorPoints[8];
 

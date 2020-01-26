@@ -205,8 +205,8 @@ namespace Library
 			float dx = DirectX::XMConvertToRadians(0.25f*static_cast<float>(x - m_mouseLastX));
 			float dy = DirectX::XMConvertToRadians(0.25f*static_cast<float>(y - m_mouseLastY));
 
-			g_D3D->camera->Pitch(dy);
-			g_D3D->camera->RotateY(-dx);
+			g_D3D->camera->Pitch(-dy);
+			g_D3D->camera->RotateY(dx);
 		}
 
 		m_mouseLastX = x;

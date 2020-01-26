@@ -97,19 +97,19 @@ float4 main(PS_INPUT input) : SV_TARGET
             float4 posSM = input.posSM[i][0];
 			posSM.xyz /= posSM.w;
 
-			//if (posSM.z < 1.0f && posSM.z > 0.0f)
-			//{
-			//	finalColor.rgb = float3(1.0f,1.0f,1.0f);
-			//}
-            
-            if (posSM.x < 0.001f || posSM.x > 0.999f ||
-
-                posSM.y < 0.001f || posSM.y > 0.999f ||
-
-                posSM.z < 0.001f || posSM.z > 0.999f)
+            if (posSM.z < 1.0f && posSM.z > 0.0f)
             {
-                finalColor.rgb = float3(1.0f, 0.0f, 1.0f);
+                finalColor.rgb = float3(1.0f, 1.0f, 1.0f);
             }
+            
+            //if (posSM.x < 0.001f || posSM.x > 0.999f ||
+
+            //    posSM.y < 0.001f || posSM.y > 0.999f ||
+
+            //    posSM.z < 0.001f || posSM.z > 0.999f)
+            //{
+            //    finalColor.rgb = float3(1.0f, 0.0f, 1.0f);
+            //}
 
                 if (posSM.x > 0.001f && posSM.x < 0.999f)
                 {
