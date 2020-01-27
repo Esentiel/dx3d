@@ -27,8 +27,8 @@ RenderScene::RenderScene()
 	m_lights.get()[0].SpotAngle = DirectX::XMConvertToRadians(30.0f);*/
 
 	m_lights.get()[0].Type = 3;
-	m_lights.get()[0].LightPos = DirectX::XMFLOAT4(-20.0f, 60.0f, 70.0f, 1.0f);
-	m_lights.get()[0].LightDir = DirectX::XMFLOAT4(0.21f, -0.69f, -0.83f, 0.0f);
+	m_lights.get()[0].LightPos = DirectX::XMFLOAT4(-20.0f, 60.0f, -70.0f, 1.0f);
+	m_lights.get()[0].LightDir = DirectX::XMFLOAT4(0.21f, -0.69f, 0.83f, 0.0f);
 	m_lights.get()[0].LightPower = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	m_lights.get()[0].ConstantAttenuation = 1.0f;
 	m_lights.get()[0].LinearAttenuation = 0.01f;

@@ -205,7 +205,7 @@ namespace Library
 			float dx = DirectX::XMConvertToRadians(0.25f*static_cast<float>(x - m_mouseLastX));
 			float dy = DirectX::XMConvertToRadians(0.25f*static_cast<float>(y - m_mouseLastY));
 
-			g_D3D->camera->Pitch(-dy);
+			g_D3D->camera->Pitch(dy);
 			g_D3D->camera->RotateY(dx);
 		}
 
@@ -287,10 +287,10 @@ namespace Library
 			g_D3D->camera->Walk(-10.0f*dt);
 
 		if (GetAsyncKeyState('A') & 0x8000)
-			g_D3D->camera->Strafe(10.0f*dt);
+			g_D3D->camera->Strafe(-10.0f*dt);
 
 		if (GetAsyncKeyState('D') & 0x8000)
-			g_D3D->camera->Strafe(-10.0f*dt);
+			g_D3D->camera->Strafe(10.0f*dt);
 
 		g_D3D->camera->UpdateViewMatrix();
 	}
