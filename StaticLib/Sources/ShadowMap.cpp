@@ -249,7 +249,6 @@ void ShadowMap::SetLightSource(const LightSource * light)
 		}
 
 
-		//DirectX::XMVECTOR dirr =  DirectX::XMVectorAdd(pos, dir);
 
 		DirectX::XMMATRIX V = DirectX::XMMatrixLookToLH(pos, dir, DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f));
 		DirectX::XMStoreFloat4x4(&(m_lightView[i]), V);
@@ -353,21 +352,6 @@ std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCa
 
 		auto invertedViewMx = DirectX::XMMatrixInverse(NULL, viewMx);
 		DirectX::XMMATRIX lightViewMx = GetViewMatrix(0);
-
-		if (true)
-		{
-			auto t_position(DirectX::XMFLOAT3(-20.0f, 60.0f, 70.0f));
-			auto t_look(DirectX::XMFLOAT3(0.21f, -0.69f, -0.83f));
-			auto t_up(DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f));
-
-			DirectX::XMVECTOR U = DirectX::XMLoadFloat3(&t_up);
-			DirectX::XMVECTOR L = DirectX::XMLoadFloat3(&t_look);
-			DirectX::XMVECTOR P = DirectX::XMLoadFloat3(&t_position);
-
-			DirectX::XMMATRIX V = DirectX::XMMatrixLookToLH(P, L, U);
-
-			//lightViewMx = V;
-		}
 
 		DirectX::XMVECTOR vectorPoints[8];
 

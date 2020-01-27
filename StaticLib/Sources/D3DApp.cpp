@@ -285,7 +285,7 @@ void D3DApp::Initialize()
 
 	// camera
 	float fov = DirectX::XMConvertToRadians(60.f);
-	m_camera.reset(new Camera(fov, m_width, m_height, 1.f, 250.0f));
+	m_camera.reset(new Camera(fov, m_width, m_height, 0.1f, 250.0f));
 	g_D3D->camera = m_camera.get();
 
 	// scene
