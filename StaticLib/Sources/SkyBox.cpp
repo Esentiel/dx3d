@@ -59,8 +59,9 @@ void Library::SkyBox::Draw(RenderScene * renderScene) // TODO: rewrite to use Me
 	// draw sphere
 	// update mesh cb
 	MeshCB meshCb;
-	DirectX::XMStoreFloat4x4(&meshCb.ViewProj, g_D3D->camera->GetView() * g_D3D->camera->GetProjection());
-	DirectX::XMStoreFloat4x4(&meshCb.World, m_transformations->GetModel());
+	DirectX::XMStoreFloat4x4(&meshCb.Model, m_transformations->GetModel());
+	DirectX::XMStoreFloat4x4(&meshCb.View, g_D3D->camera->GetView());
+	DirectX::XMStoreFloat4x4(&meshCb.Projection, g_D3D->camera->GetProjection());
 
 	g_D3D->deviceCtx->UpdateSubresource(m_constMeshBuffer.Get(), 0, nullptr, &meshCb, 0, 0);
 

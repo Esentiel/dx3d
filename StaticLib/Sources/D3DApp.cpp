@@ -401,8 +401,9 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	mProjectedTextureScalingMatrix._44 = 1.0f;
 
 	MeshCB meshCb;
-	DirectX::XMStoreFloat4x4(&meshCb.WorldViewProj, mesh->GetModelTransform() * m_camera->GetView() * m_camera->GetProjection());
-	DirectX::XMStoreFloat4x4(&meshCb.World, mesh->GetModelTransform());
+	DirectX::XMStoreFloat4x4(&meshCb.Model, mesh->GetModelTransform());
+	DirectX::XMStoreFloat4x4(&meshCb.View, m_camera->GetView());
+	DirectX::XMStoreFloat4x4(&meshCb.Projection, m_camera->GetProjection());
 	
 	meshCb.MaterialInstance.Emissive = DirectX::XMFLOAT4(0.f, 0.f, 0.f, 0.f);
 	meshCb.MaterialInstance.Ambient = DirectX::XMFLOAT4(0.8f, 0.8f, 0.8f, 1.f);
@@ -416,12 +417,15 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	m_deviceCtx->UpdateSubresource(mesh->GetConstMeshBuffer(), 0, nullptr, &meshCb, 0, 0);
 
 	ShadowMap::SMCB meshSM;
+	memcpy(meshSM.limits, m_shadowMap->GetLimits(), sizeof(float) * NUM_CASCADES);
 	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
 		for (unsigned int j = 0; j < NUM_CASCADES; j++)
 		{
-			DirectX::XMStoreFloat4x4(&(meshSM.shadowMapVP[i][j]), mesh->GetModelTransform() * m_shadowMap->GetViewMatrix(i) * m_shadowMap->GetProjection(j) * DirectX::XMLoadFloat4x4(&mProjectedTextureScalingMatrix));
+			DirectX::XMStoreFloat4x4(&(meshSM.shadowMapProj[i][j]), m_shadowMap->GetProjection(j) * DirectX::XMLoadFloat4x4(&mProjectedTextureScalingMatrix));
+			
 		}
+		DirectX::XMStoreFloat4x4(&(meshSM.shadowMapView[i]), m_shadowMap->GetViewMatrix(i));
 	}
 	m_deviceCtx->UpdateSubresource(m_shadowMap->GetConstMeshBuffer(), 0, nullptr, &meshSM, 0, 0);
 
@@ -438,7 +442,6 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 	m_deviceCtx->VSSetShader(vs, NULL, 0); //todo: mocking: ASSUMPTION: we use same vs for each
 	m_deviceCtx->VSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
 	m_deviceCtx->VSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());
-	m_deviceCtx->VSSetConstantBuffers(2, 1, m_shadowMap->GetConstMeshBufferRef());
 
 	// PS
 	ID3D11PixelShader* ps = m_shaderManager->GetPixelShader(mesh->GetPixelShader());
@@ -456,6 +459,7 @@ void Library::D3DApp::DrawMesh(Mesh* mesh)
 		g_D3D->deviceCtx->PSSetShaderResources(3, 1, pSRV);
 	m_deviceCtx->PSSetConstantBuffers(0, 1, mesh->GetConstMeshBufferRef());
 	m_deviceCtx->PSSetConstantBuffers(1, 1, m_renderScene->GetConstSceneBufferRef());
+	m_deviceCtx->PSSetConstantBuffers(2, 1, m_shadowMap->GetConstMeshBufferRef());
 
 	// draw call
 	m_deviceCtx->DrawIndexed(mesh->GetIndexCount(), 0, 0);

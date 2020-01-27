@@ -26,8 +26,11 @@ namespace Library
 	public:
 		struct SMCB
 		{
-			DirectX::XMFLOAT4X4 shadowMapVP[MAX_LIGHT_SOURCES][NUM_CASCADES];
+			DirectX::XMFLOAT4X4 shadowMapProj[MAX_LIGHT_SOURCES][NUM_CASCADES];
+			DirectX::XMFLOAT4X4 shadowMapView[MAX_LIGHT_SOURCES];
+			float limits[4];
 		};
+		const float* GetLimits() const;
 	public:
 		ShadowMap();
 		~ShadowMap();
@@ -46,13 +49,9 @@ namespace Library
 		ID3D11Buffer* GetConstMeshBuffer() const;
 		ID3D11Buffer** GetConstMeshBufferRef();
 	private:
-		struct Plane
-		{
-			DirectX::XMFLOAT3 p1, p2, p3, p4; // p1 = right-top, p2 = left-top, p3=bottom-left, p4=bottom-right
-		};
 		struct Cascade
 		{
-			DirectX::XMFLOAT3 points[8];
+			DirectX::XMFLOAT3 points[8]; // p1 = right-top, p2 = left-top, p3=bottom-left, p4=bottom-right
 		};
 		void CreateInputLayout();
 		void CreateConstLightMeshBuffer();
@@ -72,6 +71,7 @@ namespace Library
 		DirectX::XMFLOAT4X4 m_projection[NUM_CASCADES];
 		std::unique_ptr<D3D11_VIEWPORT> m_viewport;
 
+		float m_cascadeLimits[NUM_CASCADES];
 		int m_width;
 		int m_height;
 	};

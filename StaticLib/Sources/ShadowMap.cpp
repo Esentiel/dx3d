@@ -260,6 +260,11 @@ const DirectX::XMMATRIX ShadowMap::GetViewMatrix(unsigned int id)
 	return DirectX::XMLoadFloat4x4(&(m_lightView[id]));
 }
 
+const float* Library::ShadowMap::GetLimits() const
+{
+	return m_cascadeLimits;
+}
+
 void Library::ShadowMap::CalcProjections()
 {
 	// calc cascades
@@ -316,42 +321,39 @@ std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCa
 {
 	std::array<Library::ShadowMap::Cascade, NUM_CASCADES> result;
 
-	const float nearZ = g_D3D->camera->GetNear();
-	const float farZ = g_D3D->camera->GetFar();
+	const float nearestZ = g_D3D->camera->GetNear();
+	const float farestZ = g_D3D->camera->GetFar();
 
 	const float vertFovTan = tanf(g_D3D->camera->GetFov() / 2.0f);
 	const float ar = (float)m_width / m_height;
 	const float horFovTan = vertFovTan * ar;
 
-	// calc x and y
-	const float nearX = nearZ * horFovTan;
-	const float nearY = nearZ * vertFovTan;
-	const float farX = farZ * horFovTan;
-	const float farY = farZ * vertFovTan;
+	auto viewMx = g_D3D->camera->GetView();
+	auto invertedViewMx = DirectX::XMMatrixInverse(NULL, viewMx);
+	DirectX::XMMATRIX lightViewMx = GetViewMatrix(0); // TODO: assume we got a single light source
 
-	// cascades
-	Cascade cascade1;
-	cascade1.points[0] = DirectX::XMFLOAT3(nearX, nearY, nearZ);
-	cascade1.points[1] = DirectX::XMFLOAT3(-nearX, nearY, nearZ);
-	cascade1.points[2] = DirectX::XMFLOAT3(-nearX, -nearY, nearZ);
-	cascade1.points[3] = DirectX::XMFLOAT3(nearX, -nearY, nearZ);
-
-	cascade1.points[4] = DirectX::XMFLOAT3(farX, farY, farZ);
-	cascade1.points[5] = DirectX::XMFLOAT3(-farX, farY, farZ);
-	cascade1.points[6] = DirectX::XMFLOAT3(-farX, -farY, farZ);
-	cascade1.points[7] = DirectX::XMFLOAT3(farX, -farY, farZ);
-
-	result[0] = cascade1;
-
+	float nearZ = nearestZ;
+	float farZ = (farestZ - nearestZ) * 0.15f + nearZ; // 15% - 35% - 50%
 	// transform into world
 	for (int i = 0; i < NUM_CASCADES; i++)
 	{
-		auto &cascade = result[i];
+		// calc x and y
+		const float nearX = nearZ * horFovTan;
+		const float nearY = nearZ * vertFovTan;
+		const float farX = farZ * horFovTan;
+		const float farY = farZ * vertFovTan;
 
-		auto viewMx = g_D3D->camera->GetView();
+		// cascades
+		Cascade cascade;
+		cascade.points[0] = DirectX::XMFLOAT3(nearX, nearY, nearZ);
+		cascade.points[1] = DirectX::XMFLOAT3(-nearX, nearY, nearZ);
+		cascade.points[2] = DirectX::XMFLOAT3(-nearX, -nearY, nearZ);
+		cascade.points[3] = DirectX::XMFLOAT3(nearX, -nearY, nearZ);
 
-		auto invertedViewMx = DirectX::XMMatrixInverse(NULL, viewMx);
-		DirectX::XMMATRIX lightViewMx = GetViewMatrix(0);
+		cascade.points[4] = DirectX::XMFLOAT3(farX, farY, farZ);
+		cascade.points[5] = DirectX::XMFLOAT3(-farX, farY, farZ);
+		cascade.points[6] = DirectX::XMFLOAT3(-farX, -farY, farZ);
+		cascade.points[7] = DirectX::XMFLOAT3(farX, -farY, farZ);
 
 		DirectX::XMVECTOR vectorPoints[8];
 
@@ -364,6 +366,21 @@ std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCa
 			vectorPoints[j] = DirectX::XMVector3Transform(vectorPoints[j], lightViewMx);
 
 			DirectX::XMStoreFloat3(&(cascade.points[j]), vectorPoints[j]);
+		}
+
+		result[i] = cascade;
+
+		m_cascadeLimits[i] = farZ;
+
+		if (i == 0)
+		{
+			nearZ = farZ;
+			farZ = (farestZ - nearestZ) * 0.5f + nearZ; // 15% - 35% - 50%
+		}
+		else if (i == 1)
+		{
+			nearZ = farZ;
+			farZ = farestZ; // 15% - 35% - 50%
 		}
 	}
 

@@ -2,14 +2,10 @@
 
 cbuffer MVPbuffer : register(b0)
 {
-    float4x4 mvp;
-    float4x4 world;
-    float4x4 viewProj;
-    float4x4 shadowMapMatrix;
-    float diffuseIntensity;
-    float emissiveK;
-    float ambientK;
-    float roughness;
+    float4x4 model; // 64 
+    float4x4 view; // 64
+    float4x4 projection; // 64
+    Material material; // 80
 }
 
 cbuffer PerScene : register(b1)
@@ -35,12 +31,13 @@ VS_OUT main(VS_IN input)
 
     output.posL = input.position;
 
-    float4 posW = mul(float4(input.position, 1.f), world);
+    float4 posW = mul(float4(input.position, 1.f), model);
 
     // Always center sky about camera.
     posW.xyz += eyePos;
 
     // Set z = w so that z/w = 1 (i.e., skydome always on far plane).
+    float4x4 viewProj = mul(view, projection);
     output.projPos = mul(posW, viewProj).xyww;
 
     return output;

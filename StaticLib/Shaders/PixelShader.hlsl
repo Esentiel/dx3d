@@ -13,11 +13,10 @@ SamplerState ObjSamplerState : register(s2);
 
 cbuffer MVPbuffer : register(b0)
 {
-    float4x4 mvp; // 16x4 
-    float4x4 world; // 16x4
-	float4x4 viewProj; // 16x4
-    float4x4 shadowMapMatrix; // 16x4
-	Material material; // 80
+    float4x4 model; // 64 
+    float4x4 view; // 64
+    float4x4 projection; // 64
+    Material material; // 80
 }
 
 cbuffer PerScene : register(b1)
@@ -27,6 +26,14 @@ cbuffer PerScene : register(b1)
     LightSource lightS[MaxLightOnScene]; // 64x6
 }
 
+cbuffer ShadowMapVP : register(b2)
+{
+    float4x4 shadowMapProj[MaxLightOnScene][NumCascades]; // NumCascades
+    float4x4 shadowMapView[MaxLightOnScene]; // NumCascades
+    float4 limits;
+}
+
+
 struct PS_INPUT
 {
 	float2 textCoord : TEXCOORD0;
@@ -34,8 +41,8 @@ struct PS_INPUT
     float3 tangentsW : TANGENTS0;
     float3 bitangentsW : BITANGENTS0;
     float3 posW : POSITION0;
-    float4 posSM[MaxLightOnScene][NumCascades] : POSITION1; // NumCascades
 };
+
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
@@ -86,47 +93,59 @@ float4 main(PS_INPUT input) : SV_TARGET
 	// shadows
 	for (int i = 0; i < MaxLightOnScene; i++)
 	{
-        // select correct cascade
-        //
+        float4 viewPos = mul(float4(input.posW, 1.0), view);
         
-		if (input.posSM[i][0].w >= 0.0f)
+        // select correct cascade
+        uint cascadeIdx;
+        for (uint j = 0; j < NumCascades; j++)
+        {
+            if (abs(viewPos.z) < limits[j])
+            {
+                cascadeIdx = j;
+                break;
+            }
+        }
+        
+        float4x4 shadowViewProj = mul(shadowMapView[i], shadowMapProj[i][cascadeIdx]);
+        
+        float4 SMposFinal = mul(float4(input.posW, 1.0), shadowViewProj);
+        
+        if (SMposFinal.w >= 0.0f)
 		{
 			if (lightS[i].type == 0)
-				continue;
-
-            float4 posSM = input.posSM[i][0];
-			posSM.xyz /= posSM.w;
-
-            /*if (posSM.z < 1.0f && posSM.z > 0.0f)
-            {
-                finalColor.rgb = float3(1.0f, 1.0f, 1.0f);
-            }*/
+				continue;    
             
-            if (posSM.x < 0.001f || posSM.x > 0.999f ||
+            SMposFinal.xyz /= SMposFinal.w;
 
-                posSM.y < 0.001f || posSM.y > 0.999f ||
-
-                posSM.z < 0.001f || posSM.z > 0.999f)
+            if (cascadeIdx == 0)
             {
-                finalColor.rgb = float3(1.0f, 0.0f, 1.0f);
+                finalColor.rgb *= float3(1.5, 1.0, 1.0);
             }
+            else if (cascadeIdx == 1)
+            {
+                finalColor.rgb *= float3(1.0, 1.5, 1.0);
+            }
+            else if (cascadeIdx == 2)
+            {
+                finalColor.rgb *= float3(1.0, 1.0, 1.5);
+            }
+            
+            if (SMposFinal.x > 0.001f && SMposFinal.x < 0.999f)
+            {
+                float pixelDepth = SMposFinal.z;
 
-                if (posSM.x > 0.001f && posSM.x < 0.999f)
+                float x = SMposFinal.x / MaxLightOnScene + (float) i / MaxLightOnScene;
+                float y = SMposFinal.y / NumCascades + (float) cascadeIdx / NumCascades;
+
+                float sampledDepth = shadowMap.Sample(DepthMapSampler, float2(x, y)).x;
+                bool isShadowed = pixelDepth < 1.0f && pixelDepth > sampledDepth;
+
+                if (isShadowed)
                 {
-                    float pixelDepth = posSM.z;
-
-                    float x = posSM.x / MaxLightOnScene + (float) i / MaxLightOnScene;
-                    float y = posSM.y / NumCascades + (float) 0 / NumCascades;
-
-                    float sampledDepth = shadowMap.Sample(DepthMapSampler, float2(x, y)).x;
-                    bool isShadowed = pixelDepth < 1.0f && pixelDepth > sampledDepth;
-
-                    if (isShadowed)
-                    {
-                        float3 shadow = ColorShadow * ShadowFactor;
-                        finalColor.rgb *= shadow;
-                    }
+                    float3 shadow = ColorShadow * ShadowFactor;
+                    finalColor.rgb *= shadow;
                 }
+            }
         }
     }
 

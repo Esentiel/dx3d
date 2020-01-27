@@ -16,10 +16,9 @@ namespace Library
 {
 	struct MeshCB
 	{
-		DirectX::XMFLOAT4X4 WorldViewProj;
-		DirectX::XMFLOAT4X4 World;
-		DirectX::XMFLOAT4X4 ViewProj;
-		DirectX::XMFLOAT4X4 ShadowMapMatrix;
+		DirectX::XMFLOAT4X4 Model;
+		DirectX::XMFLOAT4X4 View;
+		DirectX::XMFLOAT4X4 Projection;
 		Material MaterialInstance;
 	};
 
