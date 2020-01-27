@@ -308,7 +308,7 @@ void Library::ShadowMap::CreateRasterState()
 	rasterizerState.DepthBiasClamp = 0.f;
 	rasterizerState.SlopeScaledDepthBias = 1.f;
 	rasterizerState.ScissorEnable = true;
-	rasterizerState.DepthClipEnable = true;
+	rasterizerState.DepthClipEnable = false;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
 
