@@ -28,9 +28,9 @@ namespace Library
 		{
 			DirectX::XMFLOAT4X4 shadowMapProj[MAX_LIGHT_SOURCES][NUM_CASCADES];
 			DirectX::XMFLOAT4X4 shadowMapView[MAX_LIGHT_SOURCES];
-			float limits[4];
+			float limits[2][4];
 		};
-		const float* GetLimits() const;
+		const float* GetLimits(int lightIdx) const;
 	public:
 		ShadowMap();
 		~ShadowMap();
@@ -43,7 +43,7 @@ namespace Library
 		ID3D11Buffer* GetConstMeshLightBuffer(unsigned int id, unsigned int id2) const;
 		ID3D11Buffer** GetConstMeshLightBufferRef(unsigned int id, unsigned int id2);
 		const DirectX::XMMATRIX GetViewMatrix(unsigned int id);
-		virtual const DirectX::XMMATRIX GetProjection(unsigned int id) const;
+		virtual const DirectX::XMMATRIX GetProjection(unsigned int lightIdx, unsigned int cascadeIdx) const;
 		ID3D11ShaderResourceView** GetShadowMapRef();
 
 		ID3D11Buffer* GetConstMeshBuffer() const;
@@ -57,7 +57,7 @@ namespace Library
 		void CreateConstLightMeshBuffer();
 		void CreateConstMeshBuffer();
 		void CreateRasterState();
-		std::array<Library::ShadowMap::Cascade, NUM_CASCADES> CalcCascades();
+		std::array<std::array<Library::ShadowMap::Cascade, NUM_CASCADES>, MAX_LIGHT_SOURCES> CalcCascades();
 
 		std::string m_vertexShaderName;
 		std::array<LightSource, MAX_LIGHT_SOURCES> m_lightSource;
@@ -68,10 +68,10 @@ namespace Library
 		Microsoft::WRL::ComPtr <ID3D11RasterizerState> m_rasterState;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_constMeshBuffer;
 		std::array<DirectX::XMFLOAT4X4, MAX_LIGHT_SOURCES> m_lightView;
-		DirectX::XMFLOAT4X4 m_projection[NUM_CASCADES];
+		DirectX::XMFLOAT4X4 m_projection[MAX_LIGHT_SOURCES][NUM_CASCADES];
 		std::unique_ptr<D3D11_VIEWPORT> m_viewport;
 
-		float m_cascadeLimits[NUM_CASCADES];
+		float m_cascadeLimits[MAX_LIGHT_SOURCES][NUM_CASCADES];
 		int m_width;
 		int m_height;
 	};

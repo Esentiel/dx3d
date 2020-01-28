@@ -141,7 +141,7 @@ void ShadowMap::Generate(RenderScene * scene)
 
 				// update mesh cb
 				MeshLightCB meshCb;
-				DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, mesh->GetModelTransform() * GetViewMatrix(i) * GetProjection(j));
+				DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, mesh->GetModelTransform() * GetViewMatrix(i) * GetProjection(i, j));
 
 				g_D3D->deviceCtx->UpdateSubresource(GetConstMeshLightBuffer(i, j), 0, nullptr, &meshCb, 0, 0);
 
@@ -260,9 +260,9 @@ const DirectX::XMMATRIX ShadowMap::GetViewMatrix(unsigned int id)
 	return DirectX::XMLoadFloat4x4(&(m_lightView[id]));
 }
 
-const float* Library::ShadowMap::GetLimits() const
+const float* Library::ShadowMap::GetLimits(int lightIdx) const
 {
-	return m_cascadeLimits;
+	return m_cascadeLimits[lightIdx];
 }
 
 void Library::ShadowMap::CalcProjections()
@@ -270,31 +270,35 @@ void Library::ShadowMap::CalcProjections()
 	// calc cascades
 	auto cascades = CalcCascades();
 
-	for (int j = 0; j < NUM_CASCADES; j++)
+	for (int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
-		const Cascade cascade = cascades[j];
-		float minX = cascade.points[0].x, minY = cascade.points[0].y, maxX = cascade.points[0].x, maxY = cascade.points[0].y, minZ = cascade.points[0].z, maxZ = cascade.points[0].z;
-
-		for (int i = 0; i < 8; i++)
+		auto cascadesPerLight = cascades[i];
+		for (int j = 0; j < NUM_CASCADES; j++)
 		{
-			minX = min(minX, cascade.points[i].x);
-			minY = min(minY, cascade.points[i].y);
-			minZ = min(minZ, cascade.points[i].z);
-			maxX = max(maxX, cascade.points[i].x);
-			maxY = max(maxY, cascade.points[i].y);
-			maxZ = max(maxZ, cascade.points[i].z);
-		}
+			const Cascade cascade = cascadesPerLight[j];
+			float minX = cascade.points[0].x, minY = cascade.points[0].y, maxX = cascade.points[0].x, maxY = cascade.points[0].y, minZ = cascade.points[0].z, maxZ = cascade.points[0].z;
 
-		DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterLH(minX, maxX, minY, maxY, minZ, maxZ);
-		//DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterRH(-55, 55, -55, 55, -55, 55);
-		DirectX::XMStoreFloat4x4(&m_projection[j], P);
+			for (int i = 0; i < 8; i++)
+			{
+				minX = min(minX, cascade.points[i].x);
+				minY = min(minY, cascade.points[i].y);
+				minZ = min(minZ, cascade.points[i].z);
+				maxX = max(maxX, cascade.points[i].x);
+				maxY = max(maxY, cascade.points[i].y);
+				maxZ = max(maxZ, cascade.points[i].z);
+			}
+
+			DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterLH(minX, maxX, minY, maxY, minZ, maxZ);
+			DirectX::XMStoreFloat4x4(&m_projection[i][j], P);
+		}
 	}
 }
 
-const DirectX::XMMATRIX Library::ShadowMap::GetProjection(unsigned int id) const
+const DirectX::XMMATRIX Library::ShadowMap::GetProjection(unsigned int lightIdx, unsigned int cascadeIdx) const
 {
-	assert(id < NUM_CASCADES);
-	return DirectX::XMLoadFloat4x4(&m_projection[id]);
+	assert(lightIdx < MAX_LIGHT_SOURCES);
+	assert(cascadeIdx < NUM_CASCADES);
+	return DirectX::XMLoadFloat4x4(&m_projection[lightIdx][cascadeIdx]);
 }
 
 ID3D11ShaderResourceView** Library::ShadowMap::GetShadowMapRef()
@@ -317,9 +321,9 @@ void Library::ShadowMap::CreateRasterState()
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
 
-std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCascades()
+std::array<std::array<Library::ShadowMap::Cascade, NUM_CASCADES>, MAX_LIGHT_SOURCES> Library::ShadowMap::CalcCascades()
 {
-	std::array<Library::ShadowMap::Cascade, NUM_CASCADES> result;
+	std::array<std::array<Library::ShadowMap::Cascade, NUM_CASCADES>, MAX_LIGHT_SOURCES> result;
 
 	const float nearestZ = g_D3D->camera->GetNear();
 	const float farestZ = g_D3D->camera->GetFar();
@@ -330,57 +334,60 @@ std::array<Library::ShadowMap::Cascade, NUM_CASCADES> Library::ShadowMap::CalcCa
 
 	auto viewMx = g_D3D->camera->GetView();
 	auto invertedViewMx = DirectX::XMMatrixInverse(NULL, viewMx);
-	DirectX::XMMATRIX lightViewMx = GetViewMatrix(0); // TODO: assume we got a single light source
 
-	float nearZ = nearestZ;
-	float farZ = (farestZ - nearestZ) * 0.15f + nearZ; // 15% - 35% - 50%
-	// transform into world
-	for (int i = 0; i < NUM_CASCADES; i++)
+	for (int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
-		// calc x and y
-		const float nearX = nearZ * horFovTan;
-		const float nearY = nearZ * vertFovTan;
-		const float farX = farZ * horFovTan;
-		const float farY = farZ * vertFovTan;
+		DirectX::XMMATRIX lightViewMx = GetViewMatrix(i); // TODO: assume we got a single light source
 
-		// cascades
-		Cascade cascade;
-		cascade.points[0] = DirectX::XMFLOAT3(nearX, nearY, nearZ);
-		cascade.points[1] = DirectX::XMFLOAT3(-nearX, nearY, nearZ);
-		cascade.points[2] = DirectX::XMFLOAT3(-nearX, -nearY, nearZ);
-		cascade.points[3] = DirectX::XMFLOAT3(nearX, -nearY, nearZ);
-
-		cascade.points[4] = DirectX::XMFLOAT3(farX, farY, farZ);
-		cascade.points[5] = DirectX::XMFLOAT3(-farX, farY, farZ);
-		cascade.points[6] = DirectX::XMFLOAT3(-farX, -farY, farZ);
-		cascade.points[7] = DirectX::XMFLOAT3(farX, -farY, farZ);
-
-		DirectX::XMVECTOR vectorPoints[8];
-
-		for (int j = 0; j < 8; j++)
+		float nearZ = nearestZ;
+		float farZ = (farestZ - nearestZ) * 0.15f + nearZ; // 15% - 25% - 60%
+		// transform into world
+		for (int j = 0; j < NUM_CASCADES; j++)
 		{
-			vectorPoints[j] = DirectX::XMLoadFloat3(&cascade.points[j]);
-			// transform into world
-			vectorPoints[j] = DirectX::XMVector3Transform(vectorPoints[j], invertedViewMx);
-			// transfrom into light view space
-			vectorPoints[j] = DirectX::XMVector3Transform(vectorPoints[j], lightViewMx);
+			// calc x and y
+			const float nearX = nearZ * horFovTan;
+			const float nearY = nearZ * vertFovTan;
+			const float farX = farZ * horFovTan;
+			const float farY = farZ * vertFovTan;
 
-			DirectX::XMStoreFloat3(&(cascade.points[j]), vectorPoints[j]);
-		}
+			// cascades
+			Cascade cascade;
+			cascade.points[0] = DirectX::XMFLOAT3(nearX, nearY, nearZ);
+			cascade.points[1] = DirectX::XMFLOAT3(-nearX, nearY, nearZ);
+			cascade.points[2] = DirectX::XMFLOAT3(-nearX, -nearY, nearZ);
+			cascade.points[3] = DirectX::XMFLOAT3(nearX, -nearY, nearZ);
 
-		result[i] = cascade;
+			cascade.points[4] = DirectX::XMFLOAT3(farX, farY, farZ);
+			cascade.points[5] = DirectX::XMFLOAT3(-farX, farY, farZ);
+			cascade.points[6] = DirectX::XMFLOAT3(-farX, -farY, farZ);
+			cascade.points[7] = DirectX::XMFLOAT3(farX, -farY, farZ);
 
-		m_cascadeLimits[i] = farZ;
+			DirectX::XMVECTOR vectorPoints[8];
 
-		if (i == 0)
-		{
-			nearZ = farZ;
-			farZ = (farestZ - nearestZ) * 0.5f + nearZ; // 15% - 35% - 50%
-		}
-		else if (i == 1)
-		{
-			nearZ = farZ;
-			farZ = farestZ; // 15% - 35% - 50%
+			for (int k = 0; k < 8; k++)
+			{
+				vectorPoints[k] = DirectX::XMLoadFloat3(&cascade.points[k]);
+				// transform into world
+				vectorPoints[k] = DirectX::XMVector3Transform(vectorPoints[k], invertedViewMx);
+				// transfrom into light view space
+				vectorPoints[k] = DirectX::XMVector3Transform(vectorPoints[k], lightViewMx);
+
+				DirectX::XMStoreFloat3(&(cascade.points[k]), vectorPoints[k]);
+			}
+
+			result[i][j] = cascade;
+			m_cascadeLimits[i][j] = farZ;
+
+			if (j == 0)
+			{
+				nearZ = farZ;
+				farZ = (farestZ - nearestZ) * 0.4f + nearZ; // 15% - 15% - 60%
+			}
+			else if (j == 1)
+			{
+				nearZ = farZ;
+				farZ = farestZ; // 15% - 35% - 50%
+			}
 		}
 	}
 
