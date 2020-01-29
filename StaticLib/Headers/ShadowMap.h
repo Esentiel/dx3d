@@ -15,6 +15,7 @@ struct ID3D11Buffer;
 struct D3D11_VIEWPORT;
 struct ID3D11RasterizerState;
 struct D3D11_VIEWPORT;
+struct ID3D11RenderTargetView;
 
 namespace Library
 {
@@ -60,9 +61,12 @@ namespace Library
 		std::array<std::array<Library::ShadowMap::Cascade, NUM_CASCADES>, MAX_LIGHT_SOURCES> CalcCascades();
 
 		std::string m_vertexShaderName;
+		std::string m_pixelShaderName;
 		std::array<LightSource, MAX_LIGHT_SOURCES> m_lightSource;
-		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderRes;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderResDSV;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderResRTV;
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_shadowMap;
+		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_rtv;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputlayout;
 		std::array<std::array<Microsoft::WRL::ComPtr<ID3D11Buffer>, NUM_CASCADES>, MAX_LIGHT_SOURCES> m_constMeshLightBuffer;
 		Microsoft::WRL::ComPtr <ID3D11RasterizerState> m_rasterState;

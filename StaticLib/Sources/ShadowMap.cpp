@@ -17,6 +17,7 @@ using namespace Library;
 
 ShadowMap::ShadowMap() :
 	m_vertexShaderName("VertexShaderSM"),
+	m_pixelShaderName("PixelShaderSM"),
 	m_viewport(new D3D11_VIEWPORT)
 {
 	CreateInputLayout();
@@ -57,6 +58,7 @@ void ShadowMap::Initialize(int width, int height)
 			textureDesc.ArraySize = 1;
 			textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 			textureDesc.SampleDesc.Count = 1;
+			textureDesc.SampleDesc.Quality = 0;
 			textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 
 			Microsoft::WRL::ComPtr<ID3D11Texture2D> fullScreenTexture = nullptr;
@@ -71,7 +73,7 @@ void ShadowMap::Initialize(int width, int height)
 			resourceViewDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
 			resourceViewDesc.Texture2D.MipLevels = 1;
 
-			if (FAILED(hr = g_D3D->device->CreateShaderResourceView(fullScreenTexture.Get(), &resourceViewDesc, m_shaderRes.GetAddressOf())))
+			if (FAILED(hr = g_D3D->device->CreateShaderResourceView(fullScreenTexture.Get(), &resourceViewDesc, m_shaderResDSV.GetAddressOf())))
 			{
 				THROW_GAME_EXCEPTION("IDXGIDevice::CreateShaderResourceView() failed.", hr);
 			}
@@ -88,6 +90,37 @@ void ShadowMap::Initialize(int width, int height)
 			{
 				THROW_GAME_EXCEPTION("ShadowMap::CreateDepthStencilView() failed.", hr);
 			}
+
+			// rtv for Variance SM
+			D3D11_TEXTURE2D_DESC fullScreenTextureDesc;
+			ZeroMemory(&fullScreenTextureDesc, sizeof(fullScreenTextureDesc));
+			fullScreenTextureDesc.Width = m_width * MAX_LIGHT_SOURCES;
+			fullScreenTextureDesc.Height = m_height * NUM_CASCADES;
+			fullScreenTextureDesc.MipLevels = 1;
+			fullScreenTextureDesc.ArraySize = 1;
+			fullScreenTextureDesc.Format = DXGI_FORMAT_R8G8_UNORM;
+			fullScreenTextureDesc.SampleDesc.Count = 1;
+			fullScreenTextureDesc.SampleDesc.Quality = 0;
+			fullScreenTextureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+			fullScreenTextureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+			Microsoft::WRL::ComPtr<ID3D11Texture2D> fullScreenTextureRTV = nullptr;
+			if (FAILED(hr = g_D3D->device->CreateTexture2D(&fullScreenTextureDesc, nullptr, fullScreenTextureRTV.GetAddressOf())))
+			{
+				THROW_GAME_EXCEPTION("IDXGIDevice::CreateTexture2D() failed.", hr);
+			}
+
+			if (FAILED(hr = g_D3D->device->CreateShaderResourceView(fullScreenTextureRTV.Get(), nullptr, m_shaderResRTV.GetAddressOf())))
+			{
+				THROW_GAME_EXCEPTION("IDXGIDevice::CreateShaderResourceView() failed.", hr);
+			}
+
+			CD3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc(D3D11_RTV_DIMENSION_TEXTURE2DMS);
+			if (FAILED(hr = g_D3D->device->CreateRenderTargetView(fullScreenTextureRTV.Get(), &renderTargetViewDesc, m_rtv.GetAddressOf())))
+			{
+				THROW_GAME_EXCEPTION("CreateRenderTargetView() failed", hr);
+			}
+
 		}
 
 		m_viewport->Width = (float)m_width;
@@ -102,14 +135,13 @@ void ShadowMap::Initialize(int width, int height)
 void ShadowMap::Generate(RenderScene * scene)
 {
 	CalcProjections();
-
-	static ID3D11RenderTargetView* nullRenderTargetView = nullptr;
 	
 	// set off screen rtv and dsb
-	g_D3D->deviceCtx->OMSetRenderTargets(1, &nullRenderTargetView, m_shadowMap.Get());
+	g_D3D->deviceCtx->OMSetRenderTargets(1, m_rtv.GetAddressOf(), m_shadowMap.Get());
 
 	// clear off screen rt and dsb
-	const DirectX::XMVECTORF32 BackgroundColor = { 0.392f,0.584f, 0.929f, 1.0f };
+	const float baseColor[] {0.0f, 0.0f};
+	g_D3D->deviceCtx->ClearRenderTargetView(m_rtv.Get(), baseColor);
 	g_D3D->deviceCtx->ClearDepthStencilView(m_shadowMap.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
@@ -159,7 +191,8 @@ void ShadowMap::Generate(RenderScene * scene)
 				g_D3D->deviceCtx->VSSetConstantBuffers(2, 1, GetConstMeshLightBufferRef(i, j));
 
 				// PS
-				g_D3D->deviceCtx->PSSetShader(NULL, NULL, 0);
+				ID3D11PixelShader* ps = g_D3D->shaderMgr->GetPixelShader(m_pixelShaderName);
+				g_D3D->deviceCtx->PSSetShader(ps, NULL, 0);
 
 				// draw call
 				g_D3D->deviceCtx->DrawIndexed(mesh->GetIndexCount(), 0, 0);
@@ -278,14 +311,14 @@ void Library::ShadowMap::CalcProjections()
 			const Cascade cascade = cascadesPerLight[j];
 			float minX = cascade.points[0].x, minY = cascade.points[0].y, maxX = cascade.points[0].x, maxY = cascade.points[0].y, minZ = cascade.points[0].z, maxZ = cascade.points[0].z;
 
-			for (int i = 0; i < 8; i++)
+			for (int k = 0; k < 8; k++)
 			{
-				minX = min(minX, cascade.points[i].x);
-				minY = min(minY, cascade.points[i].y);
-				minZ = min(minZ, cascade.points[i].z);
-				maxX = max(maxX, cascade.points[i].x);
-				maxY = max(maxY, cascade.points[i].y);
-				maxZ = max(maxZ, cascade.points[i].z);
+				minX = min(minX, cascade.points[k].x);
+				minY = min(minY, cascade.points[k].y);
+				minZ = min(minZ, cascade.points[k].z);
+				maxX = max(maxX, cascade.points[k].x);
+				maxY = max(maxY, cascade.points[k].y);
+				maxZ = max(maxZ, cascade.points[k].z);
 			}
 
 			DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicOffCenterLH(minX, maxX, minY, maxY, minZ, maxZ);
@@ -303,7 +336,7 @@ const DirectX::XMMATRIX Library::ShadowMap::GetProjection(unsigned int lightIdx,
 
 ID3D11ShaderResourceView** Library::ShadowMap::GetShadowMapRef()
 {
-	return m_shaderRes.GetAddressOf();
+	return m_shaderResDSV.GetAddressOf();
 }
 
 void Library::ShadowMap::CreateRasterState()

@@ -140,6 +140,7 @@
     <FxCompile Include="Shaders\VertexShaderSM.hlsl" />
     <FxCompile Include="Shaders\VertexShaderSB.hlsl" />
     <FxCompile Include="Shaders\PixelShaderSB.hlsl" />
+    <FxCompile Include="Shaders\PixelShaderSM.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="StaticLib.rc">
