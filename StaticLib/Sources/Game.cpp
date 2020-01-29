@@ -128,6 +128,7 @@ namespace Library
 			{
 				mesh->Initialize();
 				mesh->Scale(DirectX::XMFLOAT3(0.2f, 0.2f, 0.2f));
+				mesh->Rotate(DirectX::XMFLOAT3(0.0f, 0.8f, 0.0f));
 				g_D3D->renderScene->AddMesh(std::move(mesh));
 			}
 			meshID++;
