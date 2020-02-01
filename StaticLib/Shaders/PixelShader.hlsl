@@ -5,7 +5,7 @@ Texture2D diffuseTexture : register(t0);
 TextureCube SkyMap : register(t1);
 Texture2D normalMap : register(t2);
 Texture2D specularMap : register(t3);
-Texture2D shadowMap : register(t4);
+Texture2DArray shadowMap : register(t4);
 
 SamplerState magLinearWrapSampler : register(s0);
 SamplerState DepthMapSampler : register(s1);
@@ -96,7 +96,7 @@ float4 main(PS_INPUT input) : SV_TARGET
         float4 viewPos = mul(float4(input.posW, 1.0), view);
         
         // select correct cascade
-        uint cascadeIdx;
+        int cascadeIdx;
         for (uint j = 0; j < NumCascades; j++)
         {
             if (abs(viewPos.z) < limits[j])
@@ -130,21 +130,17 @@ float4 main(PS_INPUT input) : SV_TARGET
                 finalColor.rgb *= float3(1.0, 1.0, 1.5);
             }
             
-            if (SMposFinal.x > 0.001f && SMposFinal.x < 0.999f)
+            float pixelDepth = SMposFinal.z;
+
+            float3 textPos = float3(SMposFinal.x, SMposFinal.y, (float) cascadeIdx);
+            float sampledDepth = shadowMap.Sample(DepthMapSampler, textPos).x;
+                
+            bool isShadowed = pixelDepth < 1.0f && pixelDepth > sampledDepth;
+
+            if (isShadowed)
             {
-                float pixelDepth = SMposFinal.z;
-
-                float x = SMposFinal.x / MaxLightOnScene + (float) i / MaxLightOnScene;
-                float y = SMposFinal.y / NumCascades + (float) cascadeIdx / NumCascades;
-
-                float sampledDepth = shadowMap.Sample(DepthMapSampler, float2(x, y)).x;
-                bool isShadowed = pixelDepth < 1.0f && pixelDepth > sampledDepth;
-
-                if (isShadowed)
-                {
-                    float3 shadow = ColorShadow * ShadowFactor;
-                    finalColor.rgb *= shadow;
-                }
+                float3 shadow = ColorShadow * ShadowFactor;
+                finalColor.rgb *= shadow;
             }
         }
     }

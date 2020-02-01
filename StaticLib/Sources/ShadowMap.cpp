@@ -52,30 +52,19 @@ void ShadowMap::Initialize(int width, int height)
 			// create shaderRes
 			D3D11_TEXTURE2D_DESC textureDesc;
 			ZeroMemory(&textureDesc, sizeof(textureDesc));
-			textureDesc.Width = m_width * MAX_LIGHT_SOURCES;
-			textureDesc.Height = m_height * NUM_CASCADES;
+			textureDesc.Width = m_width;
+			textureDesc.Height = m_height;
 			textureDesc.MipLevels = 1;
 			textureDesc.ArraySize = 1;
 			textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-			textureDesc.SampleDesc.Count = 1;
-			textureDesc.SampleDesc.Quality = 0;
-			textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+			textureDesc.SampleDesc.Count = g_D3D->sampleDesc.Count;
+			textureDesc.SampleDesc.Quality = g_D3D->sampleDesc.Quality;
+			textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 
 			Microsoft::WRL::ComPtr<ID3D11Texture2D> fullScreenTexture = nullptr;
 			if (FAILED(hr = g_D3D->device->CreateTexture2D(&textureDesc, nullptr, fullScreenTexture.GetAddressOf())))
 			{
 				THROW_GAME_EXCEPTION("IDXGIDevice::CreateTexture2D() failed.", hr);
-			}
-
-			D3D11_SHADER_RESOURCE_VIEW_DESC resourceViewDesc;
-			ZeroMemory(&resourceViewDesc, sizeof(resourceViewDesc));
-			resourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-			resourceViewDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
-			resourceViewDesc.Texture2D.MipLevels = 1;
-
-			if (FAILED(hr = g_D3D->device->CreateShaderResourceView(fullScreenTexture.Get(), &resourceViewDesc, m_shaderResDSV.GetAddressOf())))
-			{
-				THROW_GAME_EXCEPTION("IDXGIDevice::CreateShaderResourceView() failed.", hr);
 			}
 
 			// create DSB
@@ -86,7 +75,7 @@ void ShadowMap::Initialize(int width, int height)
 			depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
 			depthStencilViewDesc.Texture2D.MipSlice = 0;
 
-			if (FAILED(hr = g_D3D->device->CreateDepthStencilView(fullScreenTexture.Get(), &depthStencilViewDesc, m_shadowMap.GetAddressOf())))
+			if (FAILED(hr = g_D3D->device->CreateDepthStencilView(fullScreenTexture.Get(), &depthStencilViewDesc, m_shadowMapDSB.GetAddressOf())))
 			{
 				THROW_GAME_EXCEPTION("ShadowMap::CreateDepthStencilView() failed.", hr);
 			}
@@ -94,41 +83,63 @@ void ShadowMap::Initialize(int width, int height)
 			// rtv for Variance SM
 			D3D11_TEXTURE2D_DESC fullScreenTextureDesc;
 			ZeroMemory(&fullScreenTextureDesc, sizeof(fullScreenTextureDesc));
-			fullScreenTextureDesc.Width = m_width * MAX_LIGHT_SOURCES;
-			fullScreenTextureDesc.Height = m_height * NUM_CASCADES;
+			fullScreenTextureDesc.Width = m_width;
+			fullScreenTextureDesc.Height = m_height;
 			fullScreenTextureDesc.MipLevels = 1;
 			fullScreenTextureDesc.ArraySize = 1;
 			fullScreenTextureDesc.Format = DXGI_FORMAT_R8G8_UNORM;
-			fullScreenTextureDesc.SampleDesc.Count = 1;
-			fullScreenTextureDesc.SampleDesc.Quality = 0;
-			fullScreenTextureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+			fullScreenTextureDesc.SampleDesc.Count = g_D3D->sampleDesc.Count;
+			fullScreenTextureDesc.SampleDesc.Quality = g_D3D->sampleDesc.Quality;
+			fullScreenTextureDesc.BindFlags = D3D11_BIND_RENDER_TARGET;
 			fullScreenTextureDesc.Usage = D3D11_USAGE_DEFAULT;
 
-			Microsoft::WRL::ComPtr<ID3D11Texture2D> fullScreenTextureRTV = nullptr;
-			if (FAILED(hr = g_D3D->device->CreateTexture2D(&fullScreenTextureDesc, nullptr, fullScreenTextureRTV.GetAddressOf())))
+			if (FAILED(hr = g_D3D->device->CreateTexture2D(&fullScreenTextureDesc, nullptr, m_fullScreenTextureRTV.GetAddressOf())))
 			{
 				THROW_GAME_EXCEPTION("IDXGIDevice::CreateTexture2D() failed.", hr);
 			}
 
-			if (FAILED(hr = g_D3D->device->CreateShaderResourceView(fullScreenTextureRTV.Get(), nullptr, m_shaderResRTV.GetAddressOf())))
-			{
-				THROW_GAME_EXCEPTION("IDXGIDevice::CreateShaderResourceView() failed.", hr);
-			}
-
 			CD3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc(D3D11_RTV_DIMENSION_TEXTURE2DMS);
-			if (FAILED(hr = g_D3D->device->CreateRenderTargetView(fullScreenTextureRTV.Get(), &renderTargetViewDesc, m_rtv.GetAddressOf())))
+			if (FAILED(hr = g_D3D->device->CreateRenderTargetView(m_fullScreenTextureRTV.Get(), &renderTargetViewDesc, m_rtv.GetAddressOf())))
 			{
 				THROW_GAME_EXCEPTION("CreateRenderTargetView() failed", hr);
 			}
 
+			// create SRV
+
+			D3D11_TEXTURE2D_DESC fullScreenTextureDescSRV;
+			ZeroMemory(&fullScreenTextureDescSRV, sizeof(fullScreenTextureDescSRV));
+			fullScreenTextureDescSRV.Width = m_width;
+			fullScreenTextureDescSRV.Height = m_height;
+			fullScreenTextureDescSRV.MipLevels = 1;
+			fullScreenTextureDescSRV.ArraySize = NUM_CASCADES;
+			fullScreenTextureDescSRV.Format = DXGI_FORMAT_R8G8_UNORM;
+			fullScreenTextureDescSRV.SampleDesc.Count = 1;
+			fullScreenTextureDescSRV.SampleDesc.Quality = 0;
+			fullScreenTextureDescSRV.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+			fullScreenTextureDescSRV.Usage = D3D11_USAGE_DEFAULT;
+
+			if (FAILED(hr = g_D3D->device->CreateTexture2D(&fullScreenTextureDescSRV, nullptr, m_fullScreenTextureSRV.GetAddressOf())))
+			{
+				THROW_GAME_EXCEPTION("IDXGIDevice::CreateTexture2D() failed.", hr);
+			}
+
+			D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
+			viewDesc.Format = DXGI_FORMAT_R8G8_UNORM;
+			viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+			viewDesc.Texture2DArray.MostDetailedMip = 0;
+			viewDesc.Texture2DArray.MipLevels = 1;
+			viewDesc.Texture2DArray.FirstArraySlice = 0;
+			viewDesc.Texture2DArray.ArraySize = NUM_CASCADES;
+
+			for (int i = 0; i < MAX_LIGHT_SOURCES; i++)
+			{
+				if (FAILED(hr = g_D3D->device->CreateShaderResourceView(m_fullScreenTextureSRV.Get(), &viewDesc, m_shaderResRTV[i].GetAddressOf())))
+				{
+					THROW_GAME_EXCEPTION("IDXGIDevice::CreateShaderResourceView() failed.", hr);
+				}
+			}
 		}
 
-		m_viewport->Width = (float)m_width;
-		m_viewport->Height = (float)m_height;
-		m_viewport->TopLeftX = 0.f;
-		m_viewport->TopLeftY = 0.f;
-		m_viewport->MinDepth = 0.0f;
-		m_viewport->MaxDepth = 1.f;
 	}
 }
 
@@ -137,35 +148,35 @@ void ShadowMap::Generate(RenderScene * scene)
 	CalcProjections();
 	
 	// set off screen rtv and dsb
-	g_D3D->deviceCtx->OMSetRenderTargets(1, m_rtv.GetAddressOf(), m_shadowMap.Get());
+	g_D3D->deviceCtx->OMSetRenderTargets(1, m_rtv.GetAddressOf(), m_shadowMapDSB.Get());
 
-	// clear off screen rt and dsb
-	const float baseColor[] {0.0f, 0.0f};
-	g_D3D->deviceCtx->ClearRenderTargetView(m_rtv.Get(), baseColor);
-	g_D3D->deviceCtx->ClearDepthStencilView(m_shadowMap.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	m_viewport->Width = (float)m_width;
+	m_viewport->Height = (float)m_height;
+	m_viewport->TopLeftX = 0;
+	m_viewport->TopLeftY = 0;
+	m_viewport->MinDepth = 0.0f;
+	m_viewport->MaxDepth = 1.f;
+
+	g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());
+
+	// scissors test
+	D3D11_RECT rects[1];
+	rects[0].left = 0;
+	rects[0].right = m_width;
+	rects[0].top = 0;
+	rects[0].bottom = m_height;
+
+	g_D3D->deviceCtx->RSSetScissorRects(1, rects);
 
 	for (unsigned int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	{
 		for (unsigned int j = 0; j < NUM_CASCADES; j++)
 		{
-			m_viewport->Width = (float)m_width;
-			m_viewport->Height = (float)m_height;
-			m_viewport->TopLeftX = i * (float)m_width;
-			m_viewport->TopLeftY = j * (float)m_height;
-			m_viewport->MinDepth = 0.0f;
-			m_viewport->MaxDepth = 1.f;
-
-			g_D3D->deviceCtx->RSSetViewports(1, m_viewport.get());
-
-			// scissors test
-			D3D11_RECT rects[1];
-			rects[0].left = i * (long)m_width;
-			rects[0].right = m_width * (i + 1);
-			rects[0].top = j * (long)m_height;
-			rects[0].bottom = m_height * (j + 1);
-
-			g_D3D->deviceCtx->RSSetScissorRects(1, rects);
-
+			// clear off screen rt and dsb
+			const float baseColor[]{ 1.0f, 1.0f };
+			g_D3D->deviceCtx->ClearRenderTargetView(m_rtv.Get(), baseColor);
+			g_D3D->deviceCtx->ClearDepthStencilView(m_shadowMapDSB.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+			
 			// PER MESH
 			for (auto it = scene->BeginMesh(); it != scene->EndMesh(); ++it)
 			{
@@ -197,6 +208,11 @@ void ShadowMap::Generate(RenderScene * scene)
 				// draw call
 				g_D3D->deviceCtx->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 			}
+
+			// resolve MSAA RT
+			UINT subResSrc = D3D11CalcSubresource(0, 0, g_D3D->sampleDesc.Count);
+			UINT subResSrv = D3D11CalcSubresource(0, j, 1);
+			g_D3D->deviceCtx->ResolveSubresource(m_fullScreenTextureSRV.Get(), subResSrv, m_fullScreenTextureRTV.Get(), subResSrc, DXGI_FORMAT_R8G8_UNORM);
 		}
 	}
 }
@@ -336,7 +352,7 @@ const DirectX::XMMATRIX Library::ShadowMap::GetProjection(unsigned int lightIdx,
 
 ID3D11ShaderResourceView** Library::ShadowMap::GetShadowMapRef()
 {
-	return m_shaderResDSV.GetAddressOf();
+	return m_shaderResRTV[0].GetAddressOf();
 }
 
 void Library::ShadowMap::CreateRasterState()
@@ -351,6 +367,7 @@ void Library::ShadowMap::CreateRasterState()
 	rasterizerState.SlopeScaledDepthBias = 1.f;
 	rasterizerState.ScissorEnable = true;
 	rasterizerState.DepthClipEnable = false;
+	rasterizerState.MultisampleEnable = true;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
 

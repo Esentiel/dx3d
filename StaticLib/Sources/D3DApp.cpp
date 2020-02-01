@@ -55,26 +55,22 @@ void CreateSampler(ID3D11SamplerState **sampler)
 void CreateSampler2(ID3D11SamplerState **sampler)
 {
 	// Create a sampler state for texture sampling in the pixel shader
-
-	D3D11_SAMPLER_DESC samplerDesc;
-	ZeroMemory(&samplerDesc, sizeof(D3D11_SAMPLER_DESC));
-
-	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
-	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-	samplerDesc.MipLODBias = 0.0f;
-	samplerDesc.MaxAnisotropy = 1;
-	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-	samplerDesc.BorderColor[0] = 1.0f;
-	samplerDesc.BorderColor[1] = 1.0f;
-	samplerDesc.BorderColor[2] = 1.0f;
-	samplerDesc.BorderColor[3] = 1.0f;
-	samplerDesc.MinLOD = -FLT_MAX;
-	samplerDesc.MaxLOD = FLT_MAX;
+	D3D11_SAMPLER_DESC SamDescShad =
+	{
+		D3D11_FILTER_ANISOTROPIC,// D3D11_FILTER Filter;
+		D3D11_TEXTURE_ADDRESS_CLAMP, //D3D11_TEXTURE_ADDRESS_MODE AddressU;
+		D3D11_TEXTURE_ADDRESS_CLAMP, //D3D11_TEXTURE_ADDRESS_MODE AddressV;
+		D3D11_TEXTURE_ADDRESS_BORDER, //D3D11_TEXTURE_ADDRESS_MODE AddressW;
+		0,//FLOAT MipLODBias;
+		16,//UINT MaxAnisotropy;
+		D3D11_COMPARISON_NEVER , //D3D11_COMPARISON_FUNC ComparisonFunc;
+		0.0,0.0,0.0,0.0,//FLOAT BorderColor[ 4 ];
+		0,//FLOAT MinLOD;
+		0//FLOAT MaxLOD;   
+	};
 
 	HRESULT hr;
-	if (FAILED(hr = g_D3D->device->CreateSamplerState(&samplerDesc, sampler)))
+	if (FAILED(hr = g_D3D->device->CreateSamplerState(&SamDescShad, sampler)))
 	{
 		THROW_GAME_EXCEPTION("CreateSamplerState() failed", hr);
 	}
@@ -269,6 +265,10 @@ void D3DApp::Initialize()
 	// device
 	g_D3D->device = m_device.Get();
 	g_D3D->deviceCtx = m_deviceCtx.Get();
+
+	// sampleDesc
+	g_D3D->sampleDesc.Count = m_sampleCount;
+	g_D3D->sampleDesc.Quality = m_levels - 1;
 
 	// shader mgr
 	m_shaderManager.reset(new ShaderManager);

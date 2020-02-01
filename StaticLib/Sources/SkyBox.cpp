@@ -46,7 +46,7 @@ void SkyBox::CreateRasterState()
 	rasterizerState.SlopeScaledDepthBias = 0.0f;
 	rasterizerState.DepthClipEnable = true;
 	rasterizerState.ScissorEnable = true;
-	rasterizerState.MultisampleEnable = true;
+	rasterizerState.MultisampleEnable = false;
 	rasterizerState.AntialiasedLineEnable = false;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
