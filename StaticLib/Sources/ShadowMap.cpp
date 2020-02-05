@@ -218,7 +218,7 @@ void ShadowMap::Generate(RenderScene * scene)
 		}
 
 		// blur
-		m_blur->Execute(160, 84, 1);
+		m_blur->Execute(m_width/256, m_height, 1);
 		m_blur->CopyResult(m_fullScreenTextureSRV.Get());
 	}
 }
