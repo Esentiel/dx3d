@@ -76,7 +76,7 @@ const Library::LightSource* Library::RenderScene::GetSceneLights() const
 	return m_lights.get();
 }
 
-void Library::RenderScene::Update(double d)
+void Library::RenderScene::Update(double )
 {
 	//for (int i = 0; i < MAX_LIGHT_SOURCES; i++)
 	//{

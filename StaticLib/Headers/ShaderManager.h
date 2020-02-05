@@ -8,6 +8,7 @@ struct ID3D10Blob;
 typedef ID3D10Blob ID3DBlob;
 struct ID3D11VertexShader;
 struct ID3D11PixelShader;
+struct ID3D11ComputeShader;
 struct ID3D11Device;
 
 namespace Library
@@ -21,12 +22,14 @@ namespace Library
 		ID3DBlob* GetShaderBLOB(const std::string &name) const;
 		ID3D11VertexShader* GetVertexShader(const std::string &name) const;
 		ID3D11PixelShader* GetPixelShader(const std::string &name) const;
+		ID3D11ComputeShader* GetComputeShader(const std::string &name) const;
 
 		void Initialize();
 	private:
 		std::map<std::string, Microsoft::WRL::ComPtr<ID3DBlob>> m_shaders;
 		std::map<std::string, Microsoft::WRL::ComPtr<ID3D11VertexShader>> m_vertexShaders;
 		std::map<std::string, Microsoft::WRL::ComPtr<ID3D11PixelShader>> m_pixelShaders;
+		std::map<std::string, Microsoft::WRL::ComPtr<ID3D11ComputeShader>> m_computeShaders;
 
 		std::wstring m_shaderFolderPath;
 	};

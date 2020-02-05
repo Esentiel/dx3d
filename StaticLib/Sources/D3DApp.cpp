@@ -304,7 +304,7 @@ void D3DApp::Initialize()
 }
 
 
-void D3DApp::Draw(const GameTime& g) 
+void D3DApp::Draw(const GameTime&) 
 {
 	//m_renderScene->Update(g.ElapsedGameTime());
 

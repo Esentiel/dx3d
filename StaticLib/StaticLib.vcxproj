@@ -95,6 +95,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Headers\Blur.h" />
     <ClInclude Include="Headers\Camera.h" />
     <ClInclude Include="Headers\D3DApp.h" />
     <ClInclude Include="Headers\FileManager.h" />
@@ -117,6 +118,7 @@
     <ClInclude Include="Headers\TextureManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Sources\Blur.cpp" />
     <ClCompile Include="Sources\Material.cpp" />
     <ClCompile Include="Sources\SkyBox.cpp" />
     <ClCompile Include="Sources\ShadowMap.cpp" />
@@ -140,6 +142,15 @@
     <ClCompile Include="Sources\TextureManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Shaders\ComputeShaderBlur.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)Shaders\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)Shaders\%(Filename).cso</ObjectFileOutput>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/Zpr</AdditionalOptions>
+    </FxCompile>
     <FxCompile Include="Shaders\PixelShaderPP.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>

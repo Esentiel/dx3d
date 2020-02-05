@@ -56,6 +56,15 @@ void ShaderManager::Initialize()
 			}
 			m_pixelShaders.insert({ shadername, std::move(pixelShader) });
 		}
+		else if (shadername._Starts_with("Compute"))
+		{
+			Microsoft::WRL::ComPtr<ID3D11ComputeShader> computeShader;
+			if (FAILED(hr = g_D3D->device->CreateComputeShader(buffer->GetBufferPointer(), buffer->GetBufferSize(), nullptr, computeShader.GetAddressOf())))
+			{
+				THROW_GAME_EXCEPTION(std::string("CreateComputeShader() failed for: ") + entry.path().string(), hr);
+			}
+			m_computeShaders.insert({ shadername, std::move(computeShader) });
+		}
 		
 		m_shaders.insert({ shadername, std::move(buffer) });
 	}
@@ -83,6 +92,15 @@ ID3D11PixelShader* Library::ShaderManager::GetPixelShader(const std::string &nam
 {
 	auto it = m_pixelShaders.find(name);
 	if (it != m_pixelShaders.end())
+		return it->second.Get();
+	else
+		return NULL;
+}
+
+ID3D11ComputeShader* Library::ShaderManager::GetComputeShader(const std::string &name) const
+{
+	auto it = m_computeShaders.find(name);
+	if (it != m_computeShaders.end())
 		return it->second.Get();
 	else
 		return NULL;

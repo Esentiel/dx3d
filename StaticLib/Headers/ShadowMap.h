@@ -17,11 +17,13 @@ struct ID3D11RasterizerState;
 struct D3D11_VIEWPORT;
 struct ID3D11RenderTargetView;
 struct ID3D11Texture2D;
+struct ID3D11UnorderedAccessView;
 
 namespace Library
 {
 
 	struct LightSource;
+	class Blur;
 
 	class ShadowMap
 	{
@@ -63,8 +65,8 @@ namespace Library
 
 		std::string m_vertexShaderName;
 		std::string m_pixelShaderName;
+		
 		std::array<LightSource, MAX_LIGHT_SOURCES> m_lightSource;
-
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> m_fullScreenTextureRTV;
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> m_fullScreenTextureSRV;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderResRTV[MAX_LIGHT_SOURCES];
@@ -77,6 +79,7 @@ namespace Library
 		std::array<DirectX::XMFLOAT4X4, MAX_LIGHT_SOURCES> m_lightView;
 		DirectX::XMFLOAT4X4 m_projection[MAX_LIGHT_SOURCES][NUM_CASCADES];
 		std::unique_ptr<D3D11_VIEWPORT> m_viewport;
+		std::unique_ptr<Blur> m_blur;
 
 		float m_cascadeLimits[MAX_LIGHT_SOURCES][NUM_CASCADES];
 		int m_width;

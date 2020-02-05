@@ -47,13 +47,13 @@ struct PS_INPUT
 float4 main(PS_INPUT input) : SV_TARGET
 {
 	// normals
-	float4 bumpMap;
+	float4 bumpMap = float4(0.0, 0.0, 0.0, 0.0);
 	float3 normal;
     if (material.hasNormalMap)
     {
         
         // normal
-        bumpMap = normalMap.Sample(magLinearWrapSampler, input.textCoord);
+        float4 bumpMap = normalMap.Sample(magLinearWrapSampler, input.textCoord);
     
         // Expand the range of the normal value from (0, +1) to (-1, +1).
         bumpMap = (bumpMap * 2.0f) - 1.0f;
@@ -97,7 +97,7 @@ float4 main(PS_INPUT input) : SV_TARGET
         
         // select correct cascade
         int cascadeIdx;
-        for (uint j = 0; j < NumCascades; j++)
+        for (int j = 0; j < NumCascades; j++)
         {
             if (abs(viewPos.z) < limits[j])
             {
