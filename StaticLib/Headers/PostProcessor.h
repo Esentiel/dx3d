@@ -9,9 +9,12 @@ struct ID3D11DepthStencilView;
 struct ID3D11InputLayout;
 struct ID3D11Buffer;
 struct ID3D11RasterizerState;
+struct ID3D11Texture2D;
 
 namespace Library
 {
+	class Blur;
+
 	class PostProcessor
 	{
 	public:
@@ -34,6 +37,8 @@ namespace Library
 		void CreateIndexBuffer();
 		void CreateRasterState();
 		
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> m_fullScreenTexture;
+
 		Microsoft::WRL::ComPtr <ID3D11RasterizerState> m_rasterState;
 
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderRes;
@@ -46,5 +51,7 @@ namespace Library
 
 		std::string m_vertexShaderName;
 		std::string m_pixelShaderName;
+
+		std::unique_ptr<Blur> m_blur;
 	};
 }

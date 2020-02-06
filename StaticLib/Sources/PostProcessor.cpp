@@ -7,6 +7,7 @@
 #include "ShaderManager.h"
 #include "GameException.h"
 #include "Camera.h"
+#include "Blur.h"
 
 using namespace Library;
 
@@ -39,7 +40,8 @@ static const UINT s_indices[] =
 
 
 
-PostProcessor::PostProcessor(int width, int height)
+PostProcessor::PostProcessor(int width, int height) :
+	m_blur(new Blur)
 {
 	m_vertexShaderName = "VertexShaderPP";
 	m_pixelShaderName = "PixelShaderPP";
@@ -58,20 +60,20 @@ PostProcessor::PostProcessor(int width, int height)
 	fullScreenTextureDesc.Usage = D3D11_USAGE_DEFAULT;
 
 	HRESULT hr;
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> fullScreenTexture = nullptr;
-	if (FAILED(hr = g_D3D->device->CreateTexture2D(&fullScreenTextureDesc, nullptr, fullScreenTexture.GetAddressOf())))
+	
+	if (FAILED(hr = g_D3D->device->CreateTexture2D(&fullScreenTextureDesc, nullptr, m_fullScreenTexture.GetAddressOf())))
 	{
 		THROW_GAME_EXCEPTION("IDXGIDevice::CreateTexture2D() failed.", hr);
 	}
 
 	// create view for rtv
-	if (FAILED(hr = g_D3D->device->CreateRenderTargetView(fullScreenTexture.Get(), nullptr, m_offscreenRtv.GetAddressOf())))
+	if (FAILED(hr = g_D3D->device->CreateRenderTargetView(m_fullScreenTexture.Get(), nullptr, m_offscreenRtv.GetAddressOf())))
 	{
 		THROW_GAME_EXCEPTION("IDXGIDevice::CreateRenderTargetView() failed.", hr);
 	}
 
 	// create view for shader res
-	if (FAILED(hr = g_D3D->device->CreateShaderResourceView(fullScreenTexture.Get(), nullptr, m_shaderRes.GetAddressOf())))
+	if (FAILED(hr = g_D3D->device->CreateShaderResourceView(m_fullScreenTexture.Get(), nullptr, m_shaderRes.GetAddressOf())))
 	{
 		THROW_GAME_EXCEPTION("IDXGIDevice::CreateShaderResourceView() failed.", hr);
 	}
@@ -101,6 +103,8 @@ PostProcessor::PostProcessor(int width, int height)
 	{
 		THROW_GAME_EXCEPTION("IDXGIDevice::CreateDepthStencilView() failed.", hr);
 	}
+
+	m_blur->Initialize(width, height, (int)DXGI_FORMAT_R8G8B8A8_UNORM, 1, m_fullScreenTexture.Get(), m_shaderRes.Get());
 }
 
 
@@ -126,6 +130,10 @@ ID3D11DepthStencilView* PostProcessor::GetOffscreenDsb()
 void Library::PostProcessor::Draw()
 {
 	g_D3D->deviceCtx->RSSetState(m_rasterState.Get());
+
+	// Blur
+	m_blur->Execute();
+	m_blur->CopyResult(m_fullScreenTexture.Get());
 
 	// IA
 	UINT stride = sizeof(VertexPP);
