@@ -117,30 +117,46 @@ float4 main(PS_INPUT input) : SV_TARGET
             
             SMposFinal.xyz /= SMposFinal.w;
 
-            if (cascadeIdx == 0)
-            {
-                finalColor.rgb *= float3(1.5, 1.0, 1.0);
-            }
-            else if (cascadeIdx == 1)
-            {
-                finalColor.rgb *= float3(1.0, 1.5, 1.0);
-            }
-            else if (cascadeIdx == 2)
-            {
-                finalColor.rgb *= float3(1.0, 1.0, 1.5);
-            }
+            //if (cascadeIdx == 0)
+            //{
+            //    finalColor.rgb *= float3(1.5, 1.0, 1.0);
+            //}
+            //else if (cascadeIdx == 1)
+            //{
+            //    finalColor.rgb *= float3(1.0, 1.5, 1.0);
+            //}
+            //else if (cascadeIdx == 2)
+            //{
+            //    finalColor.rgb *= float3(1.0, 1.0, 1.5);
+            //}
             
             float pixelDepth = SMposFinal.z;
 
             float3 textPos = float3(SMposFinal.x, SMposFinal.y, (float) cascadeIdx);
-            float sampledDepth = shadowMap.Sample(DepthMapSampler, textPos).x;
+            float2 sampledDepth = shadowMap.Sample(DepthMapSampler, textPos).xy;
                 
-            bool isShadowed = pixelDepth < 1.0f && pixelDepth > sampledDepth;
+            bool isShadowed = pixelDepth < 1.0f && pixelDepth > sampledDepth.x;
 
             if (isShadowed)
             {
                 float3 shadow = ColorShadow * ShadowFactor;
                 finalColor.rgb *= shadow;
+            }
+            else
+            {
+                float variance = (sampledDepth.y) - (sampledDepth.x * sampledDepth.x);
+                variance = min(1.0f, max(0.0f, variance + 0.00001f));
+                
+                float mean = sampledDepth.x;
+                float d = pixelDepth - mean;
+                
+                float p_max = variance / (variance + d * d);
+                float fPercentLit = pow(p_max, 4);
+                
+                float3 shadow = saturate(ColorShadow * (ShadowFactor / fPercentLit));
+                //finalColor.rgb = lerp(shadow, finalColor.rgb, fPercentLit);
+                finalColor.rgb *= shadow;
+
             }
         }
     }

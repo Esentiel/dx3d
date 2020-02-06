@@ -132,8 +132,8 @@ void Library::PostProcessor::Draw()
 	g_D3D->deviceCtx->RSSetState(m_rasterState.Get());
 
 	// Blur
-	m_blur->Execute();
-	m_blur->CopyResult(m_fullScreenTexture.Get());
+	//m_blur->Execute();
+	//m_blur->CopyResult(m_fullScreenTexture.Get());
 
 	// IA
 	UINT stride = sizeof(VertexPP);
