@@ -17,22 +17,22 @@ void main( int3 groupThreadID : SV_GroupThreadID, uint3 DTid : SV_DispatchThread
 {
 	for (int i = 0; i < NumCascades; i++)
 	{
-		float color = float(0.f);
+		float2 color = float2(0.f, 0.f);
 
 		if (DTid.y > 11 && DTid.y < 700)
 		{
 			for (int j = 0; j < 11; j++)
 			{
-				color += weights[j].x * inputTx[float3(DTid.x, DTid.y - radius + j, i)].y;
+				color += weights[j].x * inputTx[float3(DTid.x, DTid.y - radius + j, i)].xy;
 			}
 		}
 		else
 		{
-			color = inputTx[float3(DTid.x, DTid.y, i)].y;
+			color = inputTx[float3(DTid.x, DTid.y, i)].xy;
 		}
 
         
-        outputTx[float3(DTid.x, DTid.y, i)] = float2(inputTx[float3(DTid.x, DTid.y, i)].x, color);
+        outputTx[float3(DTid.x, DTid.y, i)] = color;
 
     }
 }
