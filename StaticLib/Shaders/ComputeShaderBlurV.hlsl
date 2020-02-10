@@ -12,27 +12,27 @@ RWTexture2DArray<float2> outputTx : register(u0);
 
 int radius = 5;
 
-[numthreads(1, NUM_THREADS, 1)]
+[numthreads(1, NUM_THREADS, NumCascades)]
 void main( int3 groupThreadID : SV_GroupThreadID, uint3 DTid : SV_DispatchThreadID )
 {
-	for (int i = 0; i < NumCascades; i++)
-	{
+	/*for (int i = 0; i < NumCascades; i++)
+	{*/
 		float2 color = float2(0.f, 0.f);
 
 		if (DTid.y > 11 && DTid.y < 700)
 		{
 			for (int j = 0; j < 11; j++)
 			{
-				color += weights[j].x * inputTx[float3(DTid.x, DTid.y - radius + j, i)].xy;
+				color += weights[j].x * inputTx[float3(DTid.x, DTid.y - radius + j, DTid.z)].xy;
 			}
 		}
 		else
 		{
-			color = inputTx[float3(DTid.x, DTid.y, i)].xy;
+			color = inputTx[float3(DTid.x, DTid.y, DTid.z)].xy;
 		}
 
         
-        outputTx[float3(DTid.x, DTid.y, i)] = color;
+        outputTx[float3(DTid.x, DTid.y, DTid.z)] = color;
 
-    }
+    //}
 }
