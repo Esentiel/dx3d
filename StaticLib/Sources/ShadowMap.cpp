@@ -218,8 +218,8 @@ void ShadowMap::Generate(RenderScene * scene)
 		}
 
 		// blur
-		m_blur->Execute();
-		m_blur->CopyResult(m_fullScreenTextureSRV.Get());
+		//m_blur->Execute();
+		//m_blur->CopyResult(m_fullScreenTextureSRV.Get());
 	}
 }
 
@@ -368,7 +368,7 @@ void Library::ShadowMap::CreateRasterState()
 	//ZeroMemory(&rasterizerState, sizeof(rasterizerState));
 	rasterizerState.FillMode = D3D11_FILL_SOLID;
 	rasterizerState.CullMode = D3D11_CULL_BACK;
-	rasterizerState.DepthBias = 10000;
+	rasterizerState.DepthBias = 100000;
 	rasterizerState.DepthBiasClamp = 0.f;
 	rasterizerState.SlopeScaledDepthBias = 1.f;
 	rasterizerState.ScissorEnable = true;

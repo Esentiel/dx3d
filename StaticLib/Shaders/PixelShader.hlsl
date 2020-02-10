@@ -153,12 +153,19 @@ float4 main(PS_INPUT input) : SV_TARGET
                 float p_max = variance / (variance + d * d);
                 float fPercentLit = pow(p_max, 4);
                 
-                float3 shadow = saturate(ColorShadow * (ShadowFactor / fPercentLit));
+                if (variance < 0.00001f)
+                {
+                    float3 shadow = saturate(ColorShadow * (ShadowFactor / fPercentLit));
                 //finalColor.rgb = lerp(shadow, finalColor.rgb, fPercentLit);
-                finalColor.rgb *= shadow;
+                    finalColor.rgb *= shadow;
+                }
+                else
+                {
+                    //finalColor.rgb = ColorWhite;
+                }
 
+                }
             }
-        }
     }
 
 	float shininess = (1.0f - material.roughness);
