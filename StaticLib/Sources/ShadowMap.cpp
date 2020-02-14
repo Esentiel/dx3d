@@ -212,7 +212,7 @@ void ShadowMap::Generate(RenderScene * scene)
 			}
 
 			// resolve MSAA RT
-			UINT subResSrc = D3D11CalcSubresource(0, 0, g_D3D->sampleDesc.Count);
+			UINT subResSrc = D3D11CalcSubresource(0, 0, 1);
 			UINT subResSrv = D3D11CalcSubresource(0, j, 1);
 			g_D3D->deviceCtx->ResolveSubresource(m_fullScreenTextureSRV.Get(), subResSrv, m_fullScreenTextureRTV.Get(), subResSrc, DXGI_FORMAT_R8G8_UNORM);
 		}
@@ -368,12 +368,14 @@ void Library::ShadowMap::CreateRasterState()
 	//ZeroMemory(&rasterizerState, sizeof(rasterizerState));
 	rasterizerState.FillMode = D3D11_FILL_SOLID;
 	rasterizerState.CullMode = D3D11_CULL_BACK;
+	//rasterizerState.DepthBias = D3D11_DEFAULT_DEPTH_BIAS;
 	rasterizerState.DepthBias = 100000;
 	rasterizerState.DepthBiasClamp = 0.f;
 	rasterizerState.SlopeScaledDepthBias = 1.f;
 	rasterizerState.ScissorEnable = true;
 	rasterizerState.DepthClipEnable = false;
 	rasterizerState.MultisampleEnable = true;
+	//rasterizerState.AntialiasedLineEnable = false;
 	g_D3D->device->CreateRasterizerState(&rasterizerState, &m_rasterState);
 }
 

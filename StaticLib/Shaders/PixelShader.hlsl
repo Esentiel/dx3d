@@ -134,38 +134,33 @@ float4 main(PS_INPUT input) : SV_TARGET
 
             float3 textPos = float3(SMposFinal.x, SMposFinal.y, (float) cascadeIdx);
             float2 sampledDepth = shadowMap.Sample(DepthMapSampler, textPos).xy;
-                
-            bool isShadowed = pixelDepth < 1.0f && pixelDepth > sampledDepth.x;
 
-            if (isShadowed)
+			if (pixelDepth <= sampledDepth.x)
+			{
+				// fully lit here
+			}
+			else
             {
-                float3 shadow = ColorShadow * ShadowFactor;
-                finalColor.rgb *= shadow;
-            }
-            else
-            {
-                float variance = (sampledDepth.y) - (sampledDepth.x * sampledDepth.x);
+				float2 Moments;
+				Moments.x = sampledDepth.x;
+				float dx = ddx(sampledDepth.x);
+				float dy = ddy(sampledDepth.x);
+				Moments.y = sampledDepth.x * sampledDepth.x + 0.25 * (dx * dx + dy * dy);
+
+                float variance = abs((Moments.y) - (Moments.x * Moments.x));
                 variance = min(1.0f, max(0.0f, variance + 0.00001f));
                 
-                float mean = sampledDepth.x;
+                float mean = Moments.x;
                 float d = pixelDepth - mean;
                 
                 float p_max = variance / (variance + d * d);
-                float fPercentLit = pow(p_max, 4);
-                
-                if (variance < 0.00001f)
-                {
-                    float3 shadow = saturate(ColorShadow * (ShadowFactor / fPercentLit));
-                //finalColor.rgb = lerp(shadow, finalColor.rgb, fPercentLit);
-                    finalColor.rgb *= shadow;
-                }
-                else
-                {
-                    //finalColor.rgb = ColorWhite;
-                }
+                //float fPercentLit = pow(p_max, 4);
+                float fPercentLit = p_max;
 
-                }
+                float3 shadow = saturate(ColorShadow * (ShadowFactor * fPercentLit));
+                finalColor.rgb *= shadow;
             }
+		}
     }
 
 	float shininess = (1.0f - material.roughness);
