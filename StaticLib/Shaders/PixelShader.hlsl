@@ -154,11 +154,12 @@ float4 main(PS_INPUT input) : SV_TARGET
                 float d = pixelDepth - mean;
                 
                 float p_max = variance / (variance + d * d);
-                //float fPercentLit = pow(p_max, 4);
-                float fPercentLit = p_max;
 
-                float3 shadow = saturate(ColorShadow * (ShadowFactor * fPercentLit));
-                finalColor.rgb *= shadow;
+				float fPercentLit = clamp((p_max - 0.025f) / (1.f - 0.025f), 0, 1); 
+
+				float3 finalColr = lerp(ColorBlack.rgb, finalColor.rgb, fPercentLit);
+
+                finalColor.rgb = finalColr;
             }
 		}
     }

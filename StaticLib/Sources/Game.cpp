@@ -155,7 +155,7 @@ namespace Library
 		} while (meshID < numMesh);
 
 		// sun
-		filePath = "../Content/models/sun.fbx";
+		/*filePath = "../Content/models/sun.fbx";
 		numMesh = 0;
 		meshID = 0;
 		do
@@ -172,7 +172,7 @@ namespace Library
 				g_D3D->renderScene->AddMesh(std::move(mesh));
 			}
 			meshID++;
-		} while (meshID < numMesh);
+		} while (meshID < numMesh);*/
 	}
 
 	void Game::Update(const GameTime& gameTime)

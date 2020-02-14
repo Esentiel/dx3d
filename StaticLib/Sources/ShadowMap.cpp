@@ -187,6 +187,7 @@ void ShadowMap::Generate(RenderScene * scene)
 				// update mesh cb
 				MeshLightCB meshCb;
 				DirectX::XMStoreFloat4x4(&meshCb.WorldViewLightProj, mesh->GetModelTransform() * GetViewMatrix(i) * GetProjection(i, j));
+				DirectX::XMStoreFloat4x4(&meshCb.WorldViewLight, mesh->GetModelTransform() * GetViewMatrix(i));
 
 				g_D3D->deviceCtx->UpdateSubresource(GetConstMeshLightBuffer(i, j), 0, nullptr, &meshCb, 0, 0);
 
@@ -218,8 +219,8 @@ void ShadowMap::Generate(RenderScene * scene)
 		}
 
 		// blur
-		//m_blur->Execute();
-		//m_blur->CopyResult(m_fullScreenTextureSRV.Get());
+		m_blur->Execute();
+		m_blur->CopyResult(m_fullScreenTextureSRV.Get());
 	}
 }
 
@@ -368,8 +369,8 @@ void Library::ShadowMap::CreateRasterState()
 	//ZeroMemory(&rasterizerState, sizeof(rasterizerState));
 	rasterizerState.FillMode = D3D11_FILL_SOLID;
 	rasterizerState.CullMode = D3D11_CULL_BACK;
-	//rasterizerState.DepthBias = D3D11_DEFAULT_DEPTH_BIAS;
-	rasterizerState.DepthBias = 100000;
+	rasterizerState.DepthBias = D3D11_DEFAULT_DEPTH_BIAS;
+	//rasterizerState.DepthBias = 100;
 	rasterizerState.DepthBiasClamp = 0.f;
 	rasterizerState.SlopeScaledDepthBias = 1.f;
 	rasterizerState.ScissorEnable = true;

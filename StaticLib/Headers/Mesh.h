@@ -25,6 +25,7 @@ namespace Library
 	struct MeshLightCB
 	{
 		DirectX::XMFLOAT4X4 WorldViewLightProj;
+		DirectX::XMFLOAT4X4 WorldViewLight;
 	};
 
 	struct Vertex
