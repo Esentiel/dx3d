@@ -155,7 +155,9 @@ float4 main(PS_INPUT input) : SV_TARGET
                 
                 float p_max = variance / (variance + d * d);
 
-				float fPercentLit = clamp((p_max - 0.025f) / (1.f - 0.025f), 0, 1); 
+				// fighting with light bleding
+				//float fPercentLit = clamp((p_max - 0.025f) / (1.f - 0.025f), 0, 1); 
+				float fPercentLit = pow(p_max, 16);
 
 				float3 finalColr = lerp(ColorBlack.rgb, finalColor.rgb, fPercentLit);
 
